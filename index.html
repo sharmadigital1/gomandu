@@ -430,16 +430,69 @@
 
   <script>
     const foods = [
-      { id: 1, name: "Chicken Momo", category: "Momo", price: 180, emoji: "🥟", rating: "4.8", desc: "Juicy chicken dumplings with achar", tag: "Bestseller" },
-      { id: 2, name: "Veg Momo", category: "Momo", price: 140, emoji: "🥟", rating: "4.6", desc: "Fresh vegetable-filled dumplings" },
-      { id: 3, name: "Margherita Pizza", category: "Pizza", price: 350, emoji: "🍕", rating: "4.7", desc: "Cheese, tomato and Italian herbs", tag: "Popular" },
-      { id: 4, name: "Classic Burger", category: "Burger", price: 220, emoji: "🍔", rating: "4.5", desc: "Crispy patty with fresh vegetables" },
-      { id: 5, name: "Chicken Biryani", category: "Meals", price: 280, emoji: "🍛", rating: "4.9", desc: "Aromatic rice with spiced chicken", tag: "Top rated" },
-      { id: 6, name: "Dal Bhat Set", category: "Meals", price: 250, emoji: "🍲", rating: "4.7", desc: "A hearty Nepali meal set" },
-      { id: 7, name: "Cold Coffee", category: "Drinks", price: 130, emoji: "🥤", rating: "4.4", desc: "Chilled, creamy and refreshing" },
-      { id: 8, name: "French Fries", category: "Burger", price: 120, emoji: "🍟", rating: "4.5", desc: "Golden crispy potato fries" },
-      { id: 9, name: "Cheese Pizza", category: "Pizza", price: 420, emoji: "🍕", rating: "4.8", desc: "Loaded with melted cheese" }
-    ];
+      
+let foods = [];
+
+function getCategory(name) {
+  const n = name.toLowerCase();
+
+  if (n.includes("momo")) return "Momo";
+  if (n.includes("pizza")) return "Pizza";
+  if (n.includes("burger")) return "Burger";
+  if (
+    n.includes("coffee") ||
+    n.includes("juice")
+  ) return "Drinks";
+
+  return "Meals";
+}
+
+function getEmoji(name) {
+  const n = name.toLowerCase();
+
+  if (n.includes("momo")) return "🥟";
+  if (n.includes("pizza")) return "🍕";
+  if (n.includes("burger")) return "🍔";
+  if (n.includes("fries")) return "🍟";
+  if (n.includes("coffee") || n.includes("juice")) {
+    return "🥤";
+  }
+  if (n.includes("chowmein")) return "🍜";
+
+  return "🍛";
+}
+
+async function loadFoods() {
+  const grid = document.getElementById("food-grid");
+  grid.innerHTML = '<div class="empty">Loading menu...</div>';
+
+  try {
+    const response = await fetch("/api/products");
+
+    if (!response.ok) {
+      throw new Error("Could not load products");
+    }
+
+    const data = await response.json();
+
+    foods = (data.products || []).map(product => ({
+      id: Number(product.id),
+      name: product.name,
+      category: getCategory(product.name),
+      price: Number(product.price_paisa) / 100,
+      emoji: getEmoji(product.name),
+      rating: "4.5",
+      desc: product.name + " — freshly prepared for you"
+    }));
+
+    renderFoods();
+    updateCart();
+  } catch (error) {
+    grid.innerHTML =
+      '<div class="empty">Menu could not load. Please refresh and try again.</div>';
+  }
+}
+;
 
     let selectedCategory = "All";
     let cart = {};
@@ -561,8 +614,8 @@
     }
 
     document.getElementById("year").textContent = new Date().getFullYear();
-    renderFoods();
-    updateCart();
+loadFoods();
+updateCart();
   </script>
 </body>
 </html>
