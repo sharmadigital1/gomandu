@@ -484,16 +484,7 @@ async function loadFoods() {
       rating: "4.5",
       desc: product.name + " — freshly prepared for you"
     }));
-
-    renderFoods();
-    updateCart();
-
-  } catch (error) {
-    console.error("Products loading error:", error);
-    grid.innerHTML =
-      '<div class="empty">Menu could not load. Please refresh and try again.</div>';
-  }
-}
+    
     renderFoods();
     updateCart();
   } catch (error) {
@@ -501,7 +492,6 @@ async function loadFoods() {
       '<div class="empty">Menu could not load. Please refresh and try again.</div>';
   }
 }
-;
 
     let selectedCategory = "All";
     let cart = {};
