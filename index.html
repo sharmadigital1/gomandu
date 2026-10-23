@@ -7,119 +7,562 @@
   <meta name="theme-color" content="#e63946">
   <title>GoMandu | Food, Grocery & Rides</title>
   <style>
+    :root {
+      --red: #e63946;
+      --dark: #202124;
+      --muted: #70757a;
+      --cream: #fffaf5;
+      --green: #168653;
+    }
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      color: #202124;
-      background: #fffaf5;
+      color: var(--dark);
+      background: #fff;
     }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .container { width: min(1120px, 92%); margin: auto; }
+
     header {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: white;
+      border-bottom: 1px solid #eee;
+    }
+    .nav {
+      min-height: 74px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .logo {
+      color: var(--red);
+      font-size: 27px;
+      font-weight: 900;
+      text-decoration: none;
+      letter-spacing: -1px;
+    }
+    .logo span { color: var(--dark); }
+    .nav-links { display: flex; gap: 22px; align-items: center; }
+    .nav-links a {
+      color: var(--dark);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .cart-button, .primary {
+      border: 0;
+      color: white;
+      background: var(--red);
+      border-radius: 10px;
+      padding: 12px 17px;
+      font-weight: 700;
+    }
+
+    .hero {
+      background: linear-gradient(115deg, #fff0e6, #fff8f1);
+      padding: 58px 0;
+      overflow: hidden;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      align-items: center;
+      gap: 30px;
+    }
+    .eyebrow {
+      color: var(--red);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-size: 12px;
+    }
+    h1 {
+      font-size: clamp(36px, 5vw, 58px);
+      line-height: 1.08;
+      letter-spacing: -2px;
+      margin: 14px 0;
+    }
+    h1 span { color: var(--red); }
+    .hero p { color: var(--muted); line-height: 1.7; max-width: 490px; }
+    .search {
+      display: flex;
+      background: white;
+      padding: 7px;
+      border: 1px solid #eee;
+      border-radius: 13px;
+      margin-top: 25px;
+      max-width: 510px;
+      box-shadow: 0 8px 25px #00000008;
+    }
+    .search input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: none;
+      padding: 10px;
+    }
+    .hero-art {
+      min-height: 260px;
+      display: grid;
+      place-items: center;
+      font-size: clamp(100px, 18vw, 185px);
+      background: #ffe1c9;
+      border-radius: 45% 55% 48% 52%;
+      transform: rotate(3deg);
+    }
+    .hero-art span { transform: rotate(-3deg); }
+
+    .services { padding: 26px 0 12px; }
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+    .service {
+      border: 1px solid #eee;
+      border-radius: 15px;
+      padding: 17px;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      background: white;
+    }
+    .service .emoji { font-size: 34px; }
+    .service strong { display: block; margin-bottom: 5px; }
+    .service small { color: var(--muted); }
+
+    section.menu { padding: 38px 0 60px; }
+    .section-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 22px;
+    }
+    h2 { margin: 0 0 8px; font-size: 29px; letter-spacing: -.7px; }
+    .sub { color: var(--muted); margin: 0; font-size: 14px; }
+    .categories {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .category {
+      border: 1px solid #eee;
+      background: white;
+      border-radius: 30px;
+      padding: 10px 16px;
+      font-weight: 700;
+    }
+    .category.active, .category:hover {
+      background: var(--red);
+      color: white;
+      border-color: var(--red);
+    }
+    .food-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .food-card {
+      border: 1px solid #eee;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .food-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px #0000000d;
+    }
+    .food-image {
+      height: 185px;
+      display: grid;
+      place-items: center;
+      background: #fff2e9;
+      font-size: 78px;
+      position: relative;
+    }
+    .food-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .tag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 6px 9px;
+      border-radius: 7px;
+      background: white;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .food-info { padding: 16px; }
+    .food-title {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .food-title h3 { margin: 0; font-size: 17px; }
+    .rating { font-size: 12px; white-space: nowrap; }
+    .food-info p { color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .food-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .price { font-weight: 900; font-size: 19px; }
+    .add {
+      border: 0;
+      background: #fff0f0;
+      color: var(--red);
+      padding: 10px 13px;
+      border-radius: 9px;
+      font-weight: 800;
+    }
+    .add:hover { background: var(--red); color: white; }
+
+    .empty {
+      padding: 35px;
+      text-align: center;
+      color: var(--muted);
+      grid-column: 1/-1;
+    }
+    .promise {
+      background: #f8faf8;
+      padding: 35px 0;
+      text-align: center;
+    }
+    .promise p { color: var(--muted); line-height: 1.7; }
+    footer { background: #202124; color: white; padding: 28px 0; }
+    .footer-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 7%;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    footer p { color: #c7c7c7; font-size: 13px; }
+    .footer-logo { color: #ff6873; font-size: 22px; font-weight: 900; }
+
+    .cart-panel {
+      position: fixed;
+      z-index: 10;
+      right: 0;
+      top: 0;
+      height: 100dvh;
+      width: min(400px, 100%);
       background: white;
-      box-shadow: 0 2px 12px #0000000b;
+      box-shadow: -10px 0 40px #0002;
+      padding: 23px;
+      display: none;
+      overflow-y: auto;
     }
-    .logo { font-size: 27px; font-weight: 800; color: #e63946; }
-    nav a {
-      margin-left: 20px;
-      text-decoration: none;
-      color: #333;
-      font-weight: 600;
+    .cart-panel.open { display: block; }
+    .cart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .hero {
-      padding: 75px 7%;
-      text-align: center;
-      background: linear-gradient(135deg, #fff0d9, #ffe3e4);
+    .close {
+      border: 0;
+      background: #f2f2f2;
+      border-radius: 8px;
+      padding: 8px 12px;
     }
-    .hero h1 { font-size: clamp(36px, 6vw, 60px); margin: 0 0 18px; }
-    .hero h1 span { color: #e63946; }
-    .hero p { font-size: 18px; line-height: 1.7; }
-    .button {
-      display: inline-block;
-      margin-top: 18px;
-      padding: 14px 24px;
-      background: #e63946;
-      color: white;
-      border-radius: 9px;
-      text-decoration: none;
-      font-weight: bold;
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
     }
-    .services { padding: 45px 7%; text-align: center; }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 20px;
-      margin-top: 28px;
+    .qty { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .qty button { border: 1px solid #ddd; background: white; border-radius: 6px; }
+    .total {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 900;
+      font-size: 19px;
+      padding: 18px 0;
     }
-    .card {
-      background: white;
-      padding: 28px 20px;
-      border-radius: 16px;
-      box-shadow: 0 5px 22px #0000000b;
-    }
-    .emoji { font-size: 46px; }
-    .card h3 { margin-bottom: 8px; }
-    footer {
-      padding: 25px;
+    .checkout { width: 100%; }
+    .note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .toast {
+      position: fixed;
+      z-index: 20;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       background: #202124;
       color: white;
-      text-align: center;
+      padding: 12px 18px;
+      border-radius: 10px;
+      display: none;
+      max-width: 90%;
     }
-    @media (max-width: 600px) {
-      header { padding: 18px 5%; }
-      nav a { margin-left: 10px; font-size: 13px; }
-      .hero { padding: 55px 6%; }
+    .toast.show { display: block; }
+
+    @media (max-width: 760px) {
+      .nav { min-height: 65px; }
+      .nav-links { display: none; }
+      .hero { padding: 38px 0; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-art { min-height: 170px; font-size: 110px; }
+      .service-grid { grid-template-columns: 1fr; }
+      .food-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .food-image { height: 135px; font-size: 57px; }
+      .food-info { padding: 12px; }
+      .food-title { display: block; }
+      .food-title h3 { font-size: 15px; }
+      .rating { display: inline-block; margin-top: 7px; }
+      .food-bottom { align-items: start; flex-direction: column; }
+      .add { width: 100%; }
+      .section-heading { align-items: start; flex-direction: column; }
+    }
+    @media (max-width: 390px) {
+      .food-grid { grid-template-columns: 1fr; }
+      .food-image { height: 190px; }
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="logo">GoMandu</div>
-    <nav>
-      <a href="#services">Services</a>
-      <a href="#contact">Contact</a>
-    </nav>
+    <div class="container nav">
+      <a href="#" class="logo">Go<span>Mandu</span>.</a>
+      <nav class="nav-links">
+        <a href="#food">Food</a>
+        <a href="#services">Our Services</a>
+        <a href="#about">About</a>
+      </nav>
+      <button class="cart-button" onclick="openCart()">
+        🛒 Cart (<span id="cart-count">0</span>)
+      </button>
+    </div>
   </header>
 
   <main>
     <section class="hero">
-      <h1>Everything you need,<br><span>at your doorstep.</span></h1>
-      <p>सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
-      <p>Food delivery, grocery shopping and rides — all in one place.</p>
-      <a class="button" href="#services">Explore Services</a>
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Your city, delivered</div>
+          <h1>Hungry? Let’s get it <span>delivered.</span></h1>
+          <p>Delicious food, daily groceries and convenient rides—all in one place with GoMandu.</p>
+          <div class="search">
+            <input id="search-input" type="search" placeholder="Search momo, pizza, biryani..." aria-label="Search food">
+            <button class="primary" onclick="renderFoods()">Search</button>
+          </div>
+          <p style="font-size:12px;margin-top:10px">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
+        </div>
+        <div class="hero-art" aria-label="Food illustration"><span>🍱</span></div>
+      </div>
     </section>
 
     <section class="services" id="services">
-      <h2>Discover GoMandu</h2>
-      <p>One app for your everyday needs.</p>
-      <div class="cards">
-        <article class="card">
-          <div class="emoji">🍔</div>
-          <h3>Food Delivery</h3>
-          <p>Your favourite meals, delivered to your door.</p>
-        </article>
-        <article class="card">
-          <div class="emoji">🛒</div>
-          <h3>Grocery Delivery</h3>
-          <p>Daily essentials made easy and convenient.</p>
-        </article>
-        <article class="card">
-          <div class="emoji">🛵</div>
-          <h3>Ride Booking</h3>
-          <p>Convenient rides for your everyday journey.</p>
-        </article>
+      <div class="container service-grid">
+        <div class="service"><span class="emoji">🍔</span><div><strong>Food Delivery</strong><small>Your favourite meals</small></div></div>
+        <div class="service"><span class="emoji">🛒</span><div><strong>Grocery Delivery</strong><small>Daily essentials at home</small></div></div>
+        <div class="service"><span class="emoji">🛵</span><div><strong>Ride Booking</strong><small>Move around your city</small></div></div>
+      </div>
+    </section>
+
+    <section class="menu" id="food">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2>Popular near you</h2>
+            <p class="sub">Tasty picks to make your day better.</p>
+          </div>
+          <span class="sub">🍴 Made for food lovers</span>
+        </div>
+
+        <div class="categories" id="categories">
+          <button class="category active" data-category="All">🍽️ All</button>
+          <button class="category" data-category="Momo">🥟 Momo</button>
+          <button class="category" data-category="Pizza">🍕 Pizza</button>
+          <button class="category" data-category="Burger">🍔 Burger</button>
+          <button class="category" data-category="Meals">🍛 Meals</button>
+          <button class="category" data-category="Drinks">🥤 Drinks</button>
+        </div>
+
+        <div class="food-grid" id="food-grid"></div>
+      </div>
+    </section>
+
+    <section class="promise" id="about">
+      <div class="container">
+        <h2>Good food. Great convenience.</h2>
+        <p>GoMandu brings your city’s favourites closer to you.<br>Food, groceries and rides—all the essentials, one destination.</p>
       </div>
     </section>
   </main>
 
-  <footer id="contact">
-    <p><strong>GoMandu</strong></p>
-    <p>सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
-    <p>Contact: Your business email</p>
-    <p>© 2026 GoMandu. All rights reserved.</p>
+  <footer>
+    <div class="container footer-row">
+      <div>
+        <div class="footer-logo">GoMandu.</div>
+        <p>सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
+      </div>
+      <p>© <span id="year"></span> GoMandu. All rights reserved.</p>
+    </div>
   </footer>
+
+  <aside class="cart-panel" id="cart-panel" aria-label="Shopping cart">
+    <div class="cart-head">
+      <h2>Your Cart</h2>
+      <button class="close" onclick="closeCart()">✕ Close</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="total"><span>Total</span><span id="cart-total">Rs. 0</span></div>
+    <button class="primary checkout" onclick="checkout()">Continue to order</button>
+    <p class="note">Demo only: this cart does not send real orders or accept payments yet.</p>
+  </aside>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    const foods = [
+      { id: 1, name: "Chicken Momo", category: "Momo", price: 180, emoji: "🥟", rating: "4.8", desc: "Juicy chicken dumplings with achar", tag: "Bestseller" },
+      { id: 2, name: "Veg Momo", category: "Momo", price: 140, emoji: "🥟", rating: "4.6", desc: "Fresh vegetable-filled dumplings" },
+      { id: 3, name: "Margherita Pizza", category: "Pizza", price: 350, emoji: "🍕", rating: "4.7", desc: "Cheese, tomato and Italian herbs", tag: "Popular" },
+      { id: 4, name: "Classic Burger", category: "Burger", price: 220, emoji: "🍔", rating: "4.5", desc: "Crispy patty with fresh vegetables" },
+      { id: 5, name: "Chicken Biryani", category: "Meals", price: 280, emoji: "🍛", rating: "4.9", desc: "Aromatic rice with spiced chicken", tag: "Top rated" },
+      { id: 6, name: "Dal Bhat Set", category: "Meals", price: 250, emoji: "🍲", rating: "4.7", desc: "A hearty Nepali meal set" },
+      { id: 7, name: "Cold Coffee", category: "Drinks", price: 130, emoji: "🥤", rating: "4.4", desc: "Chilled, creamy and refreshing" },
+      { id: 8, name: "French Fries", category: "Burger", price: 120, emoji: "🍟", rating: "4.5", desc: "Golden crispy potato fries" },
+      { id: 9, name: "Cheese Pizza", category: "Pizza", price: 420, emoji: "🍕", rating: "4.8", desc: "Loaded with melted cheese" }
+    ];
+
+    let selectedCategory = "All";
+    let cart = {};
+
+    const money = amount => "Rs. " + amount.toLocaleString("en-IN");
+
+    function renderFoods() {
+      const search = document.getElementById("search-input").value.trim().toLowerCase();
+      const filtered = foods.filter(food => {
+        const matchesCategory = selectedCategory === "All" || food.category === selectedCategory;
+        const matchesSearch = (food.name + " " + food.category + " " + food.desc).toLowerCase().includes(search);
+        return matchesCategory && matchesSearch;
+      });
+
+      const grid = document.getElementById("food-grid");
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty">No items found. Try another search.</div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(food => `
+        <article class="food-card">
+          <div class="food-image">
+            ${food.tag ? `<span class="tag">${food.tag}</span>` : ""}
+            <span>${food.emoji}</span>
+          </div>
+          <div class="food-info">
+            <div class="food-title">
+              <h3>${food.name}</h3>
+              <span class="rating">⭐ ${food.rating}</span>
+            </div>
+            <p>${food.desc}</p>
+            <div class="food-bottom">
+              <span class="price">${money(food.price)}</span>
+              <button class="add" onclick="addToCart(${food.id})">+ Add</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    document.getElementById("categories").addEventListener("click", event => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      selectedCategory = button.dataset.category;
+      document.querySelectorAll(".category").forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      renderFoods();
+    });
+
+    document.getElementById("search-input").addEventListener("input", renderFoods);
+
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;
+      updateCart();
+      showToast(foods.find(food => food.id === id).name + " added to cart");
+    }
+
+    function updateCart() {
+      const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+      document.getElementById("cart-count").textContent = count;
+
+      const entries = Object.entries(cart);
+      const items = document.getElementById("cart-items");
+      if (!entries.length) {
+        items.innerHTML = '<p class="empty">Your cart is empty. Add something delicious!</p>';
+      } else {
+        items.innerHTML = entries.map(([id, qty]) => {
+          const food = foods.find(item => item.id === Number(id));
+          return `<div class="cart-item">
+            <div><strong>${food.name}</strong><div class="note">${money(food.price)} each</div>
+              <div class="qty">
+                <button aria-label="Decrease ${food.name}" onclick="changeQty(${id}, -1)">−</button>
+                <span>${qty}</span>
+                <button aria-label="Increase ${food.name}" onclick="changeQty(${id}, 1)">+</button>
+              </div>
+            </div>
+            <strong>${money(food.price * qty)}</strong>
+          </div>`;
+        }).join("");
+      }
+
+      const total = entries.reduce((sum, [id, qty]) => {
+        return sum + foods.find(item => item.id === Number(id)).price * qty;
+      }, 0);
+      document.getElementById("cart-total").textContent = money(total);
+    }
+
+    function changeQty(id, amount) {
+      cart[id] = (cart[id] || 0) + amount;
+      if (cart[id] <= 0) delete cart[id];
+      updateCart();
+    }
+
+    function openCart() {
+      document.getElementById("cart-panel").classList.add("open");
+      updateCart();
+    }
+
+    function closeCart() {
+      document.getElementById("cart-panel").classList.remove("open");
+    }
+
+    function checkout() {
+      if (!Object.keys(cart).length) {
+        showToast("Your cart is empty. Add food first!");
+        return;
+      }
+      showToast("Demo cart ready! Real ordering will be connected next.");
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    renderFoods();
+    updateCart();
+  </script>
 </body>
 </html>
