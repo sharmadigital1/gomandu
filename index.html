@@ -463,6 +463,7 @@ function getEmoji(name) {
 }
 
 
+
 async function loadFoods() {
   const grid = document.getElementById("food-grid");
   grid.innerHTML = '<div class="empty">Loading menu...</div>';
@@ -488,12 +489,14 @@ async function loadFoods() {
 
     renderFoods();
     updateCart();
+
   } catch (error) {
     console.error("Products loading error:", error);
     grid.innerHTML =
       '<div class="empty">Menu could not load. Please refresh and try again.</div>';
   }
 }
+
 
 
     let selectedCategory = "All";
