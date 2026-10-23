@@ -473,7 +473,7 @@ async function loadFoods() {
       throw new Error("Could not load products");
     }
 
-    const data = await response.json();
+        const data = await response.json();
 
     foods = (data.products || []).map(product => ({
       id: Number(product.id),
@@ -484,6 +484,7 @@ async function loadFoods() {
       rating: "4.5",
       desc: product.name + " — freshly prepared for you"
     }));
+
     renderFoods();
     updateCart();
 
