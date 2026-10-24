@@ -36,7 +36,7 @@ async function verifyPassword(password, storedHash) {
   if (
     parts.length !== 4 ||
     parts[0] !== "pbkdf2_sha256" ||
-    parts[1] !== "600000"
+    parts[1] !== "100000"
   ) {
     return false;
   }
@@ -61,7 +61,7 @@ async function verifyPassword(password, storedHash) {
       {
         name: "PBKDF2",
         salt,
-        iterations: 600000,
+        iterations: 100000,
         hash: "SHA-256"
       },
       key,
