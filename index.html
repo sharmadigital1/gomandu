@@ -457,6 +457,31 @@
     function closeAuth() { authEl.close(); }
     function toggleAuth() { setMode(mode === "login" ? "signup" : "login"); }
     authEl.addEventListener("click", e => { if (e.target === authEl) closeAuth(); });
+
+async function checkSession() {
+  try {
+    const response = await fetch("/api/me", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.authenticated || !data.customer) {
+      return null;
+    }
+
+    return data.customer;
+  } catch (error) {
+    console.error("Session check failed:", error);
+    return null;
+  }
+}
     
 async function submitAuth() {
   const signup = mode === "signup";
@@ -508,8 +533,17 @@ async function submitAuth() {
       setMode("login");
       showToast("Account created! Please log in.");
     } else {
-      showToast("Login successful!");
-      // Dashboard display will be connected in the next step.
+      } else {
+  const customer = await checkSession();
+
+  if (!customer) {
+    showToast("Login succeeded, but session could not be verified.");
+    return;
+  }
+
+  showToast("Welcome, " + customer.name + "!");
+  showCustomerDashboard(customer);
+}
     }
   } catch (error) {
     console.error("Authentication error:", error);
