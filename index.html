@@ -1061,7 +1061,6 @@ async function submitAuth() {
       showToast("Welcome, " + customer.name + "!");
       showCustomerDashboard(customer);
     }
-    }
   } catch (error) {
     console.error("Authentication error:", error);
     showToast("Unable to connect. Please try again.");
