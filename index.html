@@ -775,13 +775,27 @@ function renderRestaurants() {
       alert("Could not contact the server. Please try again.");
     }
   });
-checkSession().then(customer => {
-  if (customer) {
-    window.showCustomerDashboard(customer);
-  } else {
+(async function initializeApp() {
+  const publicHome = document.getElementById("public-home");
+  const app = document.getElementById("app");
+
+  // Hide both views while checking the login session
+  if (publicHome) publicHome.hidden = true;
+  if (app) app.hidden = true;
+
+  try {
+    const customer = await checkSession();
+
+    if (customer) {
+      window.showCustomerDashboard(customer);
+    } else {
+      window.hideCustomerDashboard();
+    }
+  } catch (error) {
+    console.error("Session initialization failed:", error);
     window.hideCustomerDashboard();
   }
-});
+
   renderRestaurants();
   renderCart();
 })();
