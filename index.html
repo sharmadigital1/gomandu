@@ -775,7 +775,13 @@ function renderRestaurants() {
       alert("Could not contact the server. Please try again.");
     }
   });
-
+checkSession().then(customer => {
+  if (customer) {
+    window.showCustomerDashboard(customer);
+  } else {
+    window.hideCustomerDashboard();
+  }
+});
   renderRestaurants();
   renderCart();
 })();
