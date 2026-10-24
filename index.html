@@ -1097,9 +1097,10 @@ async function submitAuth() {
       showCustomerDashboard(customer);
     }
   } catch (error) {
-    console.error("Authentication error:", error);
-    showToast("Unable to connect. Please try again.");
-  } finally {
+  console.error("Authentication error:", error);
+  showToast("Error: " + (error.message || String(error)));
+} 
+  finally {
     submitButton.disabled = false;
     submitButton.textContent = signup ? "Sign up" : "Login";
   }
