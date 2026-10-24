@@ -457,10 +457,69 @@
     function closeAuth() { authEl.close(); }
     function toggleAuth() { setMode(mode === "login" ? "signup" : "login"); }
     authEl.addEventListener("click", e => { if (e.target === authEl) closeAuth(); });
-    function submitAuth() {
-      closeAuth();
-      showToast((mode === "signup" ? "Sign up" : "Login") + " is a demo for now. Real accounts will be connected next.");
+    
+async function submitAuth() {
+  const signup = mode === "signup";
+  const name = document.getElementById("auth-name").value.trim();
+  const email = document.getElementById("auth-id").value.trim();
+  const password = document.getElementById("auth-pass").value;
+  const submitButton = document.getElementById("auth-submit");
+
+  if (signup && name.length < 2) {
+    showToast("Please enter your full name.");
+    return;
+  }
+
+  if (password.length < 8 || password.length > 128) {
+    showToast("Password must be 8–128 characters long.");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = signup ? "Creating account..." : "Logging in...";
+
+  try {
+    const response = await fetch(
+      signup ? "/api/register" : "/api/login",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(
+          signup
+            ? { name, email, password }
+            : { email, password }
+        )
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      showToast(result.error || "Something went wrong. Please try again.");
+      return;
     }
+
+    closeAuth();
+
+    if (signup) {
+      document.getElementById("auth-id").value = email;
+      document.getElementById("auth-pass").value = "";
+      setMode("login");
+      showToast("Account created! Please log in.");
+    } else {
+      showToast("Login successful!");
+      // Dashboard display will be connected in the next step.
+    }
+  } catch (error) {
+    console.error("Authentication error:", error);
+    showToast("Unable to connect. Please try again.");
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = signup ? "Sign up" : "Login";
+  }
+}
+
 
     let toastTimer;
     function showToast(message) {
