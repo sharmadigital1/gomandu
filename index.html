@@ -249,6 +249,524 @@
     @media (max-width: 480px) { .auth .btn { padding: 9px 12px; font-size: 13px; } .logo { font-size: 23px; } }
   </style>
 </head>
+  <!-- GoMandu Customer Dashboard -->
+<section id="customer-app" hidden>
+  <div class="gm-dashboard">
+    <header class="gm-header">
+      <div>
+        <h1>GoMandu</h1>
+        <p id="gm-welcome">Welcome!</p>
+      </div>
+      <button type="button" id="gm-logout" class="gm-btn gm-outline">
+        Logout
+      </button>
+    </header>
+
+    <div id="gm-restaurants-view">
+      <h2>Explore Restaurants</h2>
+      <p>Choose a restaurant to see its menu.</p>
+      <div id="gm-restaurant-grid" class="gm-restaurant-grid"></div>
+    </div>
+
+    <div id="gm-menu-view" hidden>
+      <button type="button" id="gm-back" class="gm-btn gm-outline">
+        ← All Restaurants
+      </button>
+      <h2 id="gm-menu-title"></h2>
+      <div id="gm-food-list" class="gm-food-list"></div>
+    </div>
+
+    <section class="gm-cart">
+      <h2>Your Cart (<span id="gm-cart-count">0</span>)</h2>
+      <div id="gm-cart-items">Your cart is empty.</div>
+      <p class="gm-total">
+        Total: NPR <strong id="gm-cart-total">0</strong>
+      </p>
+      <button type="button" id="gm-clear-cart" class="gm-btn gm-outline">
+        Clear Cart
+      </button>
+      <p class="gm-cart-note">
+        Cart is ready for a checkout/order API to be connected.
+      </p>
+    </section>
+  </div>
+</section>
+
+<style>
+  #customer-app {
+    font-family: Arial, sans-serif;
+    color: #242424;
+    background: #fffaf5;
+    min-height: 70vh;
+    padding: 24px 16px;
+  }
+
+  #customer-app[hidden],
+  #gm-restaurants-view[hidden],
+  #gm-menu-view[hidden] {
+    display: none !important;
+  }
+
+  .gm-dashboard {
+    max-width: 1100px;
+    margin: auto;
+  }
+
+  .gm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 24px;
+  }
+
+  .gm-header h1 {
+    margin: 0;
+    color: #e85d25;
+  }
+
+  .gm-header p {
+    margin: 6px 0 0;
+    color: #666;
+  }
+
+  .gm-restaurant-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin: 20px 0 32px;
+  }
+
+  .gm-restaurant-card {
+    overflow: hidden;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 3px 12px #0000000c;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+
+  .gm-restaurant-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 20px #00000012;
+  }
+
+  .gm-restaurant-card img {
+    display: block;
+    width: 100%;
+    height: 165px;
+    object-fit: cover;
+  }
+
+  .gm-restaurant-info {
+    padding: 14px;
+  }
+
+  .gm-restaurant-info h3 {
+    margin: 0 0 7px;
+  }
+
+  .gm-restaurant-info p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .gm-btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .gm-primary {
+    background: #e85d25;
+    color: white;
+  }
+
+  .gm-outline {
+    color: #333;
+    background: white;
+    border: 1px solid #ddd;
+  }
+
+  .gm-food-list {
+    margin: 16px 0 32px;
+    border-top: 1px solid #eee;
+  }
+
+  .gm-food-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 4px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .gm-food-row h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+  }
+
+  .gm-food-row p {
+    margin: 0;
+    color: #555;
+  }
+
+  .gm-cart {
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 28px;
+  }
+
+  .gm-cart-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .gm-qty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gm-qty button {
+    cursor: pointer;
+    border: 1px solid #ddd;
+    background: white;
+    border-radius: 5px;
+    padding: 3px 8px;
+  }
+
+  .gm-total {
+    font-size: 18px;
+  }
+
+  .gm-cart-note {
+    color: #777;
+    font-size: 13px;
+  }
+
+  @media (max-width: 500px) {
+    #customer-app {
+      padding: 18px 12px;
+    }
+
+    .gm-food-row {
+      align-items: flex-start;
+    }
+
+    .gm-food-row .gm-btn {
+      padding: 9px;
+    }
+  }
+</style>
+
+<script>
+(() => {
+  // Sample restaurant and menu data.
+  // Replace names, prices and image URLs with your real restaurant data.
+  const restaurants = [
+    {
+      id: "momo-house",
+      name: "Kathmandu Momo House",
+      category: "Momo • Nepali",
+      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "steam-momo", name: "Veg Steam Momo", price: 150 },
+        { id: "chicken-momo", name: "Chicken Steam Momo", price: 200 },
+        { id: "fried-momo", name: "Chicken Fried Momo", price: 230 },
+        { id: "chowmein", name: "Chicken Chowmein", price: 180 }
+      ]
+    },
+    {
+      id: "newari-kitchen",
+      name: "Newari Kitchen",
+      category: "Newari • Traditional",
+      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "chatamari", name: "Chatamari", price: 180 },
+        { id: "bara", name: "Bara", price: 100 },
+        { id: "choila", name: "Buff Choila", price: 250 },
+        { id: "yomari", name: "Yomari", price: 100 }
+      ]
+    },
+    {
+      id: "thakali-darbar",
+      name: "Thakali Darbar",
+      category: "Thakali • Nepali",
+      image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "veg-thali", name: "Veg Thali Set", price: 250 },
+        { id: "chicken-thali", name: "Chicken Thakali Set", price: 400 },
+        { id: "mutton-thali", name: "Mutton Thakali Set", price: 550 },
+        { id: "dal-bhat", name: "Dal Bhat Set", price: 200 }
+      ]
+    },
+    {
+      id: "spice-garden",
+      name: "Spice Garden",
+      category: "Indian • Curry",
+      image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "butter-chicken", name: "Butter Chicken", price: 380 },
+        { id: "paneer", name: "Paneer Butter Masala", price: 300 },
+        { id: "biryani", name: "Chicken Biryani", price: 320 },
+        { id: "naan", name: "Butter Naan", price: 70 }
+      ]
+    },
+    {
+      id: "wok-express",
+      name: "Wok Express",
+      category: "Chinese • Asian",
+      image: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "veg-fried-rice", name: "Veg Fried Rice", price: 180 },
+        { id: "chicken-fried-rice", name: "Chicken Fried Rice", price: 230 },
+        { id: "chicken-chilli", name: "Chilli Chicken", price: 300 },
+        { id: "spring-roll", name: "Spring Roll", price: 160 }
+      ]
+    },
+    {
+      id: "burger-point",
+      name: "Burger Point",
+      category: "Fast Food • Burgers",
+      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "veg-burger", name: "Veg Burger", price: 180 },
+        { id: "chicken-burger", name: "Chicken Burger", price: 250 },
+        { id: "fries", name: "French Fries", price: 130 },
+        { id: "club-sandwich", name: "Club Sandwich", price: 220 }
+      ]
+    },
+    {
+      id: "pizza-corner",
+      name: "Pizza Corner",
+      category: "Pizza • Italian",
+      image: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "margherita", name: "Margherita Pizza", price: 350 },
+        { id: "chicken-pizza", name: "Chicken Pizza", price: 450 },
+        { id: "pasta", name: "Creamy Pasta", price: 300 },
+        { id: "garlic-bread", name: "Garlic Bread", price: 180 }
+      ]
+    },
+    {
+      id: "sweet-treats",
+      name: "Sweet Treats Cafe",
+      category: "Cafe • Bakery",
+      image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+      foods: [
+        { id: "cake", name: "Chocolate Cake Slice", price: 180 },
+        { id: "brownie", name: "Chocolate Brownie", price: 150 },
+        { id: "coffee", name: "Cappuccino", price: 160 },
+        { id: "milkshake", name: "Chocolate Milkshake", price: 200 }
+      ]
+    }
+  ];
+
+  const el = id => document.getElementById(id);
+  const app = el("customer-app");
+  if (!app) return;
+
+  let activeRestaurant = null;
+  let cart = [];
+
+  function money(amount) {
+    return Number(amount).toLocaleString("en-IN");
+  }
+
+  function renderRestaurants() {
+    el("gm-restaurant-grid").innerHTML = restaurants.map(r => `
+      <article class="gm-restaurant-card" data-restaurant="${r.id}" tabindex="0" role="button" aria-label="Open ${r.name}">
+        <img src="${r.image}" alt="${r.name}" loading="lazy">
+        <div class="gm-restaurant-info">
+          <h3>${r.name}</h3>
+          <p>${r.category}</p>
+          <p style="margin-top:10px;color:#e85d25;font-weight:600">View Menu →</p>
+        </div>
+      </article>
+    `).join("");
+
+    el("gm-restaurant-grid").querySelectorAll("[data-restaurant]").forEach(card => {
+      const open = () => openRestaurant(card.dataset.restaurant);
+      card.addEventListener("click", open);
+      card.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open();
+        }
+      });
+    });
+  }
+
+  function openRestaurant(id) {
+    activeRestaurant = restaurants.find(r => r.id === id);
+    if (!activeRestaurant) return;
+
+    el("gm-restaurants-view").hidden = true;
+    el("gm-menu-view").hidden = false;
+    el("gm-menu-title").textContent = activeRestaurant.name;
+
+    // Food items show as text and price only; no food images.
+    el("gm-food-list").innerHTML = activeRestaurant.foods.map(food => `
+      <div class="gm-food-row">
+        <div>
+          <h3>${food.name}</h3>
+          <p>NPR ${money(food.price)}</p>
+        </div>
+        <button type="button" class="gm-btn gm-primary"
+          data-add-food="${food.id}">Add to Cart</button>
+      </div>
+    `).join("");
+
+    el("gm-food-list").querySelectorAll("[data-add-food]").forEach(button => {
+      button.addEventListener("click", () => addToCart(activeRestaurant, button.dataset.addFood));
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function addToCart(restaurant, foodId) {
+    const food = restaurant.foods.find(f => f.id === foodId);
+    if (!food) return;
+
+    const key = restaurant.id + ":" + food.id;
+    const existing = cart.find(item => item.key === key);
+
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({
+        key,
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        foodId: food.id,
+        name: food.name,
+        price: food.price,
+        qty: 1
+      });
+    }
+
+    renderCart();
+  }
+
+  function renderCart() {
+    el("gm-cart-count").textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+    el("gm-cart-total").textContent = money(
+      cart.reduce((sum, item) => sum + item.price * item.qty, 0)
+    );
+
+    if (!cart.length) {
+      el("gm-cart-items").textContent = "Your cart is empty.";
+      return;
+    }
+
+    el("gm-cart-items").innerHTML = cart.map(item => `
+      <div class="gm-cart-line">
+        <div>
+          <strong>${item.name}</strong>
+          <div style="font-size:13px;color:#666">${item.restaurantName}</div>
+          <div>NPR ${money(item.price * item.qty)}</div>
+        </div>
+        <div class="gm-qty">
+          <button type="button" data-minus="${item.key}" aria-label="Decrease quantity">−</button>
+          <span>${item.qty}</span>
+          <button type="button" data-plus="${item.key}" aria-label="Increase quantity">+</button>
+        </div>
+      </div>
+    `).join("");
+
+    el("gm-cart-items").querySelectorAll("[data-minus]").forEach(button => {
+      button.addEventListener("click", () => changeQty(button.dataset.minus, -1));
+    });
+
+    el("gm-cart-items").querySelectorAll("[data-plus]").forEach(button => {
+      button.addEventListener("click", () => changeQty(button.dataset.plus, 1));
+    });
+  }
+
+  function changeQty(key, change) {
+    const item = cart.find(i => i.key === key);
+    if (!item) return;
+
+    item.qty += change;
+    if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
+    renderCart();
+  }
+
+  el("gm-back").addEventListener("click", () => {
+    el("gm-menu-view").hidden = true;
+    el("gm-restaurants-view").hidden = false;
+    activeRestaurant = null;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  el("gm-clear-cart").addEventListener("click", () => {
+    cart = [];
+    renderCart();
+  });
+
+  // Called after a successful login and session verification.
+  window.showCustomerDashboard = function(customer) {
+    // Hide the public landing content, but keep the auth dialog and scripts intact.
+    const publicHome = el("public-home");
+    if (publicHome) publicHome.hidden = true;
+
+    app.hidden = false;
+    el("gm-welcome").textContent =
+      "Welcome, " + (customer && customer.name ? customer.name : "Customer") + "!";
+
+    el("gm-restaurants-view").hidden = false;
+    el("gm-menu-view").hidden = true;
+    renderRestaurants();
+    renderCart();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  window.hideCustomerDashboard = function() {
+    app.hidden = true;
+    const publicHome = el("public-home");
+    if (publicHome) publicHome.hidden = false;
+  };
+
+  el("gm-logout").addEventListener("click", async () => {
+    try {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "same-origin"
+      });
+
+      if (!response.ok) {
+        alert("Logout failed. Please try again.");
+        return;
+      }
+
+      cart = [];
+      renderCart();
+      hideCustomerDashboard();
+      if (typeof openAuth === "function") openAuth("login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      alert("Could not contact the server. Please try again.");
+    }
+  });
+
+  renderRestaurants();
+  renderCart();
+})();
+</script>
 <body>
   <header>
     <div class="container nav">
