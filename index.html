@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e63946">
+  <meta name="description" content="GoMandu — food delivery, grocery delivery and ride booking in one app.">
+  <title>GoMandu | Food, Grocery & Rides</title>
+  <style>
+    :root {
+      --red: #e63946;
+      --red-dark: #c92d3a;
+      --dark: #1d1f23;
+      --muted: #6b7078;
+      --line: #eceae6;
+      --cream: #fff7f0;
+      --soft: #f7f8f7;
+      --green: #168653;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--dark);
+      background: #fff;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    .container { width: min(1140px, 92%); margin: auto; }
+    :focus-visible { outline: 3px solid #e6394655; outline-offset: 2px; }
+
+    /* Header */
+    header {
+      position: sticky; top: 0; z-index: 5;
+      background: #ffffffee; backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .logo { color: var(--red); font-size: 27px; font-weight: 900; text-decoration: none; letter-spacing: -1px; }
+    .logo span { color: var(--dark); }
+    .nav-links { display: flex; gap: 26px; }
+    .nav-links a { text-decoration: none; font-size: 14px; font-weight: 700; color: #3c4046; }
+    .nav-links a:hover { color: var(--red); }
+    .btn {
+      border: 0; border-radius: 12px; padding: 12px 20px;
+      font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+      transition: background .2s, transform .15s;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-dark); }
+    .btn-ghost { background: #fff; color: var(--dark); border: 1px solid var(--line); }
+    .btn-ghost:hover { border-color: var(--dark); }
+
+    /* Hero */
+    .hero { background: linear-gradient(115deg, #fff0e6, #fff9f3); padding: 70px 0; overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 36px; }
+    .eyebrow { color: var(--red); font-weight: 800; text-transform: uppercase; letter-spacing: 1.6px; font-size: 12px; }
+    h1 { font-size: clamp(36px, 5.2vw, 60px); line-height: 1.07; letter-spacing: -2px; margin: 14px 0; }
+    h1 span { color: var(--red); }
+    .lead { color: var(--muted); line-height: 1.7; max-width: 500px; font-size: 17px; }
+    .search {
+      display: flex; background: #fff; padding: 7px; border: 1px solid var(--line);
+      border-radius: 14px; margin-top: 26px; max-width: 520px; box-shadow: 0 10px 30px #0000000a;
+    }
+    .search input { width: 100%; min-width: 0; border: 0; outline: none; padding: 10px 12px; background: transparent; }
+    .tagline { font-size: 13px; margin-top: 14px; color: var(--muted); }
+    .hero-stats { display: flex; gap: 34px; margin-top: 34px; flex-wrap: wrap; }
+    .hero-stats strong { display: block; font-size: 24px; letter-spacing: -.5px; }
+    .hero-stats small { color: var(--muted); }
+    .hero-art {
+      border-radius: 28px; overflow: hidden; background: #ffe1c9;
+      box-shadow: 0 24px 60px #e6394633; transform: rotate(2deg);
+    }
+    .hero-art img { display: block; width: 100%; height: auto; transform: scale(1.001); }
+
+    /* Services */
+    .services { padding: 70px 0 20px; }
+    .section-head { text-align: center; max-width: 560px; margin: 0 auto 36px; }
+    h2 { margin: 0 0 10px; font-size: clamp(26px, 3.4vw, 34px); letter-spacing: -.9px; }
+    .sub { color: var(--muted); margin: 0; line-height: 1.6; }
+    .service-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .service {
+      border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff;
+      display: flex; flex-direction: column; transition: transform .2s, box-shadow .2s;
+    }
+    .service:hover { transform: translateY(-4px); box-shadow: 0 14px 34px #0000001a; }
+    .service img { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: #fff2e9; }
+    .service-body { padding: 20px 22px 24px; }
+    .service h3 { margin: 0 0 6px; font-size: 19px; }
+    .service p { margin: 0 0 14px; color: var(--muted); line-height: 1.6; font-size: 14px; }
+    .service-link { color: var(--red); font-weight: 800; font-size: 14px; text-decoration: none; }
+    .service-link:hover { text-decoration: underline; }
+
+    /* Menu */
+    .menu { padding: 60px 0; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 15px; margin-bottom: 22px; }
+    .section-heading h2 { margin-bottom: 6px; }
+    .categories { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 24px; }
+    .category { border: 1px solid var(--line); background: #fff; border-radius: 30px; padding: 10px 16px; font-weight: 700; }
+    .category.active, .category:hover { background: var(--red); color: #fff; border-color: var(--red); }
+    .food-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .food-card { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; transition: transform .2s, box-shadow .2s; }
+    .food-card:hover { transform: translateY(-4px); box-shadow: 0 14px 34px #0000000d; }
+    .food-image { height: 170px; display: grid; place-items: center; background: #fff2e9; font-size: 72px; position: relative; }
+    .tag { position: absolute; top: 12px; left: 12px; padding: 6px 9px; border-radius: 7px; background: #fff; font-size: 11px; font-weight: 800; }
+    .food-info { padding: 16px; }
+    .food-title { display: flex; align-items: start; justify-content: space-between; gap: 8px; }
+    .food-title h3 { margin: 0; font-size: 17px; }
+    .rating { font-size: 12px; white-space: nowrap; }
+    .food-info p { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 8px 0 0; }
+    .food-bottom { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+    .price { font-weight: 900; font-size: 19px; }
+    .add { border: 0; background: #fff0f0; color: var(--red); padding: 10px 14px; border-radius: 10px; font-weight: 800; }
+    .add:hover { background: var(--red); color: #fff; }
+    .empty { padding: 35px; text-align: center; color: var(--muted); grid-column: 1 / -1; }
+
+    /* How it works */
+    .how { background: var(--soft); padding: 70px 0; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; counter-reset: step; }
+    .step { text-align: center; padding: 10px 14px; }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      display: grid; place-items: center; width: 46px; height: 46px; margin: 0 auto 14px;
+      background: var(--red); color: #fff; border-radius: 50%; font-weight: 800;
+    }
+    .step h3 { margin: 0 0 6px; }
+    .step p { margin: 0; color: var(--muted); line-height: 1.6; font-size: 14px; }
+
+    /* CTA */
+    .cta { padding: 70px 0; }
+    .cta-box {
+      background: linear-gradient(120deg, var(--red), #ff6b6b); color: #fff;
+      border-radius: 24px; padding: 48px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap;
+    }
+    .cta-box h2 { margin: 0 0 8px; }
+    .cta-box p { margin: 0; opacity: .92; }
+    .cta-box .btn { background: #fff; color: var(--red); }
+
+    /* Footer */
+    footer { background: #0b0b0c; color: #fff; padding: 64px 0 28px; }
+    .footer-logo { font-size: 38px; font-weight: 900; letter-spacing: -1.5px; color: #fff; text-decoration: none; display: inline-block; }
+    .footer-logo span { color: var(--red); }
+    .footer-tagline { color: #8b8f96; font-size: 14px; margin: 8px 0 0; }
+    .footer-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 32px; margin-top: 44px; }
+    footer h4 { margin: 0 0 16px; font-size: 17px; font-weight: 600; color: #fff; line-height: 1.4; }
+    footer ul { list-style: none; padding: 0; margin: 0; }
+    footer li { margin-bottom: 12px; }
+    footer li a { color: #8b8f96; font-size: 15px; line-height: 1.5; text-decoration: none; transition: color .2s; }
+    footer li a:hover { color: #fff; }
+    .social { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .social a {
+      width: 26px; height: 26px; border-radius: 50%; background: #fff; color: #0b0b0c;
+      display: grid; place-items: center; transition: transform .2s, background .2s;
+    }
+    .social a:hover { transform: translateY(-2px); background: var(--red); color: #fff; }
+    .social svg { width: 14px; height: 14px; fill: currentColor; }
+    .store-btn {
+      display: flex; align-items: center; gap: 10px; border: 1px solid #5c5f66; border-radius: 10px;
+      padding: 9px 14px; text-decoration: none; color: #fff; margin-bottom: 12px; max-width: 190px; transition: border-color .2s;
+    }
+    .store-btn:hover { border-color: #fff; }
+    .store-btn .ico { font-size: 24px; }
+    .store-btn small { display: block; font-size: 10px; color: #b9bcc2; letter-spacing: .3px; }
+    .store-btn strong { display: block; font-size: 17px; line-height: 1.1; }
+    .copyright {
+      border-top: 1px solid #ffffff1f; margin-top: 44px; padding-top: 22px;
+      display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      font-size: 13px; color: #8b8f96; line-height: 1.6;
+    }
+    .copyright p { margin: 0; }
+
+    /* Cart */
+    .overlay { position: fixed; inset: 0; background: #0006; z-index: 9; display: none; }
+    .overlay.open { display: block; }
+    .cart-panel {
+      position: fixed; z-index: 10; right: 0; top: 0; height: 100dvh; width: min(410px, 100%);
+      background: #fff; box-shadow: -10px 0 40px #0002; padding: 23px; display: none; overflow-y: auto;
+    }
+    .cart-panel.open { display: block; }
+    .cart-head { display: flex; justify-content: space-between; align-items: center; }
+    .cart-head h2 { margin: 0; font-size: 24px; }
+    .close { border: 0; background: #f2f2f2; border-radius: 8px; padding: 8px 12px; }
+    .cart-item { display: flex; justify-content: space-between; gap: 12px; padding: 15px 0; border-bottom: 1px solid var(--line); }
+    .qty { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+    .qty button { border: 1px solid #ddd; background: #fff; border-radius: 6px; width: 28px; height: 28px; }
+    .total { display: flex; justify-content: space-between; font-weight: 900; font-size: 19px; padding: 18px 0; }
+    .checkout { width: 100%; justify-content: center; }
+    .note { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .toast {
+      position: fixed; z-index: 20; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--dark); color: #fff; padding: 12px 18px; border-radius: 10px; display: none; max-width: 90%;
+    }
+    .toast.show { display: block; }
+
+    @media (max-width: 860px) {
+      .nav-links { display: none; }
+      .hero { padding: 40px 0; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: repeat(2, 1fr); gap: 28px 20px; }
+      .footer-social-col { grid-column: 1 / -1; }
+      .hero-art { transform: none; }
+      .service-grid, .steps { grid-template-columns: 1fr; }
+      .food-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .food-image { height: 130px; font-size: 56px; }
+      .food-info { padding: 12px; }
+      .food-title { display: block; }
+      .food-title h3 { font-size: 15px; }
+      .food-bottom { align-items: start; flex-direction: column; }
+      .add { width: 100%; }
+      .section-heading { align-items: start; flex-direction: column; }
+      .cta-box { padding: 32px 24px; }
+    }
+    @media (max-width: 400px) {
+      .food-grid { grid-template-columns: 1fr; }
+      .food-image { height: 180px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a href="#" class="logo" aria-label="GoMandu home">Go<span>Mandu</span>.</a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#services">Services</a>
+        <a href="#food">Menu</a>
+        <a href="#how">How it works</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="btn btn-primary" onclick="openCart()" aria-label="Open cart">
+        🛒 Cart (<span id="cart-count">0</span>)
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Your city, delivered</div>
+          <h1>Hungry? Let’s get it <span>delivered.</span></h1>
+          <p class="lead">Delicious food, daily groceries and convenient rides — all in one place with GoMandu.</p>
+          <form class="search" onsubmit="event.preventDefault(); renderFoods(); document.getElementById('food').scrollIntoView();">
+            <input id="search-input" type="search" placeholder="Search momo, pizza, biryani..." aria-label="Search food">
+            <button class="btn btn-primary" type="submit">Search</button>
+          </form>
+          <p class="tagline">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
+          <div class="hero-stats">
+            <div><strong>30 min</strong><small>Average delivery</small></div>
+            <div><strong>3-in-1</strong><small>Food · Grocery · Rides</small></div>
+            <div><strong>Easy</strong><small>Simple ordering</small></div>
+          </div>
+        </div>
+        <div class="hero-art">
+          <img src="images/food-delivery.jpg" width="1000" height="1000" alt="GoMandu rider delivering momo, burgers and pizza in Kathmandu" fetchpriority="high">
+        </div>
+      </div>
+    </section>
+
+    <section class="services" id="services">
+      <div class="container">
+        <div class="section-head">
+          <h2>Everything you need, one app</h2>
+          <p class="sub">From a quick meal to a ride across town, GoMandu keeps your day moving.</p>
+        </div>
+        <div class="service-grid">
+          <article class="service">
+            <img src="images/food-delivery.jpg" width="1000" height="1000" loading="lazy" alt="GoMandu food delivery — good food delivered fast">
+            <div class="service-body">
+              <h3>Food Delivery</h3>
+              <p>Your favourite local meals, hot and fresh at your door.</p>
+              <a class="service-link" href="#food">Order food →</a>
+            </div>
+          </article>
+          <article class="service">
+            <img src="images/grocery-delivery.jpg" width="1000" height="1000" loading="lazy" alt="GoMandu grocery delivery — fresh groceries, happy homes">
+            <div class="service-body">
+              <h3>Grocery Delivery</h3>
+              <p>Daily essentials delivered so you can skip the queue.</p>
+              <a class="service-link" href="#services">Shop groceries →</a>
+            </div>
+          </article>
+          <article class="service">
+            <img src="images/ride-share.jpg" width="1000" height="1000" loading="lazy" alt="GoMandu ride share — explore Kathmandu together">
+            <div class="service-body">
+              <h3>Ride Share</h3>
+              <p>Get around Kathmandu quickly, safely and affordably.</p>
+              <a class="service-link" href="#services">Book a ride →</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="menu" id="food">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <h2>Popular near you</h2>
+            <p class="sub">Tasty picks to make your day better.</p>
+          </div>
+        </div>
+        <div class="categories" id="categories">
+          <button class="category active" data-category="All">🍽️ All</button>
+          <button class="category" data-category="Momo">🥟 Momo</button>
+          <button class="category" data-category="Pizza">🍕 Pizza</button>
+          <button class="category" data-category="Burger">🍔 Burger</button>
+          <button class="category" data-category="Meals">🍛 Meals</button>
+          <button class="category" data-category="Drinks">🥤 Drinks</button>
+        </div>
+        <div class="food-grid" id="food-grid" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="how" id="how">
+      <div class="container">
+        <div class="section-head">
+          <h2>How it works</h2>
+          <p class="sub">Three simple steps from craving to doorstep.</p>
+        </div>
+        <div class="steps">
+          <div class="step"><h3>Choose</h3><p>Browse the menu and pick what you love.</p></div>
+          <div class="step"><h3>Order</h3><p>Add to cart and confirm your order.</p></div>
+          <div class="step"><h3>Enjoy</h3><p>Sit back while it arrives at your door.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="container">
+        <div class="cta-box">
+          <div>
+            <h2>Good food. Great convenience.</h2>
+            <p>GoMandu brings your city’s favourites closer to you.</p>
+          </div>
+          <a class="btn" href="#food">Order now →</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <div class="container">
+      <a href="#" class="footer-logo" aria-label="GoMandu home">Go<span>Mandu</span>.</a>
+      <p class="footer-tagline">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
+
+      <div class="footer-grid">
+        <div>
+          <h4>GoMandu</h4>
+          <ul>
+            <li><a href="#food">Food Delivery</a></li>
+            <li><a href="#services">Grocery Delivery</a></li>
+            <li><a href="#services">Ride Booking</a></li>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#careers">Careers</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>For Restaurants</h4>
+          <ul>
+            <li><a href="#partner-restaurant">Partner With Us</a></li>
+            <li><a href="#restaurant-app">Apps For You</a></li>
+            <li><a href="#grow">Grow Your Business</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>For Delivery Partners</h4>
+          <ul>
+            <li><a href="#partner-rider">Partner With Us</a></li>
+            <li><a href="#rider-app">Apps For You</a></li>
+            <li><a href="#rider-faq">Rider FAQs</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Learn More</h4>
+          <ul>
+            <li><a href="#privacy">Privacy</a></li>
+            <li><a href="#security">Security</a></li>
+            <li><a href="#terms">Terms of Service</a></li>
+            <li><a href="#help">Help &amp; Support</a></li>
+            <li><a href="#report-fraud">Report a Fraud</a></li>
+            <li><a href="#blog">Blog</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-social-col">
+          <h4>Social Links</h4>
+          <div class="social">
+            <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.75h4V21H3V9.75zm6.5 0h3.8v1.6h.1c.5-1 1.8-1.9 3.7-1.9 4 0 4.9 2.6 4.9 6V21h-4v-4.9c0-1.2 0-2.7-1.7-2.7s-1.9 1.3-1.9 2.6V21h-4V9.75z"/></svg></a>
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9zm0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM17.2 5.8a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2z"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2C2 8.8 2 12 2 12s0 3.2.4 4.8a2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8c.4-1.6.4-4.8.4-4.8s0-3.2-.4-4.8zM10 15V9l5.2 3L10 15z"/></svg></a>
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3.2h-3.1V7.8c0-.9.3-1.5 1.6-1.5h1.7V3.4c-.3 0-1.3-.1-2.4-.1-2.4 0-4 1.5-4 4.1v2.4H7.7V13h2.7v8h3.1z"/></svg></a>
+            <a href="#" aria-label="X"><svg viewBox="0 0 24 24"><path d="M17.5 3h3.1l-6.8 7.7L21.8 21h-6.3l-4.9-6.4L5 21H1.9l7.3-8.3L1.5 3h6.4l4.4 5.8L17.5 3zm-1.1 16.2h1.7L6.9 4.7H5.1l11.3 14.5z"/></svg></a>
+          </div>
+          <a href="#" class="store-btn" aria-label="Download on the App Store">
+            <span class="ico">🍎</span>
+            <span><small>Download on the</small><strong>App Store</strong></span>
+          </a>
+          <a href="#" class="store-btn" aria-label="Get it on Google Play">
+            <span class="ico">▶</span>
+            <span><small>GET IT ON</small><strong>Google Play</strong></span>
+          </a>
+        </div>
+      </div>
+
+      <div class="copyright">
+        <p>© <span id="year"></span> GoMandu. All rights reserved.</p>
+        <p>Contact: <a href="mailto:hello@gomandu.com" style="color:#b9bcc2">hello@gomandu.com</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <div class="overlay" id="overlay" onclick="closeCart()"></div>
+  <aside class="cart-panel" id="cart-panel" aria-label="Shopping cart">
+    <div class="cart-head">
+      <h2>Your Cart</h2>
+      <button class="close" onclick="closeCart()">✕ Close</button>
+    </div>
+    <div id="cart-items"></div>
+    <div class="total"><span>Total</span><span id="cart-total">Rs. 0</span></div>
+    <button class="btn btn-primary checkout" onclick="checkout()">Continue to order</button>
+    <p class="note">Demo only: this cart does not send real orders or accept payments yet.</p>
+  </aside>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    let foods = [];
+    let selectedCategory = "All";
+    let cart = {};
+
+    const money = amount => "Rs. " + Number(amount).toLocaleString("en-IN");
+    const esc = str => String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+    function getCategory(name) {
+      const n = name.toLowerCase();
+      if (n.includes("momo")) return "Momo";
+      if (n.includes("pizza")) return "Pizza";
+      if (n.includes("burger")) return "Burger";
+      if (n.includes("coffee") || n.includes("juice") || n.includes("tea") || n.includes("lassi")) return "Drinks";
+      return "Meals";
+    }
+
+    function getEmoji(name) {
+      const n = name.toLowerCase();
+      if (n.includes("momo")) return "🥟";
+      if (n.includes("pizza")) return "🍕";
+      if (n.includes("burger")) return "🍔";
+      if (n.includes("fries")) return "🍟";
+      if (n.includes("coffee") || n.includes("juice") || n.includes("tea") || n.includes("lassi")) return "🥤";
+      if (n.includes("chowmein")) return "🍜";
+      return "🍛";
+    }
+
+    async function loadFoods() {
+      const grid = document.getElementById("food-grid");
+      grid.innerHTML = '<div class="empty">Loading menu...</div>';
+      try {
+        const response = await fetch("/api/products");
+        if (!response.ok) throw new Error("Could not load products");
+        const data = await response.json();
+        foods = (data.products || []).map(product => ({
+          id: Number(product.id),
+          name: String(product.name),
+          category: getCategory(String(product.name)),
+          price: Number(product.price_paisa) / 100,
+          emoji: getEmoji(String(product.name)),
+          rating: "4.5",
+          desc: product.name + " — freshly prepared for you"
+        }));
+        renderFoods();
+        updateCart();
+      } catch (error) {
+        console.error("Products loading error:", error);
+        grid.innerHTML = '<div class="empty">Menu could not load. Please refresh and try again.</div>';
+      }
+    }
+
+    function renderFoods() {
+      const search = document.getElementById("search-input").value.trim().toLowerCase();
+      const filtered = foods.filter(food => {
+        const matchesCategory = selectedCategory === "All" || food.category === selectedCategory;
+        const matchesSearch = (food.name + " " + food.category + " " + food.desc).toLowerCase().includes(search);
+        return matchesCategory && matchesSearch;
+      });
+      const grid = document.getElementById("food-grid");
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty">No items found. Try another search.</div>';
+        return;
+      }
+      grid.innerHTML = filtered.map(food => `
+        <article class="food-card">
+          <div class="food-image"><span>${food.emoji}</span></div>
+          <div class="food-info">
+            <div class="food-title">
+              <h3>${esc(food.name)}</h3>
+              <span class="rating">⭐ ${food.rating}</span>
+            </div>
+            <p>${esc(food.desc)}</p>
+            <div class="food-bottom">
+              <span class="price">${money(food.price)}</span>
+              <button class="add" onclick="addToCart(${food.id})">+ Add</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    document.getElementById("categories").addEventListener("click", event => {
+      const button = event.target.closest("[data-category]");
+      if (!button) return;
+      selectedCategory = button.dataset.category;
+      document.querySelectorAll(".category").forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+      renderFoods();
+    });
+
+    document.getElementById("search-input").addEventListener("input", renderFoods);
+
+    function addToCart(id) {
+      cart[id] = (cart[id] || 0) + 1;
+      updateCart();
+      const food = foods.find(item => item.id === id);
+      if (food) showToast(food.name + " added to cart");
+    }
+
+    function updateCart() {
+      const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+      document.getElementById("cart-count").textContent = count;
+
+      const entries = Object.entries(cart).filter(([id]) => foods.some(item => item.id === Number(id)));
+      const items = document.getElementById("cart-items");
+      if (!entries.length) {
+        items.innerHTML = '<p class="empty">Your cart is empty. Add something delicious!</p>';
+      } else {
+        items.innerHTML = entries.map(([id, qty]) => {
+          const food = foods.find(item => item.id === Number(id));
+          return `<div class="cart-item">
+            <div>
+              <strong>${esc(food.name)}</strong>
+              <div class="note">${money(food.price)} each</div>
+              <div class="qty">
+                <button aria-label="Decrease ${esc(food.name)}" onclick="changeQty(${id}, -1)">−</button>
+                <span>${qty}</span>
+                <button aria-label="Increase ${esc(food.name)}" onclick="changeQty(${id}, 1)">+</button>
+              </div>
+            </div>
+            <strong>${money(food.price * qty)}</strong>
+          </div>`;
+        }).join("");
+      }
+      const total = entries.reduce((sum, [id, qty]) => sum + foods.find(item => item.id === Number(id)).price * qty, 0);
+      document.getElementById("cart-total").textContent = money(total);
+    }
+
+    function changeQty(id, amount) {
+      cart[id] = (cart[id] || 0) + amount;
+      if (cart[id] <= 0) delete cart[id];
+      updateCart();
+    }
+
+    function openCart() {
+      document.getElementById("cart-panel").classList.add("open");
+      document.getElementById("overlay").classList.add("open");
+      updateCart();
+    }
+
+    function closeCart() {
+      document.getElementById("cart-panel").classList.remove("open");
+      document.getElementById("overlay").classList.remove("open");
+    }
+
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeCart(); });
+
+    function checkout() {
+      if (!Object.keys(cart).length) {
+        showToast("Your cart is empty. Add food first!");
+        return;
+      }
+      showToast("Demo cart ready! Real ordering will be connected next.");
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+    loadFoods();
+    updateCart();
+  </script>
+</body>
+</html>
