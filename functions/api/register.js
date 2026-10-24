@@ -25,7 +25,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "Enter a valid email address" }, 400);
     }
 
-    if (password.length < 12 || password.length > 128) {
+    if (password.length < 8 || password.length > 128) {
       return json({
         error: "Password must be 12–128 characters long"
       }, 400);
