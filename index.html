@@ -1050,18 +1050,17 @@ async function submitAuth() {
       document.getElementById("auth-pass").value = "";
       setMode("login");
       showToast("Account created! Please log in.");
-    } else {
-      } else {
-  const customer = await checkSession();
+        } else {
+      const customer = await checkSession();
 
-  if (!customer) {
-    showToast("Login succeeded, but session could not be verified.");
-    return;
-  }
+      if (!customer) {
+        showToast("Login succeeded, but session could not be verified.");
+        return;
+      }
 
-  showToast("Welcome, " + customer.name + "!");
-  showCustomerDashboard(customer);
-}
+      showToast("Welcome, " + customer.name + "!");
+      showCustomerDashboard(customer);
+    }
     }
   } catch (error) {
     console.error("Authentication error:", error);
