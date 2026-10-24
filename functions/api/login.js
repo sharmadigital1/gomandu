@@ -94,7 +94,7 @@ export async function onRequestPost({ request, env }) {
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       email.length > 254 ||
-      password.length < 12 ||
+      password.length < 8 ||
       password.length > 128
     ) {
       return json({ error: "Invalid email or password" }, 400);
