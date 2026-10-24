@@ -44,7 +44,7 @@ export async function onRequestPost({ request, env }) {
       {
         name: "PBKDF2",
         salt,
-        iterations: 600000,
+        iterations: 100000,
         hash: "SHA-256"
       },
       key,
@@ -55,7 +55,7 @@ export async function onRequestPost({ request, env }) {
       Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
 
     const passwordHash =
-      `pbkdf2_sha256$600000$${toHex(salt)}$${toHex(new Uint8Array(bits))}`;
+  `pbkdf2_sha256$100000$${toHex(salt)}$${toHex(new Uint8Array(bits))}`;
 
     await env.DB.prepare(
       `INSERT INTO customers (name, email, password_hash)
