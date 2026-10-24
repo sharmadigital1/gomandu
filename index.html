@@ -590,21 +590,30 @@
     return Number(amount).toLocaleString("en-IN");
   }
 
-  function renderRestaurants() {
-    el("gm-restaurant-grid").innerHTML = restaurants.map(r => `
-      <article class="gm-restaurant-card" data-restaurant="${r.id}" tabindex="0" role="button" aria-label="Open ${r.name}">
-        <img src="${r.image}" alt="${r.name}" loading="lazy">
-        <div class="gm-restaurant-info">
-          <h3>${r.name}</h3>
-          <p>${r.category}</p>
-          <p style="margin-top:10px;color:#e85d25;font-weight:600">View Menu →</p>
-        </div>
-      </article>
-    `).join("");
+  
+function renderRestaurants() {
+  el("gm-restaurant-grid").innerHTML = restaurants.map(r => `
+    <article class="gm-restaurant-card"
+      data-restaurant="${r.id}"
+      tabindex="0"
+      role="button"
+      aria-label="Open ${r.name}">
 
-    el("gm-restaurant-grid").querySelectorAll("[data-restaurant]").forEach(card => {
+      <img src="${r.image}" alt="${r.name}" loading="lazy">
+
+      <div class="gm-restaurant-info">
+        <h3>${r.name}</h3>
+      </div>
+    </article>
+  `).join("");
+
+  el("gm-restaurant-grid")
+    .querySelectorAll("[data-restaurant]")
+    .forEach(card => {
       const open = () => openRestaurant(card.dataset.restaurant);
+
       card.addEventListener("click", open);
+
       card.addEventListener("keydown", e => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
@@ -612,7 +621,8 @@
         }
       });
     });
-  }
+}
+
 
   function openRestaurant(id) {
     activeRestaurant = restaurants.find(r => r.id === id);
