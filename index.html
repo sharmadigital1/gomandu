@@ -250,6 +250,38 @@
   [hidden] {
   display: none !important;
 }
+
+#gm-checkout-view {
+  margin-top: 20px;
+}
+
+#gm-checkout-form label {
+  display: block;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+#gm-checkout-form input,
+#gm-checkout-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+}
+
+#gm-checkout-form input:focus,
+#gm-checkout-form textarea:focus {
+  outline: 2px solid #777;
+  outline-offset: 2px;
+}
+
+#gm-checkout-button {
+  margin: 8px 0;
+}
+    
 </style>
 </head>
 <body>
@@ -455,19 +487,51 @@
       <div id="gm-food-list" class="gm-food-list"></div>
     </div>
 
-    <section class="gm-cart">
-      <h2>Your Cart (<span id="gm-cart-count">0</span>)</h2>
-      <div id="gm-cart-items">Your cart is empty.</div>
-      <p class="gm-total">
-        Total: NPR <strong id="gm-cart-total">0</strong>
-      </p>
-      <button type="button" id="gm-clear-cart" class="gm-btn gm-outline">
-        Clear Cart
-      </button>
+    
+<section class="gm-cart">
+  <h2>Your Cart (<span id="gm-cart-count">0</span>)</h2>
+
+  <div id="gm-cart-items">Your cart is empty.</div>
+
+  <p class="gm-total">
+    Total: NPR <strong id="gm-cart-total">0</strong>
+  </p>
+
+  <button type="button" id="gm-clear-cart" class="gm-btn gm-outline">
+    Clear Cart
+  </button>
+
+  <button type="button" id="gm-checkout-button" class="gm-btn gm-primary">
+    Proceed to Checkout
+  </button>
+
+  <div id="gm-checkout-view" hidden>
+    <h3>Delivery Details</h3>
+
+    <form id="gm-checkout-form">
+      <label for="gm-delivery-name">Full Name</label>
+      <input id="gm-delivery-name" name="name"
+        type="text" autocomplete="name" required>
+
+      <label for="gm-delivery-phone">Phone Number</label>
+      <input id="gm-delivery-phone" name="phone"
+        type="tel" autocomplete="tel" required>
+
+      <label for="gm-delivery-address">Delivery Address</label>
+      <textarea id="gm-delivery-address" name="address"
+        autocomplete="street-address" rows="3" required></textarea>
+
       <p class="gm-cart-note">
-        Cart is ready for a checkout/order API to be connected.
+        Review your delivery details before placing your order.
       </p>
-    </section>
+
+      <p id="gm-checkout-message" role="status"></p>
+
+      <button type="button" id="gm-close-checkout"
+        class="gm-btn gm-outline">
+        Back to Cart
+      </button>
+    </form>
   </div>
 </section>
 
@@ -923,6 +987,24 @@ function renderRestaurants() {
     cart = [];
     renderCart();
   });
+
+el("gm-checkout-button").addEventListener("click", () => {
+  if (!cart.length) {
+    alert("Please add items to your cart first.");
+    return;
+  }
+
+  el("gm-checkout-view").hidden = false;
+  el("gm-checkout-message").textContent = "";
+  el("gm-checkout-view").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+});
+
+el("gm-close-checkout").addEventListener("click", () => {
+  el("gm-checkout-view").hidden = true;
+});
 
   // Called after a successful login and session verification.
   window.showCustomerDashboard = function(customer) {
