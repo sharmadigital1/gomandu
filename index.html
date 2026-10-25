@@ -1077,17 +1077,23 @@ el("gm-checkout-button").addEventListener("click", async () => {
 
 
 el("gm-pick-location").addEventListener("click", () => {
-  const addressInput = el("gm-delivery-address");
-  const address = addressInput.value.trim();
+  
+const mapButton = el("gm-pick-location");
 
-  const query = address || "Bharatpur, Nepal";
+if (mapButton) {
+  mapButton.addEventListener("click", () => {
+    const address =
+      el("gm-delivery-address").value.trim() ||
+      "Bharatpur, Nepal";
 
-  const mapUrl =
-    "https://www.google.com/maps/search/?api=1&query=" +
-    encodeURIComponent(query);
+    const mapUrl =
+      "https://www.google.com/maps/search/?api=1&query=" +
+      encodeURIComponent(address);
 
-  window.open(mapUrl, "_blank", "noopener");
-});
+    window.open(mapUrl, "_blank");
+  });
+}
+
 
 el("gm-checkout-form").addEventListener("submit", async (event) => {
   event.preventDefault();
