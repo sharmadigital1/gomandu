@@ -988,53 +988,55 @@ function renderRestaurants() {
     renderCart();
   });
 
+
 async function autofillCheckoutFromProfile() {
-  const nameInput = el("gm-delivery-name");
-  const phoneInput = el("gm-delivery-phone");
-  const addressInput = el("gm-delivery-address");
   const message = el("gm-checkout-message");
 
   try {
     const response = await fetch("/api/me", {
-      method: "GET",
       credentials: "same-origin",
-      headers: { "Accept": "application/json" }
+      cache: "no-store"
     });
 
-    if (response.status === 401) {
-      message.textContent = "Please log in to continue checkout.";
+    if (!response.ok) {
+      message.textContent = "Please log in before placing your order.";
       return false;
     }
 
-    if (!response.ok) {
-      throw new Error("Could not load your profile.");
+    const data = await response.json();
+
+    if (!data.authenticated || !data.customer) {
+      message.textContent = "Please log in before placing your order.";
+      return false;
     }
 
-    const data = await response.json();
-    const customer = data.customer || data.user || data;
+    const customer = data.customer;
 
-    // Only fill fields from the saved profile.
-    // Do not overwrite anything the customer has already entered.
-    if (!nameInput.value.trim() && customer.name) {
+    const nameInput = el("gm-delivery-name");
+    const phoneInput = el("gm-delivery-phone");
+    const addressInput = el("gm-delivery-address");
+
+    // Fill the saved name only if the field is empty.
+    if (customer.name && !nameInput.value.trim()) {
       nameInput.value = customer.name;
     }
 
-    if (!phoneInput.value.trim() && customer.phone) {
-      phoneInput.value = customer.phone;
-    }
-
-    if (!addressInput.value.trim() && customer.address) {
-      addressInput.value = customer.address;
-    }
+    // Phone and address are not returned by the current profile API.
+    // Leave them editable for delivery.
+    message.textContent =
+      "Profile loaded. Please check your delivery details.";
 
     return true;
   } catch (error) {
-    console.error("Checkout profile loading failed:", error);
+    console.error("GoMandu profile auto-fill error:", error);
     message.textContent =
-      "Profile details could not be loaded. Please check your details.";
+      "Could not load your profile. Please refresh and try again.";
     return false;
   }
 }
+
+
+
 
 
 el("gm-checkout-button").addEventListener("click", async () => {
@@ -1044,7 +1046,7 @@ el("gm-checkout-button").addEventListener("click", async () => {
   }
 
   el("gm-checkout-view").hidden = false;
-  el("gm-checkout-message").textContent = "Loading your profile...";
+  el("gm-checkout-message").textContent = "Loading profile...";
 
   el("gm-checkout-view").scrollIntoView({
     behavior: "smooth",
