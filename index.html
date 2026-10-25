@@ -988,23 +988,77 @@ function renderRestaurants() {
     renderCart();
   });
 
-el("gm-checkout-button").addEventListener("click", () => {
+async function autofillCheckoutFromProfile() {
+  const nameInput = el("gm-delivery-name");
+  const phoneInput = el("gm-delivery-phone");
+  const addressInput = el("gm-delivery-address");
+  const message = el("gm-checkout-message");
+
+  try {
+    const response = await fetch("/api/me", {
+      method: "GET",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" }
+    });
+
+    if (response.status === 401) {
+      message.textContent = "Please log in to continue checkout.";
+      return false;
+    }
+
+    if (!response.ok) {
+      throw new Error("Could not load your profile.");
+    }
+
+    const data = await response.json();
+    const customer = data.customer || data.user || data;
+
+    // Only fill fields from the saved profile.
+    // Do not overwrite anything the customer has already entered.
+    if (!nameInput.value.trim() && customer.name) {
+      nameInput.value = customer.name;
+    }
+
+    if (!phoneInput.value.trim() && customer.phone) {
+      phoneInput.value = customer.phone;
+    }
+
+    if (!addressInput.value.trim() && customer.address) {
+      addressInput.value = customer.address;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Checkout profile loading failed:", error);
+    message.textContent =
+      "Profile details could not be loaded. Please check your details.";
+    return false;
+  }
+}
+
+
+el("gm-checkout-button").addEventListener("click", async () => {
   if (!cart.length) {
     alert("Please add items to your cart first.");
     return;
   }
 
   el("gm-checkout-view").hidden = false;
-  el("gm-checkout-message").textContent = "";
+  el("gm-checkout-message").textContent = "Loading your profile...";
+
   el("gm-checkout-view").scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
+
+  const loaded = await autofillCheckoutFromProfile();
+
+  if (loaded) {
+    el("gm-checkout-message").textContent =
+      "Check your delivery details and edit them if needed.";
+  }
 });
 
-el("gm-close-checkout").addEventListener("click", () => {
-  el("gm-checkout-view").hidden = true;
-});
 
 el("gm-checkout-form").addEventListener("submit", async (event) => {
   event.preventDefault();
