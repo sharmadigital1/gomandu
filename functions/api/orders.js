@@ -23,7 +23,7 @@ export async function onRequestPost({ request, env }) {
       address.length > 500 ||
       !Array.isArray(items) ||
       items.length === 0 ||
-      items.length > 30
+      items.length > 32
     ) {
       return Response.json(
         { error: "Please check your order details" },
@@ -34,12 +34,11 @@ export async function onRequestPost({ request, env }) {
     const quantities = new Map();
 
     for (const item of items) {
-      const id = Number(item.id);
+      const menuKey = String(item.menu_key || "");
       const qty = Number(item.quantity);
 
       if (
-        !Number.isSafeInteger(id) ||
-        id < 1 ||
+        !/^[a-z0-9-]+:[a-z0-9-]+$/.test(menuKey) ||
         !Number.isSafeInteger(qty) ||
         qty < 1 ||
         qty > 20
@@ -50,7 +49,10 @@ export async function onRequestPost({ request, env }) {
         );
       }
 
-      quantities.set(id, (quantities.get(id) || 0) + qty);
+      quantities.set(
+        menuKey,
+        (quantities.get(menuKey) || 0) + qty
+      );
     }
 
     for (const qty of quantities.values()) {
@@ -62,28 +64,38 @@ export async function onRequestPost({ request, env }) {
       }
     }
 
-    const ids = [...quantities.keys()];
-    const placeholders = ids.map(() => "?").join(",");
+    const menuKeys = [...quantities.keys()];
+    const placeholders = menuKeys.map(() => "?").join(",");
 
     const result = await env.DB.prepare(
-      `SELECT id, name, price_paisa
+      `SELECT menu_key, name, price_npr
        FROM products
-       WHERE active = 1 AND id IN (${placeholders})`
-    ).bind(...ids).all();
+       WHERE active = 1
+         AND menu_key IN (${placeholders})`
+    ).bind(...menuKeys).all();
 
     const products = result.results || [];
 
-    if (products.length !== ids.length) {
+    if (
+      products.length !== menuKeys.length ||
+      products.some(p =>
+        !Number.isSafeInteger(Number(p.price_npr)) ||
+        Number(p.price_npr) < 0
+      )
+    ) {
       return Response.json(
-        { error: "A product is unavailable. Please refresh your cart." },
+        {
+          error:
+            "A menu item is unavailable. Please refresh your cart."
+        },
         { status: 400 }
       );
     }
 
     const orderItems = products.map(product => ({
       name: product.name,
-      quantity: quantities.get(Number(product.id)),
-      price: Number(product.price_paisa) / 100
+      quantity: quantities.get(product.menu_key),
+      price: Number(product.price_npr)
     }));
 
     const total = orderItems.reduce(
@@ -128,6 +140,8 @@ export async function onRequestPost({ request, env }) {
       {
         success: true,
         order_id: orderId,
+        currency: "NPR",
+        total_amount: total,
         message: "Order placed successfully"
       },
       { status: 201 }
