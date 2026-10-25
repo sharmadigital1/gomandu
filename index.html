@@ -1006,6 +1006,82 @@ el("gm-close-checkout").addEventListener("click", () => {
   el("gm-checkout-view").hidden = true;
 });
 
+el("gm-checkout-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (!cart.length) {
+    el("gm-checkout-message").textContent =
+      "Please add items to your cart first.";
+    return;
+  }
+
+  const submitButton = el("gm-checkout-form").querySelector(
+    'button[type="submit"], input[type="submit"]'
+  );
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.dataset.originalText =
+      submitButton.textContent || submitButton.value || "";
+    if (submitButton.tagName === "INPUT") {
+      submitButton.value = "Placing order...";
+    } else {
+      submitButton.textContent = "Placing order...";
+    }
+  }
+
+  el("gm-checkout-message").textContent = "Placing your order...";
+
+  try {
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        customer_name: el("gm-delivery-name").value.trim(),
+        phone: el("gm-delivery-phone").value.trim(),
+        address: el("gm-delivery-address").value.trim(),
+        items: cart.map((item) => ({
+          menu_key: `${item.restaurantId}:${item.foodId}`,
+          quantity: item.qty
+        }))
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.error || "Unable to place order. Please try again."
+      );
+    }
+
+    el("gm-checkout-message").textContent =
+      `Order placed successfully! Order ID: ${result.order_id}. Total: NPR ${result.total_amount}.`;
+
+    cart.length = 0;
+    renderCart();
+
+    el("gm-checkout-form").reset();
+
+  } catch (error) {
+    el("gm-checkout-message").textContent =
+      error.message || "Something went wrong. Please try again.";
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+
+      const originalText = submitButton.dataset.originalText;
+      if (submitButton.tagName === "INPUT") {
+        submitButton.value = originalText;
+      } else {
+        submitButton.textContent = originalText;
+      }
+    }
+  }
+});
+
   // Called after a successful login and session verification.
   window.showCustomerDashboard = function(customer) {
     // Hide the public landing content, but keep the auth dialog and scripts intact.
