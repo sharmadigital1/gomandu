@@ -508,30 +508,44 @@
   <div id="gm-checkout-view" hidden>
     <h3>Delivery Details</h3>
 
-    <form id="gm-checkout-form">
-      <label for="gm-delivery-name">Full Name</label>
-      <input id="gm-delivery-name" name="name"
-        type="text" autocomplete="name" required>
+   
+<form id="gm-checkout-form">
+  <label for="gm-delivery-name">Full Name</label>
+  <input id="gm-delivery-name" name="name"
+    type="text" autocomplete="name" required>
 
-      <label for="gm-delivery-phone">Phone Number</label>
-      <input id="gm-delivery-phone" name="phone"
-        type="tel" autocomplete="tel" required>
+  <label for="gm-delivery-phone">Phone Number</label>
+  <input id="gm-delivery-phone" name="phone"
+    type="tel" autocomplete="tel" required>
 
-      <label for="gm-delivery-address">Delivery Address</label>
-      <textarea id="gm-delivery-address" name="address"
-        autocomplete="street-address" rows="3" required></textarea>
+  <label for="gm-delivery-address">Delivery Address</label>
+  <textarea id="gm-delivery-address" name="address"
+    autocomplete="street-address" rows="3" required
+    placeholder="House, street, area, city"></textarea>
 
-      <p class="gm-cart-note">
-        Review your delivery details before placing your order.
-      </p>
+  <button type="button" id="gm-pick-location"
+    class="gm-btn gm-outline">
+    📍 Choose Location on Map
+  </button>
 
-      <p id="gm-checkout-message" role="status"></p>
+ <p class="gm-cart-note">
+  Review your delivery details before placing your order.
+</p> 
 
-      <button type="button" id="gm-close-checkout"
-        class="gm-btn gm-outline">
-        Back to Cart
-      </button>
-    </form>
+
+  <p id="gm-checkout-message" role="status"></p>
+
+  <button type="button" id="gm-close-checkout"
+    class="gm-btn gm-outline">
+    Back to Cart
+  </button>
+
+  <button type="submit" id="gm-place-order"
+    class="gm-btn">
+    Place Order
+  </button>
+</form>
+
   </div>
 </section>
 
