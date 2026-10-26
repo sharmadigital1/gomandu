@@ -1010,10 +1010,21 @@ function renderRestaurants() {
     }
 
     renderCart();
+    updateCartToggleCount();
+  }
+
+  function updateCartToggleCount() {
+    const countElement = el("gm-cart-toggle-count");
+    if (!countElement) return;
+
+    countElement.textContent = cart.reduce(
+      (sum, item) => sum + item.qty, 0
+    );
   }
 
   function renderCart() {
     el("gm-cart-count").textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+    updateCartToggleCount();
     el("gm-cart-total").textContent = money(
       cart.reduce((sum, item) => sum + item.price * item.qty, 0)
     );
