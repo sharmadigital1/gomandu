@@ -473,6 +473,13 @@
       </button>
     </header>
 
+    <nav class="gm-tabs" role="tablist" aria-label="Dashboard sections">
+      <button type="button" role="tab" class="gm-tab active" data-tab="home" aria-selected="true">🏠 Home</button>
+      <button type="button" role="tab" class="gm-tab" data-tab="history" aria-selected="false">🧾 Order History</button>
+      <button type="button" role="tab" class="gm-tab" data-tab="refer" aria-selected="false">🎁 Refer &amp; Earn Cash</button>
+    </nav>
+
+    <div id="gm-tab-home" class="gm-tab-panel">
     <div id="gm-restaurants-view">
       <h2>Explore Restaurants</h2>
       <p>Choose a restaurant to see its menu.</p>
@@ -547,6 +554,39 @@
 </form>
 
   </div>
+</section>
+    </div><!-- /gm-tab-home -->
+
+    <div id="gm-tab-history" class="gm-tab-panel" hidden>
+      <h2>Order History</h2>
+      <p>Your past GoMandu orders.</p>
+      <div id="gm-history-list" class="gm-history-list" aria-live="polite"></div>
+    </div>
+
+    <div id="gm-tab-refer" class="gm-tab-panel" hidden>
+      <h2>Refer &amp; Earn Cash</h2>
+      <p>Invite friends to GoMandu. When they place their first order, you both earn cash.</p>
+      <div class="gm-refer-card">
+        <div class="gm-refer-balance">
+          <span>Your referral earnings</span>
+          <strong>NPR <span id="gm-refer-earned">0</span></strong>
+          <small><span id="gm-refer-count">0</span> friends joined</small>
+        </div>
+        <label for="gm-refer-code">Your referral code</label>
+        <div class="gm-refer-row">
+          <input id="gm-refer-code" readonly>
+          <button type="button" id="gm-copy-code" class="gm-btn gm-outline">Copy code</button>
+        </div>
+        <label for="gm-refer-link">Your invite link</label>
+        <div class="gm-refer-row">
+          <input id="gm-refer-link" readonly>
+          <button type="button" id="gm-copy-link" class="gm-btn gm-outline">Copy link</button>
+        </div>
+        <button type="button" id="gm-share-refer" class="gm-btn gm-primary">Share with friends</button>
+        <p id="gm-refer-message" role="status" class="gm-cart-note"></p>
+      </div>
+    </div>
+  </div><!-- /gm-dashboard -->
 </section>
 
 <style>
@@ -729,6 +769,27 @@
     }
   }
 
+  /* Dashboard tabs */
+  .gm-tabs { display: flex; gap: 8px; margin: 18px 0 22px; overflow-x: auto; border-bottom: 1px solid #eceae6; }
+  .gm-tab { border: 0; background: none; padding: 12px 16px; font-weight: 700; color: #6b7078; white-space: nowrap; border-bottom: 3px solid transparent; cursor: pointer; }
+  .gm-tab:hover { color: #e63946; }
+  .gm-tab.active { color: #e63946; border-bottom-color: #e63946; }
+  .gm-tab-panel[hidden] { display: none !important; }
+  .gm-history-list { display: grid; gap: 12px; margin-top: 14px; }
+  .gm-order { background: #fff; border: 1px solid #eceae6; border-radius: 14px; padding: 14px 16px; }
+  .gm-order-top { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+  .gm-order small { color: #6b7078; display: block; margin-top: 4px; }
+  .gm-order ul { margin: 8px 0 0; padding-left: 18px; color: #3c4046; }
+  .gm-status { background: #e8f6ef; color: #168653; border-radius: 999px; padding: 2px 10px; font-size: 12px; text-transform: capitalize; }
+  .gm-empty { background: #fff; border: 1px dashed #d8d5cf; border-radius: 14px; padding: 24px; text-align: center; color: #6b7078; }
+  .gm-refer-card { background: #fff; border: 1px solid #eceae6; border-radius: 16px; padding: 20px; max-width: 560px; margin-top: 14px; }
+  .gm-refer-balance { background: #fff0e6; border-radius: 12px; padding: 16px; margin-bottom: 16px; display: grid; gap: 4px; }
+  .gm-refer-balance strong { font-size: 30px; color: #e63946; }
+  .gm-refer-card label { display: block; font-weight: 700; font-size: 14px; margin: 12px 0 6px; }
+  .gm-refer-row { display: flex; gap: 8px; }
+  .gm-refer-row input { flex: 1; min-width: 0; padding: 11px; border: 1px solid #ddd; border-radius: 10px; font: inherit; background: #f7f8f7; }
+  #gm-share-refer { margin-top: 16px; width: 100%; }
+
   /* Dashboard header must not inherit the sticky landing-page <header> / h1 styles */
   .gm-header { position: static; z-index: auto; background: none; backdrop-filter: none; }
   .gm-header h1 { font-size: 28px; letter-spacing: 0; line-height: 1.2; }
@@ -743,7 +804,7 @@
       <label>Password<input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••" required minlength="8"></label>
       <button class="btn btn-primary" type="submit" id="auth-submit">Login</button>
       <p class="note"><span id="auth-switch-text">New to GoMandu?</span> <a href="#" id="auth-switch" onclick="toggleAuth(); return false">Sign up</a></p>
-      
+      <p class="note">Demo only: accounts are not connected to a server yet.</p>
     </form>
   </dialog>
   <div class="toast" id="toast" role="status"></div>
@@ -1213,6 +1274,104 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       alert("Could not contact the server. Please try again.");
     }
   });
+})();
+</script>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let currentCustomer = null;
+
+  function showTab(name) {
+    document.querySelectorAll(".gm-tab").forEach(t => {
+      const on = t.dataset.tab === name;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    ["home", "history", "refer"].forEach(n => { $("gm-tab-" + n).hidden = n !== name; });
+    if (name === "history") loadHistory();
+    if (name === "refer") loadReferral();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  document.querySelectorAll(".gm-tab").forEach(t =>
+    t.addEventListener("click", () => showTab(t.dataset.tab)));
+
+  const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  async function loadHistory() {
+    const box = $("gm-history-list");
+    box.innerHTML = '<div class="gm-empty">Loading your orders…</div>';
+    try {
+      const res = await fetch("/api/orders", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const orders = Array.isArray(data) ? data : (data.orders || []);
+      if (!orders.length) {
+        box.innerHTML = '<div class="gm-empty">No orders yet. Place your first order from Home!</div>';
+        return;
+      }
+      box.innerHTML = orders.map(o => {
+        const items = (o.items || []).map(i =>
+          "<li>" + esc(i.name || i.menu_key) + " × " + esc(i.quantity || i.qty || 1) + "</li>").join("");
+        const date = o.created_at ? new Date(o.created_at).toLocaleString() : "";
+        return '<article class="gm-order"><div class="gm-order-top"><span>Order #' + esc(o.id || o.order_id) +
+          '</span><span class="gm-status">' + esc(o.status || "placed") + '</span></div>' +
+          '<small>' + esc(date) + '</small>' + (items ? "<ul>" + items + "</ul>" : "") +
+          '<p><strong>Total: NPR ' + esc(o.total_amount != null ? o.total_amount : o.total) + '</strong></p></article>';
+      }).join("");
+    } catch (e) {
+      console.error("Order history error:", e);
+      box.innerHTML = '<div class="gm-empty">Could not load your order history. Please try again later.</div>';
+    }
+  }
+
+  async function loadReferral() {
+    const c = currentCustomer || {};
+    let code = c.referral_code;
+    let earned = 0, count = 0;
+    try {
+      const res = await fetch("/api/referrals", { credentials: "same-origin", cache: "no-store" });
+      if (res.ok) {
+        const d = await res.json();
+        code = d.referral_code || code;
+        earned = d.earned || d.total_earned || 0;
+        count = d.count || d.referred_count || 0;
+      }
+    } catch (e) { console.error("Referral error:", e); }
+    if (!code) {
+      const base = String(c.name || "GO").replace(/[^a-z]/gi, "").toUpperCase().slice(0, 4) || "GO";
+      code = base + String(c.id || "").toString().padStart(3, "0");
+      if (!c.id) code = base + "MANDU";
+    }
+    $("gm-refer-code").value = code;
+    $("gm-refer-link").value = location.origin + location.pathname + "?ref=" + encodeURIComponent(code);
+    $("gm-refer-earned").textContent = earned;
+    $("gm-refer-count").textContent = count;
+  }
+
+  async function copy(inputId, label) {
+    const v = $(inputId).value;
+    try { await navigator.clipboard.writeText(v); }
+    catch (e) { $(inputId).select(); document.execCommand("copy"); }
+    $("gm-refer-message").textContent = label + " copied!";
+  }
+  $("gm-copy-code").addEventListener("click", () => copy("gm-refer-code", "Code"));
+  $("gm-copy-link").addEventListener("click", () => copy("gm-refer-link", "Link"));
+  $("gm-share-refer").addEventListener("click", async () => {
+    const text = "Order food on GoMandu! Use my code " + $("gm-refer-code").value + " to get started.";
+    const url = $("gm-refer-link").value;
+    if (navigator.share) { try { await navigator.share({ title: "GoMandu", text, url }); } catch (e) {} }
+    else { await copy("gm-refer-link", "Link"); }
+  });
+
+  // Hook into the existing dashboard show/hide functions.
+  const origShow = window.showCustomerDashboard;
+  window.showCustomerDashboard = function (customer) {
+    currentCustomer = customer || null;
+    origShow.call(window, customer);
+    showTab("home");
+  };
 })();
 </script>
 
