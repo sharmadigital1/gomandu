@@ -1,4 +1,36 @@
 
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(value)
+  );
+
+  return Array.from(
+    new Uint8Array(digest),
+    b => b.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+async function getSessionCustomer(request, env) {
+  const cookie = request.headers.get("Cookie") || "";
+  const match = cookie.match(
+    /(?:^|;\s*)gm_session=([a-f0-9]{64})(?:;|$)/
+  );
+
+  if (!match || !env.DB) return null;
+
+  const tokenHash = await sha256Hex(match[1]);
+
+  return await env.DB.prepare(`
+    SELECT c.id, c.name, c.email
+    FROM customer_sessions s
+    JOIN customers c ON c.id = s.customer_id
+    WHERE s.token_hash = ?
+      AND s.expires_at > datetime('now')
+    LIMIT 1
+  `).bind(tokenHash).first();
+}
+
 export async function onRequestPost({ request, env }) {
   if (!env.DB) {
     return Response.json(
@@ -6,6 +38,15 @@ export async function onRequestPost({ request, env }) {
       { status: 500 }
     );
   }
+
+const customer = await getSessionCustomer(request, env);
+
+if (!customer) {
+  return Response.json(
+    { error: "Please log in to place an order" },
+    { status: 401 }
+  );
+}
 
   try {
     const body = await request.json();
@@ -104,10 +145,20 @@ export async function onRequestPost({ request, env }) {
     );
 
     const orderResult = await env.DB.prepare(
-      `INSERT INTO orders
-       (customer_name, phone, address, total_amount,
-        payment_method, payment_status, order_status, created_at)
-       VALUES (?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`
+      
+const orderResult = await env.DB.prepare(
+  `INSERT INTO orders
+   (customer_name, phone, address, total_amount, customer_id,
+    payment_method, payment_status, order_status, created_at)
+   VALUES (?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`
+).bind(
+  customerName,
+  phone,
+  address,
+  total,
+  String(customer.id)
+).run();
+
     ).bind(
       customerName,
       phone,
@@ -152,6 +203,57 @@ export async function onRequestPost({ request, env }) {
     return Response.json(
       { error: "Unable to place order. Please try again." },
       { status: 500 }
+    );
+  }
+}
+
+export async function onRequestGet({ request, env }) {
+  try {
+    const customer = await getSessionCustomer(request, env);
+
+    if (!customer) {
+      return Response.json(
+        { error: "Please log in to view your orders" },
+        { status: 401, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
+    const result = await env.DB.prepare(`
+      SELECT id, total_amount, order_status, created_at
+      FROM orders
+      WHERE customer_id = ?
+      ORDER BY id DESC
+      LIMIT 50
+    `).bind(String(customer.id)).all();
+
+    const orders = result.results || [];
+
+    for (const order of orders) {
+      const itemResult = await env.DB.prepare(`
+        SELECT product_name AS name, quantity, unit_price
+        FROM order_items
+        WHERE order_id = ?
+      `).bind(order.id).all();
+
+      order.items = (itemResult.results || []).map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.unit_price
+      }));
+
+      order.status = order.order_status;
+    }
+
+    return Response.json(
+      { orders },
+      { headers: { "Cache-Control": "no-store" } }
+    );
+  } catch (error) {
+    console.error("Order history failed:", error);
+
+    return Response.json(
+      { error: "Unable to load order history" },
+      { status: 500, headers: { "Cache-Control": "no-store" } }
     );
   }
 }
