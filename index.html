@@ -482,7 +482,7 @@
 
             <div class="copyright">
         <p>© <span id="year"></span> GoMandu. All rights reserved.</p>
-        <p>Contact: <a href="mailto:hello@gomandu.com" style="color:#b9bcc2">hello@gomandu.com</a></p>
+        <p>Contact: <a href="mailto:support@go-mandu.com" style="color:#b9bcc2">support@go-mandu.com</a></p>
       </div>
     </div>
   </footer>
@@ -1582,5 +1582,524 @@ if (gmCartToggle && gmCartPanel) {
 }
 
 </script>
+
+<!-- GoMandu Admin Panel -->
+<style>
+  #gm-admin-panel {
+    font-family: inherit;
+    color: #222;
+    padding: 20px 14px 100px;
+    background: #f6f7f9;
+    min-height: 100vh;
+  }
+
+  #gm-admin-panel[hidden],
+  #gm-admin-open[hidden] {
+    display: none !important;
+  }
+
+  .gma-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .gma-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .gma-header h2 {
+    margin: 0;
+    font-size: clamp(23px, 4vw, 32px);
+  }
+
+  .gma-muted {
+    color: #666;
+    font-size: 14px;
+    margin-top: 6px;
+  }
+
+  .gma-btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 11px 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .gma-primary {
+    background: #f15a24;
+    color: white;
+  }
+
+  .gma-secondary {
+    background: #222;
+    color: white;
+  }
+
+  .gma-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .gma-stat,
+  .gma-order {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .gma-stat span {
+    display: block;
+    color: #666;
+    font-size: 13px;
+  }
+
+  .gma-stat strong {
+    display: block;
+    font-size: 25px;
+    margin-top: 7px;
+  }
+
+  .gma-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .gma-toolbar select,
+  .gma-toolbar input,
+  .gma-status-select {
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 9px;
+    background: white;
+    font: inherit;
+    max-width: 100%;
+  }
+
+  .gma-toolbar input {
+    flex: 1;
+    min-width: 170px;
+  }
+
+  .gma-orders {
+    display: grid;
+    gap: 14px;
+  }
+
+  .gma-order-top {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .gma-order h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    overflow-wrap: anywhere;
+  }
+
+  .gma-order p {
+    margin: 7px 0;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .gma-status {
+    display: inline-block;
+    border-radius: 20px;
+    background: #fff0e9;
+    color: #a43b10;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .gma-items {
+    padding: 12px 0;
+    line-height: 1.8;
+    font-size: 14px;
+  }
+
+  .gma-order-bottom {
+    border-top: 1px solid #eee;
+    padding-top: 13px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .gma-order-bottom strong {
+    margin-right: auto;
+    font-size: 18px;
+  }
+
+  .gma-message {
+    margin: 12px 0;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .gma-error {
+    color: #b42318;
+  }
+
+  .gma-success {
+    color: #137333;
+  }
+
+  @media (max-width: 600px) {
+    #gm-admin-panel {
+      padding: 16px 10px 90px;
+    }
+
+    .gma-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .gma-stat {
+      padding: 13px;
+    }
+
+    .gma-stat strong {
+      font-size: 22px;
+    }
+
+    .gma-order {
+      padding: 13px;
+    }
+
+    .gma-order-bottom {
+      align-items: stretch;
+    }
+
+    .gma-status-select {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .gma-order-bottom .gma-btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<div id="gm-admin-entry" class="gma-wrap" style="padding:12px 14px">
+  <button type="button" id="gm-admin-open" class="gma-btn gma-primary" hidden>
+    Open Admin Panel
+  </button>
+  <p id="gm-admin-access-message" class="gma-message" role="status" hidden></p>
+</div>
+
+<section id="gm-admin-panel" hidden>
+  <div class="gma-wrap">
+    <header class="gma-header">
+      <div>
+        <h2>GoMandu Admin</h2>
+        <div class="gma-muted">Order management dashboard</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" id="gm-admin-refresh" class="gma-btn gma-secondary">
+          Refresh Orders
+        </button>
+        <button type="button" id="gm-admin-close" class="gma-btn gma-secondary">
+          Close
+        </button>
+      </div>
+    </header>
+
+    <div class="gma-stats">
+      <div class="gma-stat">
+        <span>Total orders loaded</span>
+        <strong id="gma-total">0</strong>
+      </div>
+      <div class="gma-stat">
+        <span>New / pending</span>
+        <strong id="gma-pending">0</strong>
+      </div>
+      <div class="gma-stat">
+        <span>Delivered</span>
+        <strong id="gma-delivered">0</strong>
+      </div>
+    </div>
+
+    <div class="gma-toolbar">
+      <input id="gma-search" type="search"
+        placeholder="Search order, customer, phone..." aria-label="Search orders">
+
+      <select id="gma-filter" aria-label="Filter by order status">
+        <option value="all">All statuses</option>
+        <option value="new">New</option>
+        <option value="accepted">Accepted</option>
+        <option value="preparing">Preparing</option>
+        <option value="out_for_delivery">Out for delivery</option>
+        <option value="delivered">Delivered</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </div>
+
+    <p id="gma-message" class="gma-message" role="status" aria-live="polite"></p>
+    <div id="gma-orders" class="gma-orders"></div>
+  </div>
+</section>
+
+<script>
+(() => {
+  const byId = id => document.getElementById(id);
+
+  const openButton = byId("gm-admin-open");
+  const panel = byId("gm-admin-panel");
+  const accessMessage = byId("gm-admin-access-message");
+  const ordersContainer = byId("gma-orders");
+  const message = byId("gma-message");
+
+  if (!openButton || !panel || !ordersContainer || panel.dataset.ready) return;
+  panel.dataset.ready = "1";
+
+  let orders = [];
+  let busy = false;
+
+  const statuses = [
+    ["new", "New"],
+    ["accepted", "Accepted"],
+    ["preparing", "Preparing"],
+    ["out_for_delivery", "Out for delivery"],
+    ["delivered", "Delivered"],
+    ["cancelled", "Cancelled"]
+  ];
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+
+  function showMessage(text, type = "") {
+    message.className = "gma-message" + (type ? " gma-" + type : "");
+    message.textContent = text;
+  }
+
+  function statusLabel(value) {
+    const found = statuses.find(status => status[0] === value);
+    return found ? found[1] : String(value || "Unknown");
+  }
+
+  function money(value) {
+    const amount = Number(value);
+    return Number.isFinite(amount) ? amount.toLocaleString("en-IN") : "0";
+  }
+
+  async function api(url, options = {}) {
+    const response = await fetch(url, {
+      credentials: "same-origin",
+      cache: "no-store",
+      ...options,
+      headers: {
+        ...(options.headers || {})
+      }
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        response.status === 401 ? "Please log in first." :
+        response.status === 403 ? "Admin permission required." :
+        data.error || "Request failed."
+      );
+    }
+
+    return data;
+  }
+
+  function updateStats() {
+    byId("gma-total").textContent = orders.length;
+    byId("gma-pending").textContent =
+      orders.filter(order => ["new", "pending"].includes(order.order_status)).length;
+    byId("gma-delivered").textContent =
+      orders.filter(order => order.order_status === "delivered").length;
+  }
+
+  function renderOrders() {
+    const filter = byId("gma-filter").value;
+    const search = byId("gma-search").value.trim().toLowerCase();
+
+    const filtered = orders.filter(order => {
+      const matchesStatus = filter === "all" || order.order_status === filter;
+      const searchable = [
+        order.id,
+        order.customer_name,
+        order.phone,
+        order.address
+      ].join(" ").toLowerCase();
+
+      return matchesStatus && searchable.includes(search);
+    });
+
+    if (!filtered.length) {
+      ordersContainer.innerHTML =
+        '<div class="gma-order">No orders found for this filter.</div>';
+      return;
+    }
+
+    ordersContainer.innerHTML = filtered.map(order => {
+      const items = Array.isArray(order.items) ? order.items : [];
+
+      const itemHtml = items.length
+        ? items.map(item =>
+            `<div>${escapeHtml(item.product_name)} × ${escapeHtml(item.quantity)} — NPR ${money(Number(item.unit_price) * Number(item.quantity))}</div>`
+          ).join("")
+        : "<div>No item details returned.</div>";
+
+      const statusOptions = statuses.map(([value, label]) =>
+        `<option value="${value}" ${order.order_status === value ? "selected" : ""}>${label}</option>`
+      ).join("");
+
+      return `
+        <article class="gma-order" data-order-id="${Number(order.id)}">
+          <div class="gma-order-top">
+            <div>
+              <h3>Order #${escapeHtml(order.id)} · ${escapeHtml(order.customer_name)}</h3>
+              <div class="gma-muted">${escapeHtml(order.created_at || "")}</div>
+            </div>
+            <span class="gma-status">${escapeHtml(statusLabel(order.order_status))}</span>
+          </div>
+
+          <p><strong>Phone:</strong> ${escapeHtml(order.phone)}</p>
+          <p><strong>Delivery address:</strong> ${escapeHtml(order.address)}</p>
+          <p><strong>Payment:</strong> ${escapeHtml(order.payment_method || "—")} · ${escapeHtml(order.payment_status || "—")}</p>
+
+          <div class="gma-items"><strong>Items</strong>${itemHtml}</div>
+
+          <div class="gma-order-bottom">
+            <strong>Total: NPR ${money(order.total_amount)}</strong>
+            <select class="gma-status-select" aria-label="New status for order ${Number(order.id)}">
+              ${statusOptions}
+            </select>
+            <button type="button" class="gma-btn gma-primary"
+              data-save-order="${Number(order.id)}">Update Status</button>
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  async function loadOrders() {
+    if (busy) return;
+    busy = true;
+    byId("gm-admin-refresh").disabled = true;
+    showMessage("Loading orders...");
+
+    try {
+      const data = await api("/api/admin-orders");
+
+      orders = Array.isArray(data.orders) ? data.orders : [];
+      updateStats();
+      renderOrders();
+      showMessage("Orders loaded successfully.", "success");
+    } catch (error) {
+      showMessage(error.message, "error");
+      if (error.message.includes("permission") || error.message.includes("log in")) {
+        panel.hidden = true;
+        openButton.hidden = true;
+        accessMessage.hidden = false;
+        accessMessage.textContent = error.message;
+      }
+    } finally {
+      busy = false;
+      byId("gm-admin-refresh").disabled = false;
+    }
+  }
+
+  async function checkAdminAccess() {
+    try {
+      await api("/api/admin-orders");
+      openButton.hidden = false;
+      accessMessage.hidden = true;
+    } catch (error) {
+      openButton.hidden = true;
+      panel.hidden = true;
+      if (error.message.includes("permission")) {
+        accessMessage.hidden = false;
+        accessMessage.textContent = "Admin access is not enabled for this account.";
+      } else {
+        accessMessage.hidden = true;
+      }
+    }
+  }
+
+  openButton.addEventListener("click", async () => {
+    panel.hidden = false;
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    await loadOrders();
+  });
+
+  byId("gm-admin-close").addEventListener("click", () => {
+    panel.hidden = true;
+    openButton.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
+  byId("gm-admin-refresh").addEventListener("click", loadOrders);
+  byId("gma-filter").addEventListener("change", renderOrders);
+  byId("gma-search").addEventListener("input", renderOrders);
+
+  ordersContainer.addEventListener("click", async event => {
+    const button = event.target.closest("[data-save-order]");
+    if (!button) return;
+
+    const card = button.closest("[data-order-id]");
+    const orderId = Number(button.dataset.saveOrder);
+    const select = card?.querySelector(".gma-status-select");
+
+    if (!orderId || !select) return;
+
+    button.disabled = true;
+    button.textContent = "Updating...";
+
+    try {
+      await api("/api/admin-update-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          order_status: select.value
+        })
+      });
+
+      showMessage(`Order #${orderId} updated to ${statusLabel(select.value)}.`, "success");
+      await loadOrders();
+    } catch (error) {
+      showMessage(error.message, "error");
+      button.disabled = false;
+      button.textContent = "Update Status";
+    }
+  });
+
+  checkAdminAccess();
+})();
+</script>
+</body>
+</html>
+  
 </body>
 </html>
