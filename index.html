@@ -1423,7 +1423,7 @@ function renderRestaurants() {
   }
 
   function addToCart(restaurant, foodId) {
-    const food = restaurant.foods.find(f => f.id === foodId);
+    const key = food.menu_key || (restaurant.id + ":" + food.id);
     if (!food) return;
 
     const key = restaurant.id + ":" + food.id;
@@ -1437,6 +1437,7 @@ function renderRestaurants() {
         restaurantId: restaurant.id,
         restaurantName: restaurant.name,
         foodId: food.id,
+        menu_key: food.menu_key || key,
         name: food.name,
         price: food.price,
         qty: 1
@@ -1647,7 +1648,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
         address: el("gm-delivery-address").value.trim(),
         coupon_code: (window.GMUI && GMUI.couponCode()) || undefined,
         items: cart.map((item) => ({
-          menu_key: `${item.restaurantId}:${item.foodId}`,
+         menu_key: item.menu_key || item.key,
           quantity: item.qty
         }))
       })
