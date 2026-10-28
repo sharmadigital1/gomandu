@@ -2896,8 +2896,61 @@ async function submitAuth() {
 
     <h3 style="margin:28px 0 10px">Customer reviews <span id="gma-review-avg" class="gma-muted"></span></h3>
     <div id="gma-reviews" class="gma-orders"></div>
+
+<!-- GoMandu: Manage Restaurants -->
+<div id="gm-manage-restaurants" style="margin:24px 0;padding:18px;border:1px solid #ddd;border-radius:14px;background:#fff;color:#222">
+  <h2>Manage Restaurants</h2>
+  <p>Add restaurants, update photos, or hide restaurants from customers.</p>
+
+  <form id="gm-restaurant-form">
+    <input type="hidden" id="gm-restaurant-id" value="">
+
+    <label for="gm-restaurant-name">Restaurant name</label>
+    <input id="gm-restaurant-name" type="text" maxlength="100"
+      required placeholder="e.g. Kathmandu Momo House"
+      style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 14px">
+
+    <label for="gm-restaurant-photo">Photo URL (HTTPS)</label>
+    <input id="gm-restaurant-photo" type="url"
+      placeholder="https://example.com/restaurant.jpg"
+      style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 10px">
+
+    <img id="gm-restaurant-preview" alt="Restaurant photo preview"
+      hidden style="width:180px;max-width:100%;height:120px;object-fit:cover;border-radius:10px;margin:4px 0 14px">
+
+    <label for="gm-restaurant-active">Visibility</label>
+    <select id="gm-restaurant-active"
+      style="display:block;width:100%;padding:12px;margin:6px 0 14px">
+      <option value="1">Active — show to customers</option>
+      <option value="0">Inactive — hide from customers</option>
+    </select>
+
+    <button type="submit" id="gm-restaurant-save"
+      style="padding:11px 18px;background:#d71920;color:white;border:0;border-radius:8px;cursor:pointer">
+      Save restaurant
+    </button>
+
+    <button type="button" id="gm-restaurant-cancel"
+      style="padding:11px 18px;margin-left:8px;border:1px solid #aaa;border-radius:8px;cursor:pointer">
+      Clear form
+    </button>
+    <p id="gm-restaurant-message" role="status" aria-live="polite"></p>
+  </form>
+
+  <hr style="margin:22px 0">
+
+  <h3>Restaurant list</h3>
+  <button type="button" id="gm-restaurant-refresh"
+    style="padding:9px 14px;margin-bottom:12px;cursor:pointer">
+    Refresh list
+  </button>
+  <div id="gm-restaurant-list" aria-live="polite">Loading restaurants…</div>
+</div>
+<!-- End Manage Restaurants -->
   </div>
 </section>
+
+
 
 <script>
 (() => {
@@ -3167,8 +3220,163 @@ async function submitAuth() {
   if (appEl && !appEl.hidden) checkAdminAccess();
 })();
 </script>
+<script>
+(() => {
+  const root = document.getElementById("gm-manage-restaurants");
+  if (!root || root.dataset.initialized === "1") return;
+  root.dataset.initialized = "1";
+
+  const $ = id => document.getElementById(id);
+  const form = $("gm-restaurant-form");
+  const nameInput = $("gm-restaurant-name");
+  const photoInput = $("gm-restaurant-photo");
+  const activeInput = $("gm-restaurant-active");
+  const idInput = $("gm-restaurant-id");
+  const preview = $("gm-restaurant-preview");
+  const list = $("gm-restaurant-list");
+  const message = $("gm-restaurant-message");
+  const saveButton = $("gm-restaurant-save");
+  let restaurants = [];
+  let loading = false;
+
+  function safeText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;",
+      '"': "&quot;", "'": "&#39;"
+    })[char]);
+  }
+
+  function safePhoto(value) {
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" ? url.href : "";
+    } catch { return ""; }
+  }
+
+  function updatePreview() {
+    const url = safePhoto(photoInput.value.trim());
+    preview.hidden = !url;
+    if (url) preview.src = url;
+    else preview.removeAttribute("src");
+  }
+
+  preview.addEventListener("error", () => { preview.hidden = true; });
+  photoInput.addEventListener("input", updatePreview);
+
+  async function api(path, options = {}) {
+    const response = await fetch(path, {
+      credentials: "same-origin",
+      cache: "no-store",
+      ...options,
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers || {})
+      }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+    return data;
+  }
+
+  function renderList() {
+    if (!restaurants.length) {
+      list.textContent = "No restaurants yet. Add your first restaurant above.";
+      return;
+    }
+    list.innerHTML = restaurants.map(r => {
+      const photo = safePhoto(r.photo_url || "");
+      const active = Number(r.active) === 1;
+      return `<article style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #ddd">
+        ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy" style="width:90px;height:70px;object-fit:cover;border-radius:8px">` : `<div style="width:90px;height:70px;background:#eee;display:grid;place-items:center;border-radius:8px">No photo</div>`}
+        <div style="flex:1;min-width:150px"><strong>${safeText(r.name)}</strong>
+          <div style="margin-top:5px;color:${active ? "#16803c" : "#b42318"}">${active ? "Active — visible" : "Inactive — hidden"}</div>
+        </div>
+        <button type="button" data-edit="${Number(r.id)}">Edit</button>
+        <button type="button" data-toggle="${Number(r.id)}">${active ? "Deactivate" : "Activate"}</button>
+      </article>`;
+    }).join("");
+  }
+
+  async function loadRestaurants() {
+    if (loading) return;
+    loading = true;
+    list.textContent = "Loading restaurants…";
+    try {
+      const data = await api("/api/admin-restaurants");
+      restaurants = Array.isArray(data.restaurants) ? data.restaurants : [];
+      renderList();
+    } catch (error) { list.textContent = error.message; }
+    finally { loading = false; }
+  }
+
+  function clearForm() {
+    form.reset(); idInput.value = ""; activeInput.value = "1";
+    saveButton.textContent = "Save restaurant"; message.textContent = "";
+    updatePreview();
+  }
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const name = nameInput.value.trim();
+    const photo_url = photoInput.value.trim();
+    const active = Number(activeInput.value);
+    if (name.length < 2 || name.length > 100) {
+      message.textContent = "Name must be between 2 and 100 characters."; return;
+    }
+    if (photo_url && !safePhoto(photo_url)) {
+      message.textContent = "Please enter a valid HTTPS photo URL."; return;
+    }
+    saveButton.disabled = true; message.textContent = "Saving…";
+    try {
+      const payload = { name, photo_url, active };
+      if (idInput.value) payload.id = Number(idInput.value);
+      await api("/api/admin-restaurants", { method: "POST", body: JSON.stringify(payload) });
+      message.textContent = "Restaurant saved successfully.";
+      clearForm(); await loadRestaurants();
+    } catch (error) { message.textContent = error.message; }
+    finally { saveButton.disabled = false; }
+  });
+
+  $("gm-restaurant-cancel").addEventListener("click", clearForm);
+  $("gm-restaurant-refresh").addEventListener("click", loadRestaurants);
+
+  list.addEventListener("click", async event => {
+    const editButton = event.target.closest("[data-edit]");
+    const toggleButton = event.target.closest("[data-toggle]");
+    if (editButton) {
+      const r = restaurants.find(item => Number(item.id) === Number(editButton.dataset.edit));
+      if (!r) return;
+      idInput.value = r.id; nameInput.value = r.name || "";
+      photoInput.value = r.photo_url || ""; activeInput.value = Number(r.active) === 1 ? "1" : "0";
+      saveButton.textContent = "Update restaurant"; updatePreview();
+      form.scrollIntoView({ behavior: "smooth", block: "start" }); return;
+    }
+    if (toggleButton) {
+      const r = restaurants.find(item => Number(item.id) === Number(toggleButton.dataset.toggle));
+      if (!r) return;
+      toggleButton.disabled = true;
+      try {
+        await api("/api/admin-restaurants", {
+          method: "POST",
+          body: JSON.stringify({ id: Number(r.id), name: r.name, photo_url: r.photo_url || "", active: Number(r.active) === 1 ? 0 : 1 })
+        });
+        message.textContent = "Restaurant visibility updated.";
+        await loadRestaurants();
+      } catch (error) { message.textContent = error.message; }
+      finally { toggleButton.disabled = false; }
+    }
+  });
+
+  function maybeLoad() {
+    const panel = root.closest("#gm-admin-panel");
+    if (panel && !panel.hidden) loadRestaurants();
+  }
+  maybeLoad();
+  const observer = new MutationObserver(maybeLoad);
+  observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ["hidden"] });
+})();
+</script>
+
 </body>
 </html>
   
-</body>
-</html>
