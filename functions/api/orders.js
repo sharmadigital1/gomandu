@@ -1,4 +1,3 @@
-
 async function sha256Hex(value) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -145,25 +144,16 @@ if (!customer) {
     );
 
     const orderResult = await env.DB.prepare(
-      
-const orderResult = await env.DB.prepare(
-  `INSERT INTO orders
-   (customer_name, phone, address, total_amount, customer_id,
-    payment_method, payment_status, order_status, created_at)
-   VALUES (?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`
-).bind(
-  customerName,
-  phone,
-  address,
-  total,
-  String(customer.id)
-).run();
-
+      `INSERT INTO orders
+       (customer_name, phone, address, total_amount, customer_id,
+        payment_method, payment_status, order_status, created_at)
+       VALUES (?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`
     ).bind(
       customerName,
       phone,
       address,
-      total
+      total,
+      String(customer.id)
     ).run();
 
     const orderId = orderResult.meta?.last_row_id;
