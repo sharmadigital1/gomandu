@@ -499,8 +499,8 @@
           <p id="gm-welcome">Welcome!</p>
         </div>
       </div>
-      <button type="button" id="gm-logout" class="gm-btn gm-outline">
-        Logout
+      <button type="button" id="gm-account-btn" class="gm-btn gm-outline" aria-label="My Account">
+        My Account
       </button>
     </header>
 
@@ -520,12 +520,12 @@
           <button type="button" class="gm-side-item" data-tab="favorites" title="Access saved restaurants and food items."><span>Favorites</span></button>
           <button type="button" class="gm-side-item" data-tab="notifications" title="View order updates, offers and important alerts."><span>Notifications</span><span class="gm-side-badge" id="gm-badge-notif" hidden>0</span></button>
           <button type="button" class="gm-side-item" data-tab="coupons" title="View and manage available coupon codes."><span>Coupons</span></button>
-          <button type="button" class="gm-side-item" data-tab="reviews" title="Rate restaurants, food and delivery experience."><span>Reviews &amp; Ratings</span></button>
           <button type="button" class="gm-side-item" data-tab="support" title="Get help with orders, payments and other issues."><span>Support</span></button>
-          <button type="button" class="gm-side-item" data-tab="account" title="Manage profile, addresses, payments and preferences."><span>My Account</span></button>
           <div class="gm-side-sep"></div>
           <button type="button" class="gm-side-item" data-tab="refer" title="Invite friends and earn cash."><span>Refer &amp; Earn Cash</span></button>
         </nav>
+        <div class="gm-side-sep"></div>
+        <button type="button" id="gm-logout" class="gm-side-logout">Logout</button>
       </aside>
 
       <div class="gm-content">
@@ -752,7 +752,8 @@
         <div id="gm-tab-reviews" class="gm-tab-panel" hidden>
           <h2>Reviews &amp; Ratings</h2>
           <p class="gm-sub">Rate restaurants, food and delivery experience.</p>
-          <form id="gm-review-form" class="gm-card-form">
+          <p id="gm-review-context" class="gm-cart-note" role="status"></p>
+          <form id="gm-review-form" class="gm-card-form" hidden>
             <label for="gm-review-rest">Restaurant / store</label>
             <select id="gm-review-rest" class="gm-input"></select>
 
@@ -1213,6 +1214,9 @@
     .gm-sidebar.open { transform: none; }
   }
   @media (prefers-reduced-motion: reduce) { .gm-sidebar { transition: none; } }
+  .gm-side-logout { display: block; width: 100%; border: 1px solid #e63946; background: #fff; color: #e63946; border-radius: 10px; padding: 11px 12px; font-weight: 700; font-size: 15px; margin-top: 4px; }
+  .gm-side-logout:hover { background: #e63946; color: #fff; }
+  #gm-account-btn.active { background: #e63946; color: #fff; border-color: #e63946; }
 </style>
 
   <dialog id="auth" aria-labelledby="auth-title">
@@ -1871,7 +1875,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
 
   function loadUserState() {
     favRest = sGet("favRest", []); favFood = sGet("favFood", []);
-    reviews = sGet("reviews", []); tickets = sGet("tickets", []);
+    reviews = []; tickets = sGet("tickets", []);
     addresses = sGet("addresses", []); profile = sGet("profile", {});
     prefs = Object.assign({ orders: true, offers: true }, sGet("prefs", {}));
     readNotifs = sGet("read", []);
@@ -1898,7 +1902,8 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     if (name !== "menu") lastNonMenu = name;
     current = name;
     PANELS.forEach(n => { const p = $("gm-tab-" + n); if (p) p.hidden = n !== name; });
-    const sideName = name === "menu" ? "restaurants" : name;
+    const sideName = name === "menu" ? "restaurants" : name === "reviews" ? "orders" : name;
+    $("gm-account-btn").classList.toggle("active", name === "account");
     document.querySelectorAll(".gm-side-item").forEach(b => {
       const on = b.dataset.tab === sideName;
       b.classList.toggle("active", on);
@@ -1910,6 +1915,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   document.querySelectorAll(".gm-side-item").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+  $("gm-account-btn").addEventListener("click", () => showTab("account"));
 
   /* ---------------- Shared HTML builders ---------------- */
   const isFavRest = id => favRest.includes(id);
@@ -2160,6 +2166,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     let orders;
     try { orders = await loadOrders(true); }
     catch (e) { box.innerHTML = empty("Could not load your orders. Please try again later."); return; }
+    try { await loadServerReviews(); } catch (e) {}
     refreshBadges();
     const list = orders.filter(o => {
       const s = statusOf(o);
@@ -2176,7 +2183,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       return `<article class="gm-order"><div class="gm-order-top"><span>Order #${esc(id)}</span><span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></div>
         <small>${esc(date)}</small>${items ? "<ul>" + items + "</ul>" : ""}
         <p><strong>Total: NPR ${esc(total)}</strong></p>
-        <div class="gm-order-actions">${canReorder ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(id)}">Reorder</button>` : ""}
+        <div class="gm-order-actions">${s === "delivered" ? (reviewedOrders().has(String(id)) ? '<span class="gm-status">Reviewed</span>' : `<button type="button" class="gm-btn gm-primary" data-rate-order="${esc(id)}">Rate order</button>`) : ""}${canReorder ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(id)}">Reorder</button>` : ""}
         <button type="button" class="gm-btn gm-outline" data-help-order="${esc(id)}">Get help</button></div></article>`;
     }).join("");
   };
@@ -2190,6 +2197,8 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       o.items.forEach(i => { const k = resolveKey(i.menu_key); for (let n = 0; n < (Number(i.quantity || i.qty) || 1); n++) GM.addToCart(k.src, k.food.id); });
       toast("Items added to your cart."); showTab("cart"); return;
     }
+    const rt = e.target.closest("[data-rate-order]");
+    if (rt) { reviewOrder = rt.dataset.rateOrder; showTab("reviews"); return; }
     const h = e.target.closest("[data-help-order]");
     if (h) { showTab("support"); $("gm-support-order").value = h.dataset.helpOrder; $("gm-support-topic").value = "Order issue"; }
   });
@@ -2261,38 +2270,68 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
 
   // Reviews
   const rating = { food: 0, delivery: 0 };
+  let reviewOrder = null, reviewNote = "";
+  const reviewedOrders = () => new Set(reviews.filter(r => r.orderId).map(r => String(r.orderId)));
   function drawStars() {
     document.querySelectorAll(".gm-stars").forEach(box => {
       const k = box.dataset.rateFor;
       box.innerHTML = [1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" aria-checked="${rating[k] === n}" aria-label="${n} star${n > 1 ? "s" : ""}" class="${n <= rating[k] ? "on" : ""}" data-star="${n}">★</button>`).join("");
     });
   }
-  renderers.reviews = () => {
-    $("gm-review-rest").innerHTML = ALL_SOURCES.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
-    drawStars();
-    $("gm-review-list").innerHTML = reviews.length ? reviews.slice().reverse().map(r =>
-      `<article class="gm-order"><div class="gm-order-top"><span>${esc(r.restName)}</span><button type="button" class="gm-btn gm-outline" data-del-review="${esc(r.id)}" style="padding:3px 10px;font-size:12px">Delete</button></div>
-        <small>${esc(new Date(r.at).toLocaleDateString())}</small>
+  async function loadServerReviews() {
+    const res = await fetch("/api/reviews", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    reviews = (data.reviews || []).map(r => ({
+      id: r.id, orderId: r.order_id, restName: r.restaurant_name || "GoMandu",
+      food: r.food_rating, delivery: r.delivery_rating, text: r.comment || "", at: r.created_at
+    }));
+  }
+  function drawReviewList() {
+    $("gm-review-list").innerHTML = reviews.length ? reviews.map(r =>
+      `<article class="gm-order"><div class="gm-order-top"><span>${esc(r.restName)}${r.orderId ? " · Order #" + esc(r.orderId) : ""}</span></div>
+        <small>${esc(r.at ? new Date(String(r.at).replace(" ", "T") + "Z").toLocaleDateString() : "")}</small>
         <p style="margin:8px 0 0">Food <span class="gm-star-text">${stars(r.food)}</span> · Delivery <span class="gm-star-text">${stars(r.delivery)}</span></p>
         ${r.text ? `<p style="margin:8px 0 0">${esc(r.text)}</p>` : ""}</article>`).join("") : empty("You haven't reviewed anything yet.");
+  }
+  renderers.reviews = () => {
+    $("gm-review-form").hidden = !reviewOrder;
+    $("gm-review-context").textContent = reviewOrder ? "Rate your delivered order #" + reviewOrder
+      : (reviewNote || "You can rate an order after it is delivered. Open My Orders and tap “Rate order”.");
+    $("gm-review-rest").innerHTML = ALL_SOURCES.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
+    drawStars();
+    drawReviewList();
+    loadServerReviews().then(drawReviewList).catch(() => {});
   };
   $("gm-review-form").addEventListener("click", e => {
     const s = e.target.closest("[data-star]"); if (!s) return;
     rating[s.parentElement.dataset.rateFor] = Number(s.dataset.star); drawStars();
   });
-  $("gm-review-form").addEventListener("submit", e => {
+  $("gm-review-form").addEventListener("submit", async e => {
     e.preventDefault();
-    const msg = $("gm-review-msg");
+    const msg = $("gm-review-msg"), btn = e.target.querySelector('button[type="submit"]');
+    if (!reviewOrder) return;
     if (!rating.food || !rating.delivery) { msg.textContent = "Please give both a food and a delivery rating."; return; }
     const src = srcById($("gm-review-rest").value);
-    reviews.push({ id: String(Date.now()), restId: src.id, restName: src.name, food: rating.food, delivery: rating.delivery, text: $("gm-review-text").value.trim(), at: Date.now() });
-    sSet("reviews", reviews);
-    rating.food = rating.delivery = 0; $("gm-review-text").value = ""; msg.textContent = "Thanks for your review!";
-    renderers.reviews();
-  });
-  $("gm-review-list").addEventListener("click", e => {
-    const d = e.target.closest("[data-del-review]"); if (!d) return;
-    reviews = reviews.filter(r => r.id !== d.dataset.delReview); sSet("reviews", reviews); renderers.reviews();
+    btn.disabled = true; msg.textContent = "Sending…";
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: Number(reviewOrder), restaurant_id: src.id, restaurant_name: src.name,
+          food_rating: rating.food, delivery_rating: rating.delivery, comment: $("gm-review-text").value.trim()
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && res.status !== 409) throw new Error(data.error || "Could not save your review.");
+      rating.food = rating.delivery = 0; $("gm-review-text").value = ""; msg.textContent = "";
+      reviewNote = res.status === 409 ? "You have already reviewed order #" + reviewOrder + "." : "Thanks for your review of order #" + reviewOrder + "!";
+      reviewOrder = null;
+      try { await loadServerReviews(); } catch (err) {}
+      renderers.reviews();
+    } catch (err) { msg.textContent = err.message; }
+    finally { btn.disabled = false; }
   });
 
   // Support
@@ -2408,6 +2447,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     showTab("home");
     onCart();
     loadOrders(true).then(() => refreshBadges()).catch(() => refreshBadges());
+    loadServerReviews().catch(() => {});
     if (typeof window.gmAdminCheck === "function") window.gmAdminCheck();
   };
   const prevHide = window.hideCustomerDashboard;
@@ -2841,6 +2881,9 @@ async function submitAuth() {
 
     <p id="gma-message" class="gma-message" role="status" aria-live="polite"></p>
     <div id="gma-orders" class="gma-orders"></div>
+
+    <h3 style="margin:28px 0 10px">Customer reviews <span id="gma-review-avg" class="gma-muted"></span></h3>
+    <div id="gma-reviews" class="gma-orders"></div>
   </div>
 </section>
 
@@ -2989,6 +3032,25 @@ async function submitAuth() {
     }).join("");
   }
 
+  async function loadAdminReviews() {
+    const box = byId("gma-reviews");
+    try {
+      const data = await api("/api/admin-reviews");
+      const list = Array.isArray(data.reviews) ? data.reviews : [];
+      const avg = (k) => list.length ? (list.reduce((s, r) => s + Number(r[k]), 0) / list.length).toFixed(1) : "–";
+      byId("gma-review-avg").textContent = list.length ? "· " + list.length + " total · food " + avg("food_rating") + "/5 · delivery " + avg("delivery_rating") + "/5" : "";
+      box.innerHTML = list.length ? list.map(r => `
+        <article class="gma-order">
+          <div class="gma-order-top"><div><h3>Order #${escapeHtml(r.order_id)} · ${escapeHtml(r.customer_name)}</h3>
+            <div class="gma-muted">${escapeHtml(r.restaurant_name || "")} · ${escapeHtml(r.created_at || "")}</div></div></div>
+          <p><strong>Food:</strong> ${"★".repeat(Number(r.food_rating))}${"☆".repeat(5 - Number(r.food_rating))} · <strong>Delivery:</strong> ${"★".repeat(Number(r.delivery_rating))}${"☆".repeat(5 - Number(r.delivery_rating))}</p>
+          ${r.comment ? `<p>${escapeHtml(r.comment)}</p>` : ""}
+        </article>`).join("") : '<div class="gma-order">No reviews yet.</div>';
+    } catch (error) {
+      box.innerHTML = '<div class="gma-order">Could not load reviews: ' + escapeHtml(error.message) + '</div>';
+    }
+  }
+
   async function loadOrders() {
     if (busy) return;
     busy = true;
@@ -3002,6 +3064,7 @@ async function submitAuth() {
       updateStats();
       renderOrders();
       showMessage("Orders loaded successfully.", "success");
+      loadAdminReviews();
     } catch (error) {
       showMessage(error.message, "error");
       if (error.message.includes("permission") || error.message.includes("log in")) {
