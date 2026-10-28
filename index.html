@@ -1422,31 +1422,36 @@ function renderRestaurants() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function addToCart(restaurant, foodId) {
-    const key = food.menu_key || (restaurant.id + ":" + food.id);
-    if (!food) return;
+  
+function addToCart(restaurant, foodId) {
+  const food = restaurant.foods.find(
+    f => String(f.id) === String(foodId)
+  );
+  if (!food) return;
 
-    const key = restaurant.id + ":" + food.id;
-    const existing = cart.find(item => item.key === key);
+  // Keep only ONE declaration of key.
+  const key = food.menu_key || (restaurant.id + ":" + food.id);
+  const existing = cart.find(item => item.key === key);
 
-    if (existing) {
-      existing.qty += 1;
-    } else {
-      cart.push({
-        key,
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-        foodId: food.id,
-        menu_key: food.menu_key || key,
-        name: food.name,
-        price: food.price,
-        qty: 1
-      });
-    }
-
-    renderCart();
-    updateCartToggleCount();
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      key,
+      menu_key: food.menu_key || key,
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      foodId: food.id,
+      name: food.name,
+      price: food.price,
+      qty: 1
+    });
   }
+
+  renderCart();
+  updateCartToggleCount();
+}
+
 
   function updateCartToggleCount() {
     const countElement = el("gm-cart-toggle-count");
