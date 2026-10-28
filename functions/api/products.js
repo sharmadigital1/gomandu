@@ -1,5 +1,5 @@
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ env, request }) {
   if (!env.DB) {
     return Response.json(
       { error: "Database binding DB is missing" },
@@ -8,20 +8,30 @@ export async function onRequestGet({ env }) {
   }
 
   try {
-    const result = await env.DB.prepare(
-      `SELECT id, name, price_paisa
-       FROM products
-       WHERE active = 1
-       ORDER BY id`
-    ).all();
+    const url = new URL(request.url);
+    const restaurantId = url.searchParams.get("restaurant_id");
+
+    let query = `
+      SELECT id, name, price_npr, menu_key, restaurant_id
+      FROM products
+      WHERE active = 1
+    `;
+
+    let statement;
+
+    if (restaurantId) {
+      query += " AND restaurant_id = ?";
+      statement = env.DB.prepare(query + " ORDER BY id")
+        .bind(Number(restaurantId));
+    } else {
+      statement = env.DB.prepare(query + " ORDER BY id");
+    }
+
+    const result = await statement.all();
 
     return Response.json(
       { products: result.results || [] },
-      {
-        headers: {
-          "Cache-Control": "no-store"
-        }
-      }
+      { headers: { "Cache-Control": "no-store" } }
     );
   } catch {
     return Response.json(
