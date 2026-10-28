@@ -1217,6 +1217,18 @@
   .gm-side-logout { display: block; width: 100%; border: 1px solid #e63946; background: #fff; color: #e63946; border-radius: 10px; padding: 11px 12px; font-weight: 700; font-size: 15px; margin-top: 4px; }
   .gm-side-logout:hover { background: #e63946; color: #fff; }
   #gm-account-btn.active { background: #e63946; color: #fff; border-color: #e63946; }
+      /* Checkout buttons */
+  #gm-checkout-form #gm-place-order {
+    display: block; width: 100%; margin-top: 14px; padding: 15px 20px;
+    background: linear-gradient(135deg, #e63946, #c92d3a); color: #fff;
+    border: 0; border-radius: 14px; font-size: 17px; font-weight: 800; letter-spacing: .3px;
+    box-shadow: 0 8px 20px rgba(230, 57, 70, .32); cursor: pointer;
+    transition: transform .15s, box-shadow .15s, filter .15s;
+  }
+  #gm-checkout-form #gm-place-order:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(230, 57, 70, .4); }
+  #gm-checkout-form #gm-place-order:active { transform: translateY(0) scale(.99); }
+  #gm-checkout-form #gm-place-order:disabled { opacity: .65; cursor: not-allowed; transform: none; box-shadow: none; }
+  #gm-checkout-form #gm-close-checkout { display: block; width: 100%; margin-top: 14px; padding: 12px 20px; border-radius: 14px; }
 </style>
 
   <dialog id="auth" aria-labelledby="auth-title">
