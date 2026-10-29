@@ -3231,76 +3231,85 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   byId("gma-filter").addEventListener("change", renderOrders);
   byId("gma-search").addEventListener("input", renderOrders);
 
-  ordersContainer.addEventListener("click", async event => {
+ ordersContainer.addEventListener("click", async event => {
+  // Save delivery person details
   const deliveryButton = event.target.closest("[data-save-delivery]");
 
-  if (!deliveryButton) return;
+  if (deliveryButton) {
+    const card = deliveryButton.closest("[data-order-id]");
+    const orderId = Number(deliveryButton.dataset.saveDelivery);
 
-  const card = deliveryButton.closest("[data-order-id]");
-  const orderId = Number(deliveryButton.dataset.saveDelivery);
+    if (!card || !orderId) return;
 
-  if (!card || !orderId) return;
+    const name = card.querySelector(".gma-delivery-name").value.trim();
+    const phone = card.querySelector(".gma-delivery-phone").value.trim();
+    const notes = card.querySelector(".gma-delivery-notes").value.trim();
 
-  const name = card.querySelector(".gma-delivery-name").value.trim();
-  const phone = card.querySelector(".gma-delivery-phone").value.trim();
-  const notes = card.querySelector(".gma-delivery-notes").value.trim();
-
-  deliveryButton.disabled = true;
-  deliveryButton.textContent = "Saving...";
-
-  try {
-    await api("/api/admin-assign-delivery", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        order_id: orderId,
-        delivery_person_name: name,
-        delivery_person_phone: phone,
-        delivery_notes: notes
-      })
-    });
-
-    showMessage(`Delivery details saved for order #${orderId}.`, "success");
-    await loadOrders();
-  } catch (error) {
-    showMessage(error.message, "error");
-    deliveryButton.disabled = false;
-    deliveryButton.textContent = "Save Delivery Details";
-  }
-});
-
-    showMessage(`Delivery details saved for order #$DIL0.`, "success");
-    await loadOrders();
-  } catch (error) {
-    showMessage(error.message, "error");
-    deliveryButton.disabled = false;
-    deliveryButton.textContent = "Save Delivery Details";
-  }
-
-  return;
-}
-
-const button = event.target.closest("[data-save-order]");
-if (!button) return;
-
-    const card = button.closest("[data-order-id]");
-    const orderId = Number(button.dataset.saveOrder);
-    const select = card?.querySelector(".gma-status-select");
-
-    if (!orderId || !select) return;
-
-    button.disabled = true;
-    button.textContent = "Updating...";
+    deliveryButton.disabled = true;
+    deliveryButton.textContent = "Saving...";
 
     try {
-      await api("/api/admin-update-order", {
+      await api("/api/admin-assign-delivery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           order_id: orderId,
-          order_status: select.value
+          delivery_person_name: name,
+          delivery_person_phone: phone,
+          delivery_notes: notes
         })
       });
+
+      showMessage(
+        `Delivery details saved for order #${orderId}.`,
+        "success"
+      );
+
+      await loadOrders();
+    } catch (error) {
+      showMessage(error.message, "error");
+      deliveryButton.disabled = false;
+      deliveryButton.textContent = "Save Delivery Details";
+    }
+
+    return;
+  }
+
+  // Existing order status update
+  const button = event.target.closest("[data-save-order]");
+  if (!button) return;
+
+  const card = button.closest("[data-order-id]");
+  const orderId = Number(button.dataset.saveOrder);
+  const select = card?.querySelector(".gma-status-select");
+
+  if (!orderId || !select) return;
+
+  button.disabled = true;
+  button.textContent = "Updating...";
+
+  try {
+    await api("/api/admin-update-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_id: orderId,
+        order_status: select.value
+      })
+    });
+
+    showMessage(
+      `Order #${orderId} updated to ${statusLabel(select.value)}.`,
+      "success"
+    );
+
+    await loadOrders();
+  } catch (error) {
+    showMessage(error.message, "error");
+    button.disabled = false;
+    button.textContent = "Update Status";
+  }
+});
 
       showMessage(`Order #${orderId} updated to ${statusLabel(select.value)}.`, "success");
       await loadOrders();
