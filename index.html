@@ -408,6 +408,126 @@
   .ip-soon .big { font-size: 64px; }
   @media (max-width: 560px) { .ip-two { grid-template-columns: 1fr; } }
 </style>
+<style id="gm-admin-redesign">
+  /* ===== Admin redesign: sidebar shell ===== */
+  #gm-admin-panel {
+    --a-bg: #f4f5f7; --a-card: #fff; --a-line: #e7e5e0; --a-ink: #1d1f23; --a-muted: #6b7078;
+    --a-brand: #e63946; --a-series: #2a78d6; --a-grid: #ecebe7;
+    position: fixed; inset: 0; z-index: 10100; overflow: auto; padding: 0 !important; min-height: 0 !important;
+    background: var(--a-bg) !important; color: var(--a-ink);
+  }
+  body.gmx-lock { overflow: hidden; }
+  .gmx-shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100%; }
+  .gmx-side { background: #15171a; color: #fff; padding: 18px 12px; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .gmx-brand { font-size: 24px; font-weight: 900; letter-spacing: -1px; padding: 4px 10px 18px; color: var(--a-brand); }
+  .gmx-brand span { color: #fff; }
+  .gmx-brand small { display: block; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #8b8f96; font-weight: 700; margin-top: 2px; }
+  .gmx-nav { display: grid; gap: 2px; }
+  .gmx-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; color: #c9ccd2; text-align: left; padding: 11px 12px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .gmx-nav-item:hover { background: #23262b; color: #fff; }
+  .gmx-nav-item.active { background: var(--a-brand); color: #fff; }
+  .gmx-i { width: 22px; text-align: center; }
+  .gmx-badge { margin-left: auto; background: #fff; color: var(--a-brand); border-radius: 999px; font-size: 12px; font-weight: 800; padding: 1px 8px; }
+  .gmx-nav-item:not(.active) .gmx-badge { background: var(--a-brand); color: #fff; }
+  .gmx-badge[hidden] { display: none; }
+  .gmx-main { padding: 22px clamp(14px, 3vw, 34px) 80px; min-width: 0; max-width: 1180px; width: 100%; }
+  .gmx-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .gmx-top h2 { margin: 0; font-size: clamp(22px, 3vw, 28px); letter-spacing: -.5px; }
+  .gmx-top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gmx-muted { color: var(--a-muted); font-size: 13px; margin: 4px 0 0; line-height: 1.5; }
+  .gmx-btn { border: 1px solid var(--a-line); background: #fff; color: var(--a-ink); border-radius: 10px; padding: 10px 14px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .gmx-btn:hover { border-color: #b9b7b1; }
+  .gmx-btn:disabled { opacity: .55; cursor: default; }
+  .gmx-btn-primary { background: var(--a-brand); border-color: var(--a-brand); color: #fff; }
+  .gmx-btn-primary:hover { background: #c92d3a; border-color: #c92d3a; }
+  .gmx-link { border: 0; background: none; color: var(--a-brand); font-weight: 800; font-size: 13px; cursor: pointer; padding: 2px 0; }
+  .gmx-link:hover { text-decoration: underline; }
+  .gmx-tab[hidden] { display: none !important; }
+  .gmx-note { background: #fff7e6; border: 1px solid #f3dca8; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.55; margin-bottom: 14px; }
+  .gmx-card { background: var(--a-card); border: 1px solid var(--a-line); border-radius: 16px; padding: 16px 18px; min-width: 0; }
+  .gmx-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+  .gmx-card-head h3 { margin: 0; font-size: 16px; }
+  .gmx-card-head small { color: var(--a-muted); font-weight: 400; font-size: 12px; }
+  .gmx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .gmx-span2 { grid-column: 1 / -1; }
+  .gmx-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .gmx-kpi { background: #fff; border: 1px solid var(--a-line); border-radius: 14px; padding: 14px 16px; }
+  .gmx-kpi small { display: block; color: var(--a-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+  .gmx-kpi strong { display: block; font-size: 26px; letter-spacing: -.5px; margin-top: 6px; }
+  .gmx-kpi span { display: block; color: var(--a-muted); font-size: 12px; margin-top: 2px; }
+  .gmx-kpi.alert strong { color: var(--a-brand); }
+  .gmx-toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .gmx-toolbar input, .gmx-toolbar select { border: 1px solid var(--a-line); border-radius: 10px; padding: 11px 12px; font: inherit; background: #fff; min-width: 0; }
+  .gmx-toolbar input { flex: 1; min-width: 180px; }
+  .gmx-form { display: grid; gap: 12px; max-width: 520px; }
+  .gmx-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
+  .gmx-form input, .gmx-form select { border: 1px solid var(--a-line); border-radius: 10px; padding: 11px 12px; font: inherit; font-weight: 400; background: #fff; width: 100%; box-sizing: border-box; }
+  .gmx-form input:focus, .gmx-form select:focus, .gmx-toolbar input:focus { outline: 2px solid #e6394655; border-color: var(--a-brand); }
+  .gmx-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .gmx-preview { width: 180px; max-width: 100%; height: 120px; object-fit: cover; border-radius: 10px; }
+  .gmx-preview[hidden] { display: none; }
+  /* lists / tables */
+  .gmx-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .gmx-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--a-muted); padding: 8px 10px; border-bottom: 1px solid var(--a-line); white-space: nowrap; }
+  .gmx-table td { padding: 11px 10px; border-bottom: 1px solid var(--a-line); vertical-align: middle; }
+  .gmx-table tr:last-child td { border-bottom: 0; }
+  .gmx-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .gmx-scroll { overflow-x: auto; }
+  .gmx-empty { padding: 22px; text-align: center; color: var(--a-muted); }
+  .gmx-pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 700; background: #eef0f3; color: #3c4046; }
+  .gmx-pill.on { background: #e8f6ef; color: #168653; }
+  .gmx-pill.off { background: #fdeaea; color: #b3261e; }
+  .gmx-code { font-family: ui-monospace, Menlo, monospace; font-weight: 800; background: #fff0e6; color: #c92d3a; border-radius: 6px; padding: 2px 8px; font-size: 13px; }
+  .gmx-rest-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-bottom: 1px solid var(--a-line); }
+  .gmx-rest-row:last-child { border-bottom: 0; }
+  .gmx-rest-row img, .gmx-rest-row .ph { width: 90px; height: 70px; object-fit: cover; border-radius: 8px; background: #eee; flex: none; }
+  .gmx-rest-row .info { flex: 1; min-width: 150px; }
+  .gmx-rest-row button { border: 1px solid var(--a-line); background: #fff; border-radius: 8px; padding: 8px 12px; font-weight: 700; cursor: pointer; }
+  /* bars (status / top items) */
+  .gmx-hbar { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; }
+  .gmx-hbar .track { height: 10px; background: var(--a-grid); border-radius: 5px; overflow: hidden; }
+  .gmx-hbar .fill { height: 100%; background: var(--a-series); border-radius: 0 4px 4px 0; min-width: 2px; }
+  .gmx-hbar .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .gmx-hbar .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .gmx-top-items .gmx-hbar { grid-template-columns: 150px 1fr 36px; }
+  /* svg charts */
+  .gmx-chart { position: relative; }
+  .gmx-chart svg { display: block; width: 100%; height: auto; }
+  .gmx-chart .bar { fill: var(--a-series); transition: opacity .12s; }
+  .gmx-chart .bar.dim { opacity: .45; }
+  .gmx-chart .hit { fill: transparent; cursor: pointer; }
+  .gmx-chart text { font: 13px system-ui, sans-serif; fill: var(--a-muted); }
+  .gmx-chart text.val { fill: var(--a-ink); font-weight: 700; }
+  .gmx-chart .grid { stroke: var(--a-grid); stroke-width: 1; }
+  .gmx-tip { position: absolute; pointer-events: none; background: #15171a; color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 12px; line-height: 1.4; white-space: nowrap; transform: translate(-50%, -100%); z-index: 2; }
+  .gmx-tip[hidden] { display: none; }
+  .gmx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .gmx-attn { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--a-line); flex-wrap: wrap; }
+  .gmx-attn:last-child { border-bottom: 0; }
+  .gmx-attn small { display: block; color: var(--a-muted); }
+  /* reuse of old order cards inside the new shell */
+  #gm-admin-panel .gma-btn { background: var(--a-brand); color: #fff; }
+  #gm-admin-panel .gma-stat, #gm-admin-panel .gma-order { border-radius: 14px; border-color: var(--a-line); }
+  .gma-delivery-box { display: grid; gap: 10px; background: #faf9f7; border: 1px solid var(--a-line); border-radius: 12px; padding: 14px; margin: 12px 0; }
+  .gma-delivery-box h4 { margin: 0; font-size: 14px; }
+  .gma-delivery-box label { display: grid; gap: 5px; font-size: 13px; font-weight: 700; }
+  .gma-delivery-box input, .gma-delivery-box textarea { border: 1px solid var(--a-line); border-radius: 10px; padding: 10px 12px; font: inherit; font-weight: 400; background: #fff; width: 100%; box-sizing: border-box; }
+  .gma-delivery-box textarea { min-height: 64px; resize: vertical; }
+  .gma-delivery-box .gma-btn { justify-self: start; }
+  @media (max-width: 860px) {
+    .gmx-shell { grid-template-columns: 1fr; }
+    .gmx-side { position: sticky; top: 0; z-index: 3; height: auto; padding: 10px; display: flex; align-items: center; gap: 10px; overflow-x: auto; }
+    .gmx-brand { padding: 0 6px; font-size: 18px; flex: none; }
+    .gmx-brand small { display: none; }
+    .gmx-nav { display: flex; gap: 4px; }
+    .gmx-nav-item { width: auto; white-space: nowrap; padding: 9px 12px; }
+    .gmx-nav-item .gmx-i { display: none; }
+    .gmx-grid { grid-template-columns: 1fr; }
+    .gmx-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .gmx-hbar, .gmx-top-items .gmx-hbar { grid-template-columns: 96px 1fr 34px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .gmx-chart .bar { transition: none; } }
+</style>
 </head>
 <body>
  <div id="public-home">
@@ -2026,12 +2146,14 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     MART10: { type: "pct", value: 10, max: 150, min: 500, title: "10% off groceries & more", desc: "Up to NPR 150 off. Minimum order NPR 500." }
   };
   const OFFERS = [
-    { id: "welcome", icon: "🎉", title: "Welcome offer: 10% off", desc: "New to GoMandu? Get 10% off your order, up to NPR 100.", code: "WELCOME20" },
+    { id: "welcome", icon: "🎉", title: "Welcome offer: 20% off", desc: "New to GoMandu? Get 20% off your order, up to NPR 200.", code: "WELCOME20" },
     { id: "momo", icon: "🥟", title: "Momo Monday", desc: "NPR 50 off when you order NPR 300 or more.", code: "MOMO50" },
     { id: "big", icon: "🛍️", title: "Big basket saver", desc: "NPR 100 off on orders above NPR 1,000.", code: "GOMANDU100" },
     { id: "mart", icon: "🥬", title: "Grocery savings", desc: "10% off orders of NPR 500 or more, up to NPR 150.", code: "MART10" },
     { id: "refer", icon: "🎁", title: "Refer & earn cash", desc: "Invite friends. You both earn cash on their first order.", go: "refer" }
   ];
+
+  window.GMData = { coupons: COUPONS, mart: MART };
 
   /* ---------------- Per-user local storage ---------------- */
   let customer = null;
@@ -3085,109 +3207,138 @@ async function submitAuth() {
   <p id="gm-admin-access-message" class="gma-message" role="status" hidden></p>
 </div>
 
-<section id="gm-admin-panel" hidden>
-  <div class="gma-wrap">
-    <header class="gma-header">
-      <div>
-        <h2>GoMandu Admin</h2>
-        <div class="gma-muted">Order management dashboard</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button type="button" id="gm-admin-refresh" class="gma-btn gma-secondary">
-          Refresh Orders
-        </button>
-        <button type="button" id="gm-admin-close" class="gma-btn gma-secondary">
-          Close
-        </button>
-      </div>
-    </header>
+<section id="gm-admin-panel" hidden aria-label="GoMandu admin">
+  <div class="gmx-shell">
+    <aside class="gmx-side" aria-label="Admin menu">
+      <div class="gmx-brand">Go<span>Mandu</span><small>Admin</small></div>
+      <nav class="gmx-nav" id="gmx-nav">
+        <button type="button" class="gmx-nav-item active" data-atab="overview"><span class="gmx-i">▦</span><span>Overview</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="orders"><span class="gmx-i">🧾</span><span>Orders</span><span class="gmx-badge" id="gmx-badge-orders" hidden>0</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="restaurants"><span class="gmx-i">🍽️</span><span>Restaurants</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="menu"><span class="gmx-i">📋</span><span>Menu items</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="customers"><span class="gmx-i">👥</span><span>Customers</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="coupons"><span class="gmx-i">🎟️</span><span>Coupons</span></button>
+        <button type="button" class="gmx-nav-item" data-atab="reviews"><span class="gmx-i">⭐</span><span>Reviews</span></button>
+      </nav>
+    </aside>
 
-    <div class="gma-stats">
-      <div class="gma-stat">
-        <span>Total orders loaded</span>
-        <strong id="gma-total">0</strong>
+    <div class="gmx-main">
+      <div class="gmx-top">
+        <div>
+          <h2 id="gmx-title">Overview</h2>
+          <p class="gmx-muted" id="gmx-updated">Not loaded yet</p>
+        </div>
+        <div class="gmx-top-actions">
+          <button type="button" id="gm-admin-refresh" class="gmx-btn gmx-btn-primary">↻ Refresh</button>
+          <button type="button" id="gm-admin-close" class="gmx-btn">Back to app</button>
+        </div>
       </div>
-      <div class="gma-stat">
-        <span>New / pending</span>
-        <strong id="gma-pending">0</strong>
-      </div>
-      <div class="gma-stat">
-        <span>Delivered</span>
-        <strong id="gma-delivered">0</strong>
-      </div>
+
+      <!-- OVERVIEW -->
+      <section class="gmx-tab" id="gmx-tab-overview">
+        <div class="gmx-kpis" id="gmx-kpis"></div>
+        <div class="gmx-grid">
+          <div class="gmx-card"><div class="gmx-card-head"><h3>Orders · last 7 days</h3></div><div id="gmx-chart-orders" class="gmx-chart"></div></div>
+          <div class="gmx-card"><div class="gmx-card-head"><h3>Revenue · last 7 days <small>NPR, excl. cancelled</small></h3></div><div id="gmx-chart-revenue" class="gmx-chart"></div></div>
+          <div class="gmx-card"><div class="gmx-card-head"><h3>Orders by status</h3></div><div id="gmx-status-bars"></div></div>
+          <div class="gmx-card"><div class="gmx-card-head"><h3>Top items</h3><small>by quantity sold</small></div><div id="gmx-top-items"></div></div>
+          <div class="gmx-card gmx-span2"><div class="gmx-card-head"><h3>Needs attention</h3><button type="button" class="gmx-link" data-goatab="orders">Open orders →</button></div><div id="gmx-attention"></div></div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="gmx-tab" id="gmx-tab-orders" hidden>
+        <div class="gma-stats">
+          <div class="gma-stat"><span>Total orders loaded</span><strong id="gma-total">0</strong></div>
+          <div class="gma-stat"><span>New / pending</span><strong id="gma-pending">0</strong></div>
+          <div class="gma-stat"><span>Delivered</span><strong id="gma-delivered">0</strong></div>
+        </div>
+        <div class="gma-toolbar">
+          <input id="gma-search" type="search" placeholder="Search order, customer, phone..." aria-label="Search orders">
+          <select id="gma-filter" aria-label="Filter by order status">
+            <option value="all">All statuses</option>
+            <option value="new">New</option>
+            <option value="accepted">Accepted</option>
+            <option value="preparing">Preparing</option>
+            <option value="out_for_delivery">Out for delivery</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button type="button" id="gmx-export" class="gmx-btn">⬇ Export CSV</button>
+        </div>
+        <p id="gma-message" class="gma-message" role="status" aria-live="polite"></p>
+        <div id="gma-orders" class="gma-orders"></div>
+      </section>
+
+      <!-- RESTAURANTS -->
+      <section class="gmx-tab" id="gmx-tab-restaurants" hidden>
+        <div id="gm-manage-restaurants" class="gmx-card">
+          <div class="gmx-card-head"><h3>Add or edit a restaurant</h3></div>
+          <p class="gmx-muted">Add restaurants, update photos, or hide restaurants from customers.</p>
+          <form id="gm-restaurant-form" class="gmx-form">
+            <input type="hidden" id="gm-restaurant-id" value="">
+            <label for="gm-restaurant-name">Restaurant name
+              <input id="gm-restaurant-name" type="text" maxlength="100" required placeholder="e.g. Kathmandu Momo House">
+            </label>
+            <label for="gm-restaurant-photo">Photo URL (HTTPS)
+              <input id="gm-restaurant-photo" type="url" placeholder="https://example.com/restaurant.jpg">
+            </label>
+            <img id="gm-restaurant-preview" class="gmx-preview" alt="Restaurant photo preview" hidden>
+            <label for="gm-restaurant-active">Visibility
+              <select id="gm-restaurant-active">
+                <option value="1">Active — show to customers</option>
+                <option value="0">Inactive — hide from customers</option>
+              </select>
+            </label>
+            <div class="gmx-row">
+              <button type="submit" id="gm-restaurant-save" class="gmx-btn gmx-btn-primary">Save restaurant</button>
+              <button type="button" id="gm-restaurant-cancel" class="gmx-btn">Clear form</button>
+            </div>
+            <p id="gm-restaurant-message" class="gmx-muted" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+        <div class="gmx-card" style="margin-top:14px">
+          <div class="gmx-card-head"><h3>Restaurant list</h3><button type="button" id="gm-restaurant-refresh" class="gmx-btn">↻ Refresh list</button></div>
+          <div id="gm-restaurant-list" aria-live="polite">Loading restaurants…</div>
+        </div>
+      </section>
+
+      <!-- MENU -->
+      <section class="gmx-tab" id="gmx-tab-menu" hidden>
+        <div class="gmx-note">This is the menu customers currently see. It lives in the website code, so items can’t be edited here yet. Editing needs a menu API on your server.</div>
+        <div class="gmx-toolbar">
+          <select id="gmx-menu-source" aria-label="Restaurant"></select>
+          <input id="gmx-menu-search" type="search" placeholder="Search items…" aria-label="Search menu items">
+        </div>
+        <div class="gmx-card"><div id="gmx-menu-list"></div></div>
+      </section>
+
+      <!-- CUSTOMERS -->
+      <section class="gmx-tab" id="gmx-tab-customers" hidden>
+        <div class="gmx-note">Built from your orders: everyone who has placed at least one order.</div>
+        <div class="gmx-toolbar">
+          <input id="gmx-cust-search" type="search" placeholder="Search name or phone…" aria-label="Search customers">
+          <select id="gmx-cust-sort" aria-label="Sort customers">
+            <option value="spent">Highest spend</option>
+            <option value="orders">Most orders</option>
+            <option value="recent">Most recent</option>
+          </select>
+        </div>
+        <div class="gmx-card"><div id="gmx-cust-list"></div></div>
+      </section>
+
+      <!-- COUPONS -->
+      <section class="gmx-tab" id="gmx-tab-coupons" hidden>
+        <div class="gmx-note">Coupon rules are defined in the website code and re-checked by your server when an order is placed. Creating or editing coupons needs a coupons API on your server.</div>
+        <div class="gmx-card"><div id="gmx-coupon-list"></div></div>
+      </section>
+
+      <!-- REVIEWS -->
+      <section class="gmx-tab" id="gmx-tab-reviews" hidden>
+        <p class="gmx-muted"><strong>Customer reviews</strong> <span id="gma-review-avg"></span></p>
+        <div id="gma-reviews" class="gma-orders"></div>
+      </section>
     </div>
-
-    <div class="gma-toolbar">
-      <input id="gma-search" type="search"
-        placeholder="Search order, customer, phone..." aria-label="Search orders">
-
-      <select id="gma-filter" aria-label="Filter by order status">
-        <option value="all">All statuses</option>
-        <option value="new">New</option>
-        <option value="accepted">Accepted</option>
-        <option value="preparing">Preparing</option>
-        <option value="out_for_delivery">Out for delivery</option>
-        <option value="delivered">Delivered</option>
-        <option value="cancelled">Cancelled</option>
-      </select>
-    </div>
-
-    <p id="gma-message" class="gma-message" role="status" aria-live="polite"></p>
-    <div id="gma-orders" class="gma-orders"></div>
-
-    <h3 style="margin:28px 0 10px">Customer reviews <span id="gma-review-avg" class="gma-muted"></span></h3>
-    <div id="gma-reviews" class="gma-orders"></div>
-
-<!-- GoMandu: Manage Restaurants -->
-<div id="gm-manage-restaurants" style="margin:24px 0;padding:18px;border:1px solid #ddd;border-radius:14px;background:#fff;color:#222">
-  <h2>Manage Restaurants</h2>
-  <p>Add restaurants, update photos, or hide restaurants from customers.</p>
-
-  <form id="gm-restaurant-form">
-    <input type="hidden" id="gm-restaurant-id" value="">
-
-    <label for="gm-restaurant-name">Restaurant name</label>
-    <input id="gm-restaurant-name" type="text" maxlength="100"
-      required placeholder="e.g. Kathmandu Momo House"
-      style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 14px">
-
-    <label for="gm-restaurant-photo">Photo URL (HTTPS)</label>
-    <input id="gm-restaurant-photo" type="url"
-      placeholder="https://example.com/restaurant.jpg"
-      style="display:block;width:100%;box-sizing:border-box;padding:12px;margin:6px 0 10px">
-
-    <img id="gm-restaurant-preview" alt="Restaurant photo preview"
-      hidden style="width:180px;max-width:100%;height:120px;object-fit:cover;border-radius:10px;margin:4px 0 14px">
-
-    <label for="gm-restaurant-active">Visibility</label>
-    <select id="gm-restaurant-active"
-      style="display:block;width:100%;padding:12px;margin:6px 0 14px">
-      <option value="1">Active — show to customers</option>
-      <option value="0">Inactive — hide from customers</option>
-    </select>
-
-    <button type="submit" id="gm-restaurant-save"
-      style="padding:11px 18px;background:#d71920;color:white;border:0;border-radius:8px;cursor:pointer">
-      Save restaurant
-    </button>
-
-    <button type="button" id="gm-restaurant-cancel"
-      style="padding:11px 18px;margin-left:8px;border:1px solid #aaa;border-radius:8px;cursor:pointer">
-      Clear form
-    </button>
-    <p id="gm-restaurant-message" role="status" aria-live="polite"></p>
-  </form>
-
-  <hr style="margin:22px 0">
-
-  <h3>Restaurant list</h3>
-  <button type="button" id="gm-restaurant-refresh"
-    style="padding:9px 14px;margin-bottom:12px;cursor:pointer">
-    Refresh list
-  </button>
-  <div id="gm-restaurant-list" aria-live="polite">Loading restaurants…</div>
-</div>
-<!-- End Manage Restaurants -->
   </div>
 </section>
 
@@ -3384,6 +3535,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
     try {
       const data = await api("/api/admin-reviews");
       const list = Array.isArray(data.reviews) ? data.reviews : [];
+      window.dispatchEvent(new CustomEvent("gma:reviews", { detail: list }));
       const avg = (k) => list.length ? (list.reduce((s, r) => s + Number(r[k]), 0) / list.length).toFixed(1) : "–";
       byId("gma-review-avg").textContent = list.length ? "· " + list.length + " total · food " + avg("food_rating") + "/5 · delivery " + avg("delivery_rating") + "/5" : "";
       box.innerHTML = list.length ? list.map(r => `
@@ -3410,6 +3562,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
       orders = Array.isArray(data.orders) ? data.orders : [];
       updateStats();
       renderOrders();
+      window.dispatchEvent(new CustomEvent("gma:orders", { detail: orders }));
       showMessage("Orders loaded successfully.", "success");
       loadAdminReviews();
     } catch (error) {
@@ -3435,6 +3588,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
     accessMessage.textContent = "";
     orders = [];
     ordersContainer.innerHTML = "";
+    window.dispatchEvent(new CustomEvent("gma:orders", { detail: [] }));
   }
 
   async function checkAdminAccess() {
@@ -3616,10 +3770,10 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
     list.innerHTML = restaurants.map(r => {
       const photo = safePhoto(r.photo_url || "");
       const active = Number(r.active) === 1;
-      return `<article style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #ddd">
-        ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy" style="width:90px;height:70px;object-fit:cover;border-radius:8px">` : `<div style="width:90px;height:70px;background:#eee;display:grid;place-items:center;border-radius:8px">No photo</div>`}
-        <div style="flex:1;min-width:150px"><strong>${safeText(r.name)}</strong>
-          <div style="margin-top:5px;color:${active ? "#16803c" : "#b42318"}">${active ? "Active — visible" : "Inactive — hidden"}</div>
+      return `<article class="gmx-rest-row">
+        ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
+        <div class="info"><strong>${safeText(r.name)}</strong>
+          <div style="margin-top:6px"><span class="gmx-pill ${active ? "on" : "off"}">${active ? "Active — visible" : "Inactive — hidden"}</span></div>
         </div>
         <button type="button" data-edit="${Number(r.id)}">Edit</button>
         <button type="button" data-toggle="${Number(r.id)}">${active ? "Deactivate" : "Activate"}</button>
@@ -3738,7 +3892,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
     about: { title: "About Us", body: () => `
       <p class="ip-meta">GoMandu</p><h1>About GoMandu</h1>
       <p class="ip-lead">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
-      <p>GoMandu is a bhairahawa-built delivery app. We connect hungry people with the local restaurants they love, and get the order to their door fast, hot and fresh.</p>
+      <p>GoMandu is a Kathmandu-built delivery app. We connect hungry people with the local restaurants they love, and get the order to their door fast, hot and fresh.</p>
       <h2>What we do today</h2>
       <p><strong>Food delivery</strong> is live. Pick a restaurant, add dishes to your cart, confirm your delivery details, pay cash on delivery, and follow the order from <em>My Orders</em>.</p>
       <h2>What is coming</h2>
@@ -3948,6 +4102,222 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   }));
 
   route();
+})();
+</script>
+<script>
+/* GoMandu admin UI: tabs, overview charts, customers, coupons, menu.
+   Orders and reviews come from the existing admin script via the "gma:orders" and
+   "gma:reviews" events. Nothing here talks to the server directly. */
+(() => {
+  const $ = id => document.getElementById(id);
+  const panel = $("gm-admin-panel");
+  if (!panel) return;
+  const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const num = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+  const money = v => num(v).toLocaleString("en-IN", { maximumFractionDigits: 0 });
+  const LABELS = { new: "New", pending: "New", accepted: "Accepted", preparing: "Preparing", out_for_delivery: "Out for delivery", delivered: "Delivered", cancelled: "Cancelled" };
+  const STATUS_ORDER = ["new", "accepted", "preparing", "out_for_delivery", "delivered", "cancelled"];
+  const norm = o => { const s = String(o.order_status || "new").toLowerCase(); return s === "pending" ? "new" : s; };
+  const total = o => num(o.total_amount != null ? o.total_amount : o.total);
+
+  let orders = [], reviews = [], loadedAt = null;
+
+  /* SQLite-style "YYYY-MM-DD HH:MM:SS" has no zone and is UTC; treat it that way. */
+  function when(o) {
+    const s = String(o.created_at || "");
+    if (!s) return null;
+    const d = /^\d{4}-\d\d-\d\d[ T]\d\d:\d\d(:\d\d)?$/.test(s) ? new Date(s.replace(" ", "T") + "Z") : new Date(s);
+    return isNaN(d) ? null : d;
+  }
+  const dayKey = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const fmtDate = d => d ? d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+
+  /* ---------- Tabs ---------- */
+  const TITLES = { overview: "Overview", orders: "Orders", restaurants: "Restaurants", menu: "Menu items", customers: "Customers", coupons: "Coupons", reviews: "Reviews" };
+  let tab = "overview";
+  const renderers = {};
+  function showTab(name) {
+    if (!TITLES[name]) name = "overview";
+    tab = name;
+    Object.keys(TITLES).forEach(n => { const el = $("gmx-tab-" + n); if (el) el.hidden = n !== name; });
+    document.querySelectorAll("#gmx-nav .gmx-nav-item").forEach(b => {
+      const on = b.dataset.atab === name;
+      b.classList.toggle("active", on);
+      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    });
+    $("gmx-title").textContent = TITLES[name];
+    if (renderers[name]) renderers[name]();
+    panel.scrollTo({ top: 0 });
+  }
+  document.querySelectorAll("#gmx-nav .gmx-nav-item").forEach(b => b.addEventListener("click", () => showTab(b.dataset.atab)));
+  panel.addEventListener("click", e => { const g = e.target.closest("[data-goatab]"); if (g) showTab(g.dataset.goatab); });
+
+  /* Lock page scroll behind the overlay; open on the Overview. */
+  let wasHidden = panel.hidden;
+  new MutationObserver(() => {
+    document.body.classList.toggle("gmx-lock", !panel.hidden);
+    if (wasHidden && !panel.hidden) showTab("overview");
+    wasHidden = panel.hidden;
+  }).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
+
+  /* ---------- Data events ---------- */
+  window.addEventListener("gma:orders", e => {
+    orders = Array.isArray(e.detail) ? e.detail : [];
+    loadedAt = new Date();
+    $("gmx-updated").textContent = "Updated " + loadedAt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    const n = orders.filter(o => norm(o) === "new").length;
+    const b = $("gmx-badge-orders"); b.textContent = n; b.hidden = !n;
+    if (renderers[tab] && tab !== "orders" && tab !== "reviews" && tab !== "restaurants") renderers[tab]();
+  });
+  window.addEventListener("gma:reviews", e => {
+    reviews = Array.isArray(e.detail) ? e.detail : [];
+    if (tab === "overview") renderers.overview();
+  });
+
+  /* ---------- Chart helpers ---------- */
+  const tip = host => host.querySelector(".gmx-tip");
+  function barChart(host, data, fmt, unit, integer) {
+    const W = 560, H = 220, L = 48, R = 8, T = 24, B = 28;
+    const max = Math.max(1, ...data.map(d => d.value));
+    const nice = (() => { const p = Math.pow(10, Math.floor(Math.log10(max))); const m = max / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10) * p; })();
+    const top = integer ? Math.max(2, Math.ceil(max / 2) * 2) : nice;
+    const nice2 = top; const iw = W - L - R, ih = H - T - B, slot = iw / data.length, bw = Math.min(46, slot * .62);
+    const y = v => T + ih - (v / nice2) * ih;
+    const maxIdx = data.reduce((m, d, i) => d.value > data[m].value ? i : m, 0);
+    const grid = [0, .5, 1].map(f => { const v = nice2 * f; return `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${esc(fmt(v))}</text>`; }).join("");
+    const bars = data.map((d, i) => {
+      const cx = L + slot * i + slot / 2, h = Math.max(d.value > 0 ? 2 : 0, (d.value / nice2) * ih), x = cx - bw / 2, top = T + ih - h, r = Math.min(4, bw / 2, h);
+      const path = h ? `M${x},${T + ih} V${top + r} Q${x},${top} ${x + r},${top} H${x + bw - r} Q${x + bw},${top} ${x + bw},${top + r} V${T + ih} Z` : "";
+      const label = (i === maxIdx && d.value > 0) || i === data.length - 1 ? `<text class="val" x="${cx}" y="${top - 6}" text-anchor="middle">${esc(fmt(d.value))}</text>` : "";
+      return `<g data-i="${i}"><path class="bar" d="${path}"/>${label}<text x="${cx}" y="${H - 8}" text-anchor="middle">${esc(d.label)}</text><rect class="hit" x="${cx - slot / 2}" y="${T}" width="${slot}" height="${ih + B}"/></g>`;
+    }).join("");
+    const rows = data.map(d => `<tr><td>${esc(d.tip)}</td><td>${esc(fmt(d.value))}</td></tr>`).join("");
+    host.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(unit)} per day, last ${data.length} days">${grid}${bars}</svg><div class="gmx-tip" hidden></div><table class="gmx-sr"><caption>${esc(unit)} per day</caption><tbody>${rows}</tbody></table>`;
+    const t = tip(host), svg = host.querySelector("svg");
+    host.querySelectorAll("g[data-i]").forEach(g => {
+      const i = Number(g.dataset.i);
+      g.addEventListener("pointerenter", () => {
+        host.querySelectorAll(".bar").forEach((b, j) => b.classList.toggle("dim", j !== i));
+        const r = g.querySelector(".hit").getBoundingClientRect(), hr = host.getBoundingClientRect();
+        const bar = g.querySelector(".bar").getBoundingClientRect();
+        t.innerHTML = "<strong>" + esc(data[i].tip) + "</strong><br>" + esc(unit) + ": " + esc(fmt(data[i].value));
+        t.style.left = (r.left + r.width / 2 - hr.left) + "px"; t.style.top = ((bar.height ? bar.top : r.bottom - 30) - hr.top - 6) + "px"; t.hidden = false;
+      });
+      g.addEventListener("pointerleave", () => { t.hidden = true; host.querySelectorAll(".bar").forEach(b => b.classList.remove("dim")); });
+    });
+  }
+  const hbars = (rows, max) => rows.map(r => `<div class="gmx-hbar"><span class="l" title="${esc(r.label)}">${esc(r.label)}</span><span class="track"><span class="fill" style="display:block;width:${max ? Math.max(2, r.value / max * 100) : 0}%"></span></span><span class="v">${esc(r.value)}</span></div>`).join("");
+
+  /* ---------- Overview ---------- */
+  renderers.overview = () => {
+    const todayKey = dayKey(new Date());
+    const live = orders.filter(o => norm(o) !== "cancelled");
+    const today = orders.filter(o => { const d = when(o); return d && dayKey(d) === todayKey; });
+    const todayRev = today.filter(o => norm(o) !== "cancelled").reduce((s, o) => s + total(o), 0);
+    const attention = orders.filter(o => norm(o) === "new");
+    const out = orders.filter(o => norm(o) === "out_for_delivery").length;
+    const aov = live.length ? live.reduce((s, o) => s + total(o), 0) / live.length : 0;
+    const avgR = reviews.length ? (reviews.reduce((s, r) => s + num(r.food_rating), 0) / reviews.length).toFixed(1) : "–";
+    const k = (label, val, sub, alert) => `<div class="gmx-kpi${alert ? " alert" : ""}"><small>${label}</small><strong>${val}</strong><span>${sub}</span></div>`;
+    $("gmx-kpis").innerHTML =
+      k("Today’s orders", today.length, "since midnight") +
+      k("Today’s revenue", "NPR " + money(todayRev), "excl. cancelled") +
+      k("Needs attention", attention.length, "new, not yet accepted", attention.length > 0) +
+      k("Out for delivery", out, "on the road now") +
+      k("Avg order value", "NPR " + money(aov), "all loaded orders") +
+      k("Food rating", avgR + (reviews.length ? " / 5" : ""), reviews.length + " review" + (reviews.length === 1 ? "" : "s"));
+
+    const days = [];
+    for (let i = 6; i >= 0; i--) { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - i); days.push(d); }
+    const byDay = Object.fromEntries(days.map(d => [dayKey(d), { n: 0, rev: 0 }]));
+    orders.forEach(o => { const d = when(o); if (!d) return; const b = byDay[dayKey(d)]; if (!b) return; if (norm(o) !== "cancelled") { b.n++; b.rev += total(o); } });
+    const series = f => days.map(d => ({ label: d.toLocaleDateString(undefined, { weekday: "short" }), tip: d.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "short" }), value: f(byDay[dayKey(d)]) }));
+    barChart($("gmx-chart-orders"), series(b => b.n), v => String(Math.round(v)), "Orders", true);
+    barChart($("gmx-chart-revenue"), series(b => b.rev), v => v >= 1000 ? (Math.round(v / 100) / 10) + "k" : String(Math.round(v)), "Revenue (NPR)");
+
+    const counts = {}; STATUS_ORDER.forEach(s => counts[s] = 0); orders.forEach(o => { const s = norm(o); counts[s] = (counts[s] || 0) + 1; });
+    const st = Object.keys(counts).map(s => ({ label: LABELS[s] || s, value: counts[s] }));
+    $("gmx-status-bars").innerHTML = orders.length ? hbars(st, Math.max(...st.map(r => r.value))) : '<div class="gmx-empty">No orders yet.</div>';
+
+    const items = {};
+    live.forEach(o => (o.items || []).forEach(i => { const n = i.product_name || i.name || "Item"; items[n] = (items[n] || 0) + num(i.quantity || 1); }));
+    const top = Object.entries(items).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([label, value]) => ({ label, value }));
+    $("gmx-top-items").className = "gmx-top-items";
+    $("gmx-top-items").innerHTML = top.length ? hbars(top, top[0].value) : '<div class="gmx-empty">No item data yet.</div>';
+
+    const list = attention.slice().sort((a, b) => (when(b) || 0) - (when(a) || 0)).slice(0, 5);
+    $("gmx-attention").innerHTML = list.length ? list.map(o => `<div class="gmx-attn"><div><strong>Order #${esc(o.id)} · ${esc(o.customer_name)}</strong><small>${esc(fmtDate(when(o)))} · NPR ${esc(money(total(o)))} · ${esc(o.phone || "")}</small></div><button type="button" class="gmx-btn" data-find-order="${esc(o.id)}">Review</button></div>`).join("") : '<div class="gmx-empty">All caught up. No new orders waiting. 🎉</div>';
+  };
+  panel.addEventListener("click", e => {
+    const b = e.target.closest("[data-find-order]"); if (!b) return;
+    showTab("orders"); const s = $("gma-search"); s.value = b.dataset.findOrder; s.dispatchEvent(new Event("input"));
+  });
+
+  /* ---------- Orders: CSV export ---------- */
+  $("gmx-export").addEventListener("click", () => {
+    if (!orders.length) return;
+    const q = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+    const rows = [["Order", "Date", "Customer", "Phone", "Address", "Status", "Payment", "Total (NPR)", "Items"]].concat(orders.map(o => [o.id, o.created_at, o.customer_name, o.phone, o.address, LABELS[norm(o)] || norm(o), (o.payment_method || "") + " " + (o.payment_status || ""), total(o), (o.items || []).map(i => (i.product_name || i.name) + " x" + i.quantity).join("; ")]));
+    const blob = new Blob(["\ufeff" + rows.map(r => r.map(q).join(",")).join("\r\n")], { type: "text/csv" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "gomandu-orders-" + dayKey(new Date()) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
+  /* ---------- Customers (derived from orders) ---------- */
+  function customers() {
+    const map = new Map();
+    orders.forEach(o => {
+      const key = String(o.phone || o.customer_name || o.id).replace(/\s+/g, "");
+      const c = map.get(key) || { name: o.customer_name || "Unknown", phone: o.phone || "", orders: 0, delivered: 0, spent: 0, last: null, address: "" };
+      c.orders++; if (norm(o) === "delivered") c.delivered++;
+      if (norm(o) !== "cancelled") c.spent += total(o);
+      const d = when(o); if (d && (!c.last || d > c.last)) { c.last = d; c.address = o.address || c.address; c.name = o.customer_name || c.name; }
+      map.set(key, c);
+    });
+    return Array.from(map.values());
+  }
+  renderers.customers = () => {
+    const q = $("gmx-cust-search").value.trim().toLowerCase(), sort = $("gmx-cust-sort").value;
+    let list = customers().filter(c => (c.name + " " + c.phone).toLowerCase().includes(q));
+    list.sort((a, b) => sort === "orders" ? b.orders - a.orders : sort === "recent" ? (b.last || 0) - (a.last || 0) : b.spent - a.spent);
+    $("gmx-cust-list").innerHTML = list.length ? `<div class="gmx-scroll"><table class="gmx-table"><thead><tr><th>Customer</th><th>Phone</th><th class="num">Orders</th><th class="num">Spent (NPR)</th><th>Last order</th><th></th></tr></thead><tbody>${list.map(c => `<tr><td><strong>${esc(c.name)}</strong><div class="gmx-muted">${esc(c.address)}</div></td><td>${esc(c.phone)}</td><td class="num">${c.orders}</td><td class="num">${esc(money(c.spent))}</td><td>${esc(fmtDate(c.last))}</td><td><button type="button" class="gmx-btn" data-cust-orders="${esc(c.phone || c.name)}">Orders</button></td></tr>`).join("")}</tbody></table></div>` : '<div class="gmx-empty">No customers yet. They appear after the first order.</div>';
+  };
+  $("gmx-cust-search").addEventListener("input", renderers.customers);
+  $("gmx-cust-sort").addEventListener("change", renderers.customers);
+  $("gmx-cust-list").addEventListener("click", e => {
+    const b = e.target.closest("[data-cust-orders]"); if (!b) return;
+    showTab("orders"); const s = $("gma-search"); s.value = b.dataset.custOrders; s.dispatchEvent(new Event("input"));
+  });
+
+  /* ---------- Coupons (read-only, from site code) ---------- */
+  renderers.coupons = () => {
+    const data = (window.GMData && window.GMData.coupons) || {};
+    const entries = Object.entries(data);
+    const hasField = orders.some(o => "coupon_code" in o);
+    const used = code => hasField ? orders.filter(o => String(o.coupon_code || "").toUpperCase() === code && norm(o) !== "cancelled").length : "–";
+    $("gmx-coupon-list").innerHTML = entries.length ? `<div class="gmx-scroll"><table class="gmx-table"><thead><tr><th>Code</th><th>Offer</th><th>Rule</th><th class="num">Min order</th><th class="num">Used</th></tr></thead><tbody>${entries.map(([code, c]) => `<tr><td><span class="gmx-code">${esc(code)}</span></td><td><strong>${esc(c.title)}</strong><div class="gmx-muted">${esc(c.desc)}</div></td><td>${c.type === "pct" ? esc(c.value) + "% (max NPR " + esc(c.max) + ")" : "NPR " + esc(c.value) + " flat"}</td><td class="num">NPR ${esc(money(c.min))}</td><td class="num">${esc(used(code))}</td></tr>`).join("")}</tbody></table></div>` : '<div class="gmx-empty">No coupons found.</div>';
+  };
+
+  /* ---------- Menu items (read-only, from site code) ---------- */
+  function sources() {
+    const d = window.GMData || {};
+    const rest = (window.GM && window.GM.restaurants) || [];
+    return d.mart ? rest.concat([d.mart]) : rest;
+  }
+  renderers.menu = () => {
+    const sel = $("gmx-menu-source"), src = sources();
+    if (sel.options.length !== src.length + 1) {
+      sel.innerHTML = '<option value="">All restaurants &amp; mart</option>' + src.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("");
+    }
+    const q = $("gmx-menu-search").value.trim().toLowerCase();
+    const rows = [];
+    src.filter(s => !sel.value || s.id === sel.value).forEach(s => s.foods.forEach(f => {
+      if ((f.name + " " + s.name + " " + (f.cat || "")).toLowerCase().includes(q)) rows.push({ s, f });
+    }));
+    $("gmx-menu-list").innerHTML = rows.length ? `<div class="gmx-scroll"><table class="gmx-table"><thead><tr><th>Item</th><th>Restaurant</th><th>Category</th><th class="num">Price (NPR)</th></tr></thead><tbody>${rows.map(({ s, f }) => `<tr><td><strong>${f.icon ? esc(f.icon) + " " : ""}${esc(f.name)}</strong></td><td>${esc(s.name)}</td><td>${esc(f.cat || s.category || "")}</td><td class="num">${esc(money(f.price))}</td></tr>`).join("")}</tbody></table></div><p class="gmx-muted" style="margin-top:10px">${rows.length} item${rows.length === 1 ? "" : "s"}</p>` : '<div class="gmx-empty">No items match.</div>';
+  };
+  $("gmx-menu-source").addEventListener("change", renderers.menu);
+  $("gmx-menu-search").addEventListener("input", renderers.menu);
 })();
 </script>
 </body>
