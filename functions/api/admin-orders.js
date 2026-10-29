@@ -60,9 +60,12 @@ export async function onRequestGet({ request, env }) {
 
     const result = await env.DB.prepare(
       `SELECT id, customer_name, phone, address,
-              total_amount, payment_method, payment_status,
-              order_status, created_at
-       FROM orders
+       total_amount, payment_method, payment_status,
+       order_status, created_at,
+       delivery_person_name,
+       delivery_person_phone,
+       delivery_notes
+FROM orders
        ORDER BY id DESC
        LIMIT 100`
     ).all();
