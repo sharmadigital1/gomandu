@@ -310,221 +310,103 @@
 #gm-cart-panel {
   margin-bottom: 90px;
 }
- 
-/* GoMandu Customer Dashboard — Modern Theme */
-#customer-app {
-  --gm-red: #e63946;
-  --gm-dark: #171717;
-  --gm-yellow: #ffd43b;
-  --gm-light: #fffdf7;
-  background: var(--gm-light);
-  color: var(--gm-dark);
-  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  padding: 24px 16px 100px;
-}
-
-#customer-app .gm-dashboard {
-  max-width: 1240px;
-  margin: 0 auto;
-}
-
-#customer-app .gm-header {
-  border-bottom: 2px solid #f0ece4;
-  padding: 0 0 20px;
-  margin-bottom: 24px;
-}
-
-#customer-app .gm-header h1,
-#customer-app #gm-menu-title {
-  color: var(--gm-red);
-  font-weight: 850;
-  letter-spacing: -0.6px;
-}
-
-#customer-app .gm-restaurant-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 20px;
-  margin: 22px 0 34px;
-}
-
-#customer-app .gm-restaurant-card {
-  overflow: hidden;
-  border: 1px solid #eee8df;
-  border-radius: 18px;
-  background: #fff;
-  box-shadow: 0 5px 18px #1717170a;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-
-#customer-app .gm-restaurant-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px #17171718;
-}
-
-#customer-app .gm-restaurant-card img {
-  display: block;
-  width: 100%;
-  height: 185px;
-  object-fit: cover;
-}
-
-#customer-app .gm-restaurant-info {
-  padding: 16px;
-}
-
-#customer-app .gm-restaurant-info h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-#customer-app .gm-btn.gm-primary {
-  background: var(--gm-red);
-  color: #fff;
-  border: 1px solid var(--gm-red);
-  border-radius: 10px;
-  font-weight: 750;
-  transition: background .2s ease, transform .2s ease;
-}
-
-#customer-app .gm-btn.gm-primary:hover {
-  background: #c92d3a;
-  transform: translateY(-1px);
-}
-
-#customer-app .gm-btn.gm-outline {
-  background: #fff;
-  color: var(--gm-dark);
-  border: 1px solid #dedbd5;
-  border-radius: 10px;
-}
-
-#customer-app .gm-food-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 18px;
-  margin: 12px 0;
-  border: 1px solid #eee8df;
-  border-radius: 15px;
-  background: #fff;
-  box-shadow: 0 4px 14px #17171708;
-}
-
-#customer-app .gm-food-row h3 {
-  margin: 0 0 7px;
-  font-size: 17px;
-}
-
-#customer-app .gm-food-row p {
-  margin: 0;
-  color: var(--gm-red);
-  font-weight: 800;
-}
-
-#customer-app .gm-food-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-#customer-app .gm-quick button {
-  border: 1px solid #eee3d0;
-  border-radius: 13px;
-  background: #fff;
-  padding: 13px 16px;
-  font-weight: 750;
-  transition: background .2s ease;
-}
-
-#customer-app .gm-quick button:hover {
-  background: #fff3bd;
-}
-
-#customer-app .gm-cart-toggle {
-  background: var(--gm-red);
-  border: 2px solid var(--gm-yellow);
-  box-shadow: 0 7px 24px #17171725;
-}
-
-#customer-app .gm-side-item.active,
-#customer-app .gm-side-item[aria-current="page"] {
-  background: #fff0ee;
-  color: var(--gm-red);
-  border-left: 4px solid var(--gm-red);
-}
-
-#customer-app .gm-delivery-assignment {
-  margin: 16px 0;
-  padding: 16px;
-  border-radius: 14px;
-  border: 1px solid #f1df9a;
-  background: #fffbea;
-}
-
-#customer-app .gm-delivery-assignment h4 {
-  margin: 0 0 10px;
-}
-
-#customer-app .gm-delivery-assignment p {
-  margin: 6px 0;
-}
-
-#customer-app .gm-delivery-assignment a {
-  color: var(--gm-red);
-  font-weight: 750;
-}
-
-@media (max-width: 600px) {
-  #customer-app {
-    padding: 16px 10px 100px;
+    
+</style>
+<style id="gm-overview-css">
+  /* ===== Customer dashboard: Overview tab ===== */
+  .ov-hello { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .ov-hello h2 { font-size: clamp(22px, 3vw, 28px); letter-spacing: -.5px; }
+  .ov-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #fff0e6; border: 1px solid #ffd9bf; border-radius: 14px; padding: 12px 16px; margin-bottom: 16px; font-weight: 700; }
+  .ov-banner[hidden] { display: none !important; }
+  .ov-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .ov-stat { background: #fff; border: 1px solid #eceae6; border-radius: 14px; padding: 14px 16px; }
+  .ov-stat small { display: block; color: #6b7078; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+  .ov-stat strong { display: block; font-size: 24px; letter-spacing: -.5px; margin-top: 6px; }
+  .ov-stat.accent strong { color: #e63946; }
+  .ov-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .ov-card { background: #fff; border: 1px solid #eceae6; border-radius: 16px; padding: 16px 18px; min-width: 0; }
+  .ov-wide { grid-column: 1 / -1; }
+  .ov-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .gm-content .ov-card-head h3 { margin: 0; font-size: 17px; }
+  .ov-link { border: 0; background: none; color: #e63946; font-weight: 800; font-size: 13px; padding: 4px 0; }
+  .ov-link:hover { text-decoration: underline; }
+  .ov-muted { color: #6b7078; font-size: 14px; margin: 0; line-height: 1.6; }
+  .ov-empty { text-align: center; padding: 14px 6px; color: #6b7078; }
+  .ov-empty .gm-btn { margin-top: 10px; }
+  .ov-track-top { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-weight: 800; margin-bottom: 14px; }
+  .ov-steps { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 0 12px; padding: 0; }
+  .ov-steps li { position: relative; text-align: center; font-size: 12px; font-weight: 700; color: #9a9ea5; padding-top: 30px; }
+  .ov-steps li::before { content: ""; position: absolute; top: 6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: #e4e2dd; z-index: 1; }
+  .ov-steps li::after { content: ""; position: absolute; top: 13px; left: -50%; width: 100%; height: 3px; background: #e4e2dd; }
+  .ov-steps li:first-child::after { display: none; }
+  .ov-steps li.done { color: #3c4046; }
+  .ov-steps li.done::before, .ov-steps li.done::after { background: #168653; }
+  .ov-steps li.now { color: #e63946; }
+  .ov-steps li.now::before { background: #e63946; box-shadow: 0 0 0 5px #e6394626; }
+  .ov-steps li.now::after { background: #168653; }
+  .ov-meta { color: #6b7078; font-size: 13px; margin: 0; }
+  .ov-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+  .ov-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eceae6; }
+  .ov-row:last-child { border-bottom: 0; }
+  .ov-row > div { min-width: 0; }
+  .ov-row strong { display: block; font-size: 14px; }
+  .ov-row small { color: #6b7078; display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ov-row .gm-btn { padding: 7px 12px; font-size: 13px; flex: none; }
+  .ov-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ov-quick button { background: #f7f8f7; border: 1px solid #eceae6; border-radius: 12px; padding: 12px 6px; font-weight: 700; font-size: 13px; display: grid; gap: 4px; justify-items: center; }
+  .ov-quick button span { font-size: 22px; }
+  .ov-quick button:hover { border-color: #e63946; color: #e63946; }
+  .ov-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ov-chip { border: 1px solid #eceae6; background: #fff; border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; }
+  .ov-chip:hover { border-color: #e63946; color: #e63946; }
+  .ov-deal { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eceae6; }
+  .ov-deal:last-child { border-bottom: 0; }
+  .ov-deal strong { display: block; font-size: 14px; }
+  .ov-code { display: inline-block; margin-top: 3px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; font-weight: 800; background: #fff0e6; color: #c92d3a; border-radius: 6px; padding: 2px 8px; }
+  .ov-skel { height: 56px; border-radius: 10px; background: linear-gradient(90deg, #f1efeb 25%, #f8f7f4 50%, #f1efeb 75%); background-size: 200% 100%; animation: ovsk 1.2s infinite; }
+  @keyframes ovsk { to { background-position: -200% 0; } }
+  @media (max-width: 860px) {
+    .ov-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ov-grid { grid-template-columns: 1fr; }
   }
-
-  #customer-app .gm-restaurant-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  #customer-app .gm-restaurant-card img {
-    height: 125px;
-  }
-
-  #customer-app .gm-restaurant-info {
-    padding: 11px;
-  }
-
-  #customer-app .gm-restaurant-info h3 {
-    font-size: 15px;
-  }
-
-  #customer-app .gm-food-row {
-    align-items: flex-start;
-    flex-direction: column;
-    padding: 14px;
-  }
-
-  #customer-app .gm-food-actions {
-    width: 100%;
-  }
-
-  #customer-app .gm-food-actions .gm-btn {
-    flex: 1;
-  }
-}
-
-@media (max-width: 360px) {
-  #customer-app .gm-restaurant-grid {
-    grid-template-columns: 1fr;
-  }
-
-  #customer-app .gm-restaurant-card img {
-    height: 175px;
-  }
-}
-   
+  @media (prefers-reduced-motion: reduce) { .ov-skel { animation: none; } }
+</style>
+<style id="gm-info-css">
+  /* ===== Footer info pages ===== */
+  .soon-badge { display: inline-block; vertical-align: middle; margin-left: 6px; background: #fff3df; color: #b26a00; border-radius: 999px; padding: 2px 9px; font-size: 11px; font-weight: 800; letter-spacing: .3px; }
+  #info-page { padding: 40px 0 70px; background: var(--soft); min-height: 60vh; }
+  #info-page[hidden] { display: none !important; }
+  .ip-back { display: inline-block; margin-bottom: 18px; font-weight: 800; font-size: 14px; color: var(--red); text-decoration: none; }
+  .ip-back:hover { text-decoration: underline; }
+  .ip-card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: clamp(22px, 4vw, 40px); max-width: 860px; }
+  .ip-card h1 { font-size: clamp(28px, 4vw, 38px); letter-spacing: -1px; margin: 6px 0 8px; }
+  .ip-card h2 { font-size: 20px; letter-spacing: -.3px; margin: 28px 0 8px; }
+  .ip-card h3 { font-size: 16px; margin: 18px 0 6px; }
+  .ip-card p, .ip-card li { color: #3c4046; line-height: 1.75; font-size: 15px; }
+  .ip-card ul, .ip-card ol { padding-left: 20px; margin: 8px 0; }
+  .ip-lead { color: var(--muted) !important; font-size: 17px !important; margin: 0 0 6px; }
+  .ip-meta { color: var(--muted); font-size: 13px; margin: 0 0 4px; }
+  .ip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin: 16px 0; }
+  .ip-tile { border: 1px solid var(--line); border-radius: 14px; padding: 16px; background: #fffaf6; }
+  .ip-tile .ico { font-size: 26px; }
+  .ip-tile h3 { margin: 8px 0 4px; }
+  .ip-tile p { margin: 0; font-size: 14px; }
+  .ip-note { background: #fff0e6; border: 1px solid #ffd9bf; border-radius: 12px; padding: 12px 16px; margin: 16px 0; font-size: 14px; color: #3c4046; }
+  .ip-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .ip-form { display: grid; gap: 12px; margin-top: 16px; }
+  .ip-form label { display: grid; gap: 6px; font-size: 13px; font-weight: 700; }
+  .ip-form input, .ip-form select, .ip-form textarea { border: 1px solid var(--line); border-radius: 10px; padding: 12px; font: inherit; font-weight: 400; background: #fff; width: 100%; }
+  .ip-form input:focus, .ip-form select:focus, .ip-form textarea:focus { outline: 2px solid #e6394655; border-color: var(--red); }
+  .ip-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .ip-form .btn { justify-content: center; }
+  .ip-form small { color: var(--muted); font-weight: 400; }
+  .ip-faq details { border: 1px solid var(--line); border-radius: 12px; padding: 0 16px; margin: 10px 0; background: #fff; }
+  .ip-faq summary { cursor: pointer; font-weight: 800; padding: 14px 0; font-size: 15px; }
+  .ip-faq details[open] summary { color: var(--red); }
+  .ip-faq details p { margin: 0 0 14px; }
+  .ip-soon { text-align: center; padding: 20px 0 6px; }
+  .ip-soon .big { font-size: 64px; }
+  @media (max-width: 560px) { .ip-two { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -557,7 +439,7 @@
         <p class="tagline">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
         <div class="hero-stats">
           <div><strong>30 min</strong><small>Average delivery</small></div>
-          <div><strong>3-in-1</strong><small>Food · Grocery · Rides</small></div>
+          <div><strong>Food first</strong><small>Grocery &amp; rides coming soon</small></div>
           <div><strong>Easy</strong><small>Simple ordering</small></div>
         </div>
       </div>
@@ -581,17 +463,17 @@
           <article class="service">
             <img data-img="grocery" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="1000" height="1000" alt="GoMandu grocery delivery — fresh groceries, happy homes">
             <div class="service-body">
-              <h3>Grocery Delivery</h3>
+              <h3>Grocery Delivery <span class="soon-badge">Coming soon</span></h3>
               <p>Daily essentials delivered so you can skip the queue.</p>
-              <a class="service-link" href="#" onclick="openAuth('signup');return false">Shop groceries →</a>
+              <a class="service-link" href="#grocery-soon">Learn more →</a>
             </div>
           </article>
           <article class="service">
             <img data-img="ride" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" width="1000" height="1000" alt="GoMandu ride share — explore Kathmandu together">
             <div class="service-body">
-              <h3>Ride Share</h3>
+              <h3>Ride Share <span class="soon-badge">Coming soon</span></h3>
               <p>Get around Kathmandu quickly, safely and affordably.</p>
-              <a class="service-link" href="#" onclick="openAuth('signup');return false">Book a ride →</a>
+              <a class="service-link" href="#ride-soon">Learn more →</a>
             </div>
           </article>
         </div>
@@ -625,7 +507,14 @@
       </div>
     </section>
   </main>
-   
+
+  <main id="info-page" hidden>
+    <div class="container">
+      <a class="ip-back" href="#">← Back to home</a>
+      <article class="ip-card" id="info-card"></article>
+    </div>
+  </main>
+
   <footer id="contact">
     <div class="container">
       <a href="#" class="footer-logo" aria-label="GoMandu home">Go<span>Mandu</span>.</a>
@@ -636,8 +525,8 @@
           <h4>GoMandu</h4>
           <ul>
             <li><a href="#services">Food Delivery</a></li>
-            <li><a href="#services">Grocery Delivery</a></li>
-            <li><a href="#services">Ride Booking</a></li>
+            <li><a href="#grocery-soon">Grocery Delivery <span class="soon-badge">Soon</span></a></li>
+            <li><a href="#ride-soon">Ride Booking <span class="soon-badge">Soon</span></a></li>
             <li><a href="#how">How it works</a></li>
             <li><a href="#about">About Us</a></li>
             <li><a href="#careers">Careers</a></li>
@@ -722,7 +611,8 @@
       <div id="gm-scrim" class="gm-scrim" hidden></div>
       <aside id="gm-sidebar" class="gm-sidebar" aria-label="Customer menu">
         <nav class="gm-side-nav">
-          <button type="button" class="gm-side-item active" data-tab="home" title="Browse featured restaurants, food, offers and recommendations."><span>Home</span></button>
+          <button type="button" class="gm-side-item active" data-tab="overview" title="Your dashboard: active order, spending, recent orders and shortcuts."><span>Overview</span></button>
+          <button type="button" class="gm-side-item" data-tab="home" title="Browse featured restaurants, food, offers and recommendations."><span>Home</span></button>
           <button type="button" class="gm-side-item" data-tab="search" title="Search restaurants, foods, cuisines and products."><span>Search</span></button>
           <button type="button" class="gm-side-item" data-tab="restaurants" title="Browse and filter all available restaurants."><span>Restaurants</span></button>
           <button type="button" class="gm-side-item" data-tab="categories" title="Explore food by category and cuisine."><span>Food Categories</span></button>
@@ -744,8 +634,57 @@
 
       <div class="gm-content">
 
+        <!-- OVERVIEW -->
+        <div id="gm-tab-overview" class="gm-tab-panel">
+          <div class="ov-hello">
+            <div>
+              <h2 id="ov-greeting">Hello!</h2>
+              <p class="gm-sub" id="ov-date"></p>
+            </div>
+            <button type="button" class="gm-btn gm-primary" data-go="home">Order now</button>
+          </div>
+
+          <div id="ov-cart-banner" class="ov-banner" hidden></div>
+
+          <div class="ov-stats" id="ov-stats" aria-live="polite"></div>
+
+          <div class="ov-grid">
+            <section class="ov-card ov-wide" aria-labelledby="ov-active-h">
+              <div class="ov-card-head"><h3 id="ov-active-h">Active order</h3><button type="button" class="ov-link" data-go="orders">All orders →</button></div>
+              <div id="ov-active"></div>
+            </section>
+
+            <section class="ov-card" aria-labelledby="ov-recent-h">
+              <div class="ov-card-head"><h3 id="ov-recent-h">Recent orders</h3><button type="button" class="ov-link" data-go="orders">View all →</button></div>
+              <div id="ov-recent"></div>
+            </section>
+
+            <section class="ov-card" aria-labelledby="ov-quick-h">
+              <div class="ov-card-head"><h3 id="ov-quick-h">Quick actions</h3></div>
+              <div class="ov-quick">
+                <button type="button" data-go="restaurants"><span>🍽️</span>Restaurants</button>
+                <button type="button" data-go="grocery"><span>🥬</span>Grocery</button>
+                <button type="button" data-go="offers"><span>🏷️</span>Offers</button>
+                <button type="button" data-go="favorites"><span>♡</span>Favorites</button>
+                <button type="button" data-go="support"><span>💬</span>Support</button>
+                <button type="button" data-go="refer"><span>🎁</span>Refer</button>
+              </div>
+            </section>
+
+            <section class="ov-card" aria-labelledby="ov-deals-h">
+              <div class="ov-card-head"><h3 id="ov-deals-h">Deals for you</h3><button type="button" class="ov-link" data-go="coupons">All coupons →</button></div>
+              <div id="ov-deals"></div>
+            </section>
+
+            <section class="ov-card" aria-labelledby="ov-fav-h">
+              <div class="ov-card-head"><h3 id="ov-fav-h">Saved restaurants</h3><button type="button" class="ov-link" data-go="favorites">Manage →</button></div>
+              <div id="ov-favs"></div>
+            </section>
+          </div>
+        </div><!-- /overview -->
+
         <!-- HOME -->
-        <div id="gm-tab-home" class="gm-tab-panel">
+        <div id="gm-tab-home" class="gm-tab-panel" hidden>
           <form id="gm-home-search" class="gm-hero-search" role="search">
             <input id="gm-home-search-input" type="search" placeholder="Search restaurants, foods, groceries…" aria-label="Search">
             <button type="submit" class="gm-btn gm-primary">Search</button>
@@ -2118,9 +2057,9 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
 
   /* ---------------- Tabs / navigation ---------------- */
   const PANELS = ["home", "search", "restaurants", "categories", "grocery", "offers", "cart", "checkout",
-    "orders", "favorites", "notifications", "coupons", "reviews", "support", "account", "refer", "menu"];
-  let current = "home";
-  let lastNonMenu = "home";
+    "orders", "favorites", "notifications", "coupons", "reviews", "support", "account", "refer", "menu", "overview"];
+  let current = "overview";
+  let lastNonMenu = "overview";
 
   const sidebar = $("gm-sidebar"), scrim = $("gm-scrim"), menuBtn = $("gm-menu-btn");
   function openSidebar() { sidebar.classList.add("open"); scrim.hidden = false; menuBtn.setAttribute("aria-expanded", "true"); }
@@ -2130,7 +2069,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeSidebar(); });
 
   function showTab(name) {
-    if (!PANELS.includes(name)) name = "home";
+    if (!PANELS.includes(name)) name = "overview";
     if (name !== "menu") lastNonMenu = name;
     current = name;
     PANELS.forEach(n => { const p = $("gm-tab-" + n); if (p) p.hidden = n !== name; });
@@ -2415,16 +2354,6 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       return `<article class="gm-order"><div class="gm-order-top"><span>Order #${esc(id)}</span><span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></div>
         <small>${esc(date)}</small>${items ? "<ul>" + items + "</ul>" : ""}
         <p><strong>Total: NPR ${esc(total)}</strong></p>
-                <div class="gm-delivery-assignment">
-          <h4>🚚 Delivery Person</h4>
-          ${o.delivery_person_name || o.delivery_person_phone ? `
-            ${o.delivery_person_name ? `<p><strong>Name:</strong> ${esc(o.delivery_person_name)}</p>` : ""}
-            ${o.delivery_person_phone ? `<p><strong>Phone:</strong> <a href="tel:${esc(o.delivery_person_phone)}">${esc(o.delivery_person_phone)}</a></p>` : ""}
-            ${o.delivery_notes ? `<p><strong>Note:</strong> ${esc(o.delivery_notes)}</p>` : ""}
-          ` : `
-            <p>Delivery person has not been assigned yet.</p>
-          `}
-        </div>
         <div class="gm-order-actions">${s === "delivered" ? (reviewedOrders().has(String(id)) ? '<span class="gm-status">Reviewed</span>' : `<button type="button" class="gm-btn gm-primary" data-rate-order="${esc(id)}">Rate order</button>`) : ""}${canReorder ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(id)}">Reorder</button>` : ""}
         <button type="button" class="gm-btn gm-outline" data-help-order="${esc(id)}">Get help</button></div></article>`;
     }).join("");
@@ -2678,6 +2607,88 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     }
   };
 
+  // Overview (dashboard landing)
+  const STEPS = [["placed", "Placed"], ["accepted", "Accepted"], ["preparing", "Preparing"], ["out_for_delivery", "On the way"]];
+  const stepIndex = s => (s === "new" || s === "pending") ? 0 : Math.max(0, STEPS.findIndex(x => x[0] === s));
+  const orderId = o => o.id || o.order_id;
+  const orderTotal = o => Number(o.total_amount != null ? o.total_amount : o.total) || 0;
+  const orderTime = o => o.created_at ? new Date(o.created_at).getTime() || 0 : 0;
+  const shortDate = o => o.created_at ? new Date(o.created_at).toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "";
+  const orderSummary = o => (o.items || []).map(i => (i.name || i.product_name || "Item") + " × " + (i.quantity || i.qty || 1)).join(", ");
+  const canReorder = o => (o.items || []).length && (o.items || []).every(i => resolveKey(i.menu_key));
+  const statTile = (label, value, accent) => `<div class="ov-stat${accent ? " accent" : ""}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
+
+  renderers.overview = async () => {
+    const hour = new Date().getHours();
+    const hi = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    const first = String((customer && customer.name) || "").trim().split(/\s+/)[0];
+    $("ov-greeting").textContent = hi + (first ? ", " + first : "") + "!";
+    $("ov-date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) + " · What are we eating today?";
+
+    const banner = $("ov-cart-banner");
+    const n = GM.cart.reduce((s, i) => s + i.qty, 0);
+    banner.hidden = !n;
+    if (n) banner.innerHTML = `<span>🛒 You have ${n} item${n === 1 ? "" : "s"} in your cart · NPR ${money(subtotal())}</span><span><button type="button" class="gm-btn gm-outline" data-go="cart">View cart</button> <button type="button" class="gm-btn gm-primary" data-go="checkout">Checkout</button></span>`;
+
+    const rs = REST.filter(r => isFavRest(r.id));
+    $("ov-favs").innerHTML = rs.length
+      ? `<div class="ov-chips">${rs.slice(0, 8).map(r => `<button type="button" class="ov-chip" data-open-restaurant="${esc(r.id)}">${esc(r.name)}</button>`).join("")}</div>`
+      : `<p class="ov-muted">No saved restaurants yet. Tap the ♡ on a restaurant to keep it handy.</p>`;
+    const deals = appliedCoupon && COUPONS[appliedCoupon]
+      ? [{ code: appliedCoupon, title: COUPONS[appliedCoupon].title, applied: true }]
+      : Object.entries(COUPONS).slice(0, 2).map(([code, c]) => ({ code, title: c.title }));
+    $("ov-deals").innerHTML = deals.map(d => `<div class="ov-deal"><div><strong>${esc(d.title)}</strong><span class="ov-code">${esc(d.code)}</span></div>${d.applied ? '<span class="gm-status">Applied</span>' : `<button type="button" class="gm-btn gm-outline" data-copy-coupon="${esc(d.code)}">Copy</button>`}</div>`).join("");
+
+    const skel = '<div class="ov-skel"></div>';
+    $("ov-stats").innerHTML = [1, 2, 3, 4].map(() => `<div class="ov-stat">${skel}</div>`).join("");
+    $("ov-active").innerHTML = skel; $("ov-recent").innerHTML = skel;
+    let orders;
+    try { orders = await loadOrders(true); }
+    catch (e) {
+      $("ov-stats").innerHTML = statTile("Saved items", favRest.length + favFood.length) + statTile("Cart items", n);
+      const err = `<p class="ov-muted">Could not load your orders right now. <button type="button" class="ov-link" id="ov-retry">Try again</button></p>`;
+      $("ov-active").innerHTML = err; $("ov-recent").innerHTML = err;
+      const r = $("ov-retry"); if (r) r.onclick = () => renderers.overview();
+      return;
+    }
+    if (current !== "overview") return;
+    refreshBadges();
+
+    const sorted = orders.slice().sort((a, b) => orderTime(b) - orderTime(a));
+    const active = sorted.filter(o => ACTIVE.includes(statusOf(o)));
+    const done = sorted.filter(o => statusOf(o) === "delivered");
+    const spent = done.reduce((s, o) => s + orderTotal(o), 0);
+    $("ov-stats").innerHTML =
+      statTile("Total orders", sorted.length) + statTile("Active now", active.length, active.length > 0) +
+      statTile("Total spent", "NPR " + money(spent)) + statTile("Saved items", favRest.length + favFood.length);
+
+    const a = active[0];
+    if (!a) {
+      $("ov-active").innerHTML = `<div class="ov-empty">No active orders right now.<div><button type="button" class="gm-btn gm-primary" data-go="home">Order something tasty</button></div></div>`;
+    } else {
+      const s = statusOf(a), idx = stepIndex(s);
+      $("ov-active").innerHTML = `<div class="ov-track-top"><span>Order #${esc(orderId(a))}</span><span class="gm-status s-active">${esc(statusLabel(s))}</span></div>
+        <ol class="ov-steps" aria-label="Order progress">${STEPS.map((x, i) => `<li class="${i < idx ? "done" : i === idx ? "now" : ""}"${i === idx ? ' aria-current="step"' : ""}>${x[1]}</li>`).join("")}</ol>
+        <p class="ov-meta">${esc(orderSummary(a))} · NPR ${esc(money(orderTotal(a)))}${active.length > 1 ? " · +" + (active.length - 1) + " more active" : ""}</p>
+        <div class="gm-actions" style="margin-top:12px"><button type="button" class="gm-btn gm-outline" data-go="orders">Track details</button><button type="button" class="gm-btn gm-outline" data-help-order="${esc(orderId(a))}">Get help</button></div>`;
+    }
+
+    const recent = sorted.slice(0, 3);
+    $("ov-recent").innerHTML = recent.length
+      ? `<ul class="ov-list">${recent.map(o => { const s = statusOf(o); return `<li class="ov-row"><div><strong>Order #${esc(orderId(o))} <span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></strong><small>${esc(shortDate(o))} · NPR ${esc(money(orderTotal(o)))}${orderSummary(o) ? " · " + esc(orderSummary(o)) : ""}</small></div>${canReorder(o) ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(orderId(o))}">Reorder</button>` : ""}</li>`; }).join("")}</ul>`
+      : `<div class="ov-empty">No orders yet.<div><button type="button" class="gm-btn gm-primary" data-go="home">Place your first order</button></div></div>`;
+  };
+  $("gm-tab-overview").addEventListener("click", e => {
+    const re = e.target.closest("[data-reorder]");
+    if (re) {
+      const o = (ordersCache || []).find(x => String(orderId(x)) === re.dataset.reorder); if (!o) return;
+      o.items.forEach(i => { const k = resolveKey(i.menu_key); for (let q = 0; q < (Number(i.quantity || i.qty) || 1); q++) GM.addToCart(k.src, k.food.id); });
+      toast("Items added to your cart."); showTab("cart"); return;
+    }
+    const h = e.target.closest("[data-help-order]");
+    if (h) { showTab("support"); $("gm-support-order").value = h.dataset.helpOrder; $("gm-support-topic").value = "Order issue"; }
+  });
+
   const prevShow = window.showCustomerDashboard;
   window.showCustomerDashboard = function (c) {
     customer = c || null;
@@ -2686,7 +2697,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     justOrdered = false;
     prevShow.call(window, c);
     if (window.GMLegacy) window.GMLegacy.setCustomer(c);
-    showTab("home");
+    showTab("overview");
     onCart();
     loadOrders(true).then(() => refreshBadges()).catch(() => refreshBadges());
     loadServerReviews().catch(() => {});
@@ -3118,7 +3129,6 @@ async function submitAuth() {
         <option value="out_for_delivery">Out for delivery</option>
         <option value="delivered">Delivered</option>
         <option value="cancelled">Cancelled</option>
-        <option value="unassigned_delivery">Needs delivery person</option>
       </select>
     </div>
 
@@ -3269,30 +3279,15 @@ async function submitAuth() {
     const search = byId("gma-search").value.trim().toLowerCase();
 
     const filtered = orders.filter(order => {
-     const orderStatus = String(order.order_status || "").toLowerCase();
+      const matchesStatus = filter === "all" || order.order_status === filter;
+      const searchable = [
+        order.id,
+        order.customer_name,
+        order.phone,
+        order.address
+      ].join(" ").toLowerCase();
 
-const isUnassigned =
-  !String(order.delivery_person_name || "").trim();
-
-const matchesStatus =
-  filter === "all" ||
-  (
-    filter === "unassigned_delivery"
-      ? isUnassigned &&
-        !["delivered", "cancelled"].includes(orderStatus)
-      : orderStatus === filter
-  );
-
-const searchable = [
-  order.id,
-  order.customer_name,
-  order.phone,
-  order.address,
-  order.delivery_person_name,
-  order.delivery_person_phone
-].join(" ").toLowerCase();
-
-return matchesStatus && searchable.includes(search);
+      return matchesStatus && searchable.includes(search);
     });
 
     if (!filtered.length) {
@@ -3712,5 +3707,248 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
 })();
 </script>
 
+<script>
+/* GoMandu footer pages. Hash routes: #about, #careers, #privacy ... (no backend needed).
+   Forms open the visitor's email app addressed to SUPPORT_EMAIL. */
+(() => {
+  const SUPPORT_EMAIL = "support@go-mandu.com";
+  const BASE_TITLE = document.title;
+  const $ = id => document.getElementById(id);
+  const mail = `<a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>`;
+  const signup = '<button type="button" class="btn btn-primary" onclick="openAuth(\'signup\')">Sign up &amp; order food</button>';
+  const home = '<a class="btn btn-ghost" href="#">Back to home</a>';
+  const tile = (ico, h, p) => `<div class="ip-tile"><div class="ico">${ico}</div><h3>${h}</h3><p>${p}</p></div>`;
+  const faq = items => `<div class="ip-faq">${items.map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join("")}</div>`;
+  const soon = (ico, name, line) => `<div class="ip-soon"><div class="big">${ico}</div><h1>${name} — coming soon</h1><p class="ip-lead">${line}</p>
+    <p>Right now GoMandu delivers <strong>food</strong>. We are working hard to bring ${name.toLowerCase()} to you next. Want to hear when it launches? Email ${mail}.</p>
+    <div class="ip-actions" style="justify-content:center">${signup}${home}</div></div>`;
+
+  /* Forms: field = [name, label, type, required, options/placeholder] */
+  function formHtml(id, btn, fields, note) {
+    const f = fields.map(([n, label, type, req, extra]) => {
+      const r = req ? " required" : "";
+      if (type === "select") return `<label>${label}<select name="${n}"${r}>${extra.map(o => `<option>${o}</option>`).join("")}</select></label>`;
+      if (type === "textarea") return `<label>${label}<textarea name="${n}" rows="4"${r} placeholder="${extra || ""}"></textarea></label>`;
+      return `<label>${label}<input name="${n}" type="${type}"${r} placeholder="${extra || ""}"></label>`;
+    }).join("");
+    return `<form class="ip-form" id="${id}" data-mailform>${f}<button class="btn btn-primary" type="submit">${btn}</button><small>${note || "This opens your email app with the details filled in. Press send there to submit."}</small></form>`;
+  }
+
+  const PAGES = {
+    about: { title: "About Us", body: () => `
+      <p class="ip-meta">GoMandu</p><h1>About GoMandu</h1>
+      <p class="ip-lead">सवारी होस् या भोक, GoMandu मै छ सबै थोक!</p>
+      <p>GoMandu is a Kathmandu-built delivery app. We connect hungry people with the local restaurants they love, and get the order to their door fast, hot and fresh.</p>
+      <h2>What we do today</h2>
+      <p><strong>Food delivery</strong> is live. Pick a restaurant, add dishes to your cart, confirm your delivery details, pay cash on delivery, and follow the order from <em>My Orders</em>.</p>
+      <h2>What is coming</h2>
+      <div class="ip-grid">${tile("🥬", "Grocery delivery", "Daily essentials at your door. Coming soon.")}${tile("🛵", "Ride booking", "Quick, safe and affordable rides across Kathmandu. Coming soon.")}</div>
+      <h2>What we care about</h2>
+      <div class="ip-grid">${tile("⚡", "Speed", "We aim for around 30 minutes on average.")}${tile("🤝", "Local first", "We back neighbourhood restaurants and the riders who serve them.")}${tile("🔍", "Simplicity", "Clear prices and a few taps from craving to doorstep.")}</div>
+      <div class="ip-actions">${signup}<a class="btn btn-ghost" href="#help">Help &amp; Support</a></div>` },
+
+    careers: { title: "Careers", body: () => `
+      <p class="ip-meta">Join us</p><h1>Careers at GoMandu</h1>
+      <p class="ip-lead">Help us make everyday life in Kathmandu easier.</p>
+      <p>We are a small, growing team and we are always happy to meet kind, curious people. There are no formal openings posted right now, but you can introduce yourself and we will keep your details for the next opportunity.</p>
+      <h2>Areas we hire in</h2>
+      <div class="ip-grid">${tile("💻", "Engineering", "Web, mobile and backend.")}${tile("📞", "Customer support", "Help customers and restaurants quickly.")}${tile("🤝", "Operations &amp; growth", "Onboard restaurants and grow new areas.")}${tile("🎨", "Design &amp; content", "Brand, UI and storytelling.")}</div>
+      <h2>Introduce yourself</h2>
+      ${formHtml("form-careers", "Send application", [
+        ["name", "Full name", "text", true, ""], ["email", "Email", "email", true, ""],
+        ["area", "Area of interest", "select", true, ["Engineering", "Customer support", "Operations & growth", "Design & content", "Other"]],
+        ["link", "CV / LinkedIn / portfolio link", "url", false, "https://"],
+        ["msg", "Tell us about yourself", "textarea", true, "A few lines about you and what you would like to do"]], "Please attach your CV in the email that opens.")}` },
+
+    "partner-restaurant": { title: "Partner With Us — Restaurants", body: () => `
+      <p class="ip-meta">For Restaurants</p><h1>Partner your restaurant with GoMandu</h1>
+      <p class="ip-lead">Reach more hungry customers in your area without changing how you cook.</p>
+      <div class="ip-grid">${tile("📈", "More orders", "Be discovered by customers who order food near you.")}${tile("🛵", "Delivery handled", "Riders pick up and deliver, so you can focus on the kitchen.")}${tile("🧾", "Simple orders", "See each order with items and delivery details.")}</div>
+      <h2>How to join</h2>
+      <ol><li>Tell us about your restaurant using the form below.</li><li>Our team contacts you to discuss your menu and details.</li><li>Your menu goes live and orders start coming in.</li></ol>
+      <h2>Apply to partner</h2>
+      ${formHtml("form-rest", "Apply to partner", [
+        ["rname", "Restaurant name", "text", true, ""], ["owner", "Owner / manager name", "text", true, ""],
+        ["phone", "Phone number", "tel", true, ""], ["email", "Email", "email", false, ""],
+        ["area", "Area / address", "text", true, "e.g. Baneshwor, Kathmandu"],
+        ["cuisine", "Type of food", "text", false, "e.g. Momo, Newari, Pizza"]])}` },
+
+    "restaurant-app": { title: "Restaurant Apps", body: () => `
+      <p class="ip-meta">For Restaurants</p><h1>Apps for restaurants</h1>
+      <p class="ip-lead">A dedicated GoMandu app for restaurant partners is on the way.</p>
+      <p>It is planned to help you manage incoming orders, update your menu and mark items as unavailable, all from your phone.</p>
+      <div class="ip-grid">${tile("🔔", "Order alerts", "Know the moment a new order arrives.")}${tile("📋", "Menu control", "Edit dishes and prices yourself.")}${tile("⏱️", "Prep updates", "Tell customers and riders when food is ready.")}</div>
+      <div class="ip-note">Coming soon. Until then, partner restaurants are supported directly by our team. Contact ${mail}.</div>
+      <div class="ip-actions"><a class="btn btn-primary" href="#partner-restaurant">Partner with us</a>${home}</div>` },
+
+    grow: { title: "Grow Your Business", body: () => `
+      <p class="ip-meta">For Restaurants</p><h1>Grow your business with GoMandu</h1>
+      <p class="ip-lead">Delivery is a way to serve customers you could not reach before.</p>
+      <h2>Ideas that work</h2>
+      <div class="ip-grid">${tile("📸", "Great photos", "Clear, bright dish photos get more taps.")}${tile("📝", "Clear menu", "Short names and honest descriptions help customers decide.")}${tile("🌶️", "Signature dishes", "Highlight the one or two things you are known for.")}${tile("⭐", "Reviews", "Customers can rate your food. Fast, tasty orders earn trust.")}${tile("🏷️", "Offers", "Coupons and deals bring first-time customers back.")}${tile("⏰", "Be ready", "Accept and prepare orders quickly for faster delivery.")}</div>
+      <h2>Tips for packing</h2>
+      <ul><li>Use sealed containers for gravy and soup.</li><li>Pack hot and cold items separately.</li><li>Include cutlery and napkins when needed.</li></ul>
+      <div class="ip-actions"><a class="btn btn-primary" href="#partner-restaurant">Partner with us</a>${home}</div>` },
+
+    "partner-rider": { title: "Partner With Us — Delivery Partners", body: () => `
+      <p class="ip-meta">For Delivery Partners</p><h1>Deliver with GoMandu</h1>
+      <p class="ip-lead">Earn by delivering food around Kathmandu, with the schedule that suits you.</p>
+      <div class="ip-grid">${tile("🕒", "Flexible time", "Ride when it works for you.")}${tile("🛵", "Use your own bike", "A motorbike or scooter and a smartphone to start.")}${tile("📍", "Local area", "Deliver in neighbourhoods you know well.")}</div>
+      <h2>What you need</h2>
+      <ul><li>Valid driving licence and bike documents (bluebook)</li><li>A smartphone with mobile data</li><li>Citizenship or other valid ID</li><li>Age 18 or older</li></ul>
+      <h2>Apply to deliver</h2>
+      ${formHtml("form-rider", "Apply as a rider", [
+        ["name", "Full name", "text", true, ""], ["phone", "Phone number", "tel", true, ""],
+        ["area", "Area you live in", "text", true, "e.g. Koteshwor"],
+        ["vehicle", "Vehicle", "select", true, ["Motorbike", "Scooter", "Bicycle", "Other"]],
+        ["licence", "Do you have a valid driving licence?", "select", true, ["Yes", "No", "Applying"]]])}` },
+
+    "rider-app": { title: "Rider App", body: () => `
+      <p class="ip-meta">For Delivery Partners</p><h1>The rider app</h1>
+      <p class="ip-lead">A dedicated GoMandu rider app is coming soon.</p>
+      <p>It is planned to show you nearby pickups, give turn-by-turn directions and let you update each delivery step by step.</p>
+      <div class="ip-grid">${tile("📲", "Accept deliveries", "See new jobs and accept with one tap.")}${tile("🗺️", "Navigation", "Get to the restaurant and customer easily.")}${tile("✅", "Delivery updates", "Update status so customers can follow along.")}</div>
+      <div class="ip-note">Coming soon. Apply now and our team will contact you with next steps. Questions: ${mail}.</div>
+      <div class="ip-actions"><a class="btn btn-primary" href="#partner-rider">Apply to deliver</a>${home}</div>` },
+
+    "rider-faq": { title: "Rider FAQs", body: () => `
+      <p class="ip-meta">For Delivery Partners</p><h1>Rider FAQs</h1>
+      <p class="ip-lead">Answers to common questions from delivery partners.</p>
+      ${faq([
+        ["Who can become a delivery partner?", "Anyone 18 or older with a valid driving licence, vehicle documents, a valid ID and a smartphone."],
+        ["Which vehicle can I use?", "A motorbike or scooter is best for food delivery. Bicycles may suit short distances. Tell us your vehicle in the application."],
+        ["How do I apply?", "Fill in the form on the <a href=\"#partner-rider\">Partner With Us</a> page. Our team will contact you."],
+        ["How are earnings paid?", "Payment details are explained during onboarding. Ask our team if you need clarity before you start."],
+        ["Can I choose my working hours?", "Yes. You decide when to be available. Lunch and dinner are usually the busiest."],
+        ["Customers pay cash on delivery. What should I do?", "Collect the exact order total shown on the order and hand over the food. Report any problem to support straight away."],
+        ["What if the customer is unreachable?", "Try calling the number on the order. If you still cannot reach them, contact support and we will guide you."],
+        ["How do I report a problem or accident?", `Contact us at ${mail} as soon as it is safe to do so.`]
+      ])}
+      <div class="ip-actions"><a class="btn btn-primary" href="#partner-rider">Apply to deliver</a>${home}</div>` },
+
+    privacy: { title: "Privacy Policy", body: () => `
+      <p class="ip-meta">Last updated: October 2026</p><h1>Privacy Policy</h1>
+      <p class="ip-lead">Your privacy matters to us. This page explains what we collect and why.</p>
+      <h2>Information we collect</h2>
+      <ul><li><strong>Account details:</strong> your name, email and phone number when you sign up.</li><li><strong>Order details:</strong> items ordered, order total, status and time.</li><li><strong>Delivery details:</strong> address, phone number and, if you choose it, a location picked on the map.</li><li><strong>Reviews and support requests</strong> you send us.</li><li><strong>On your device:</strong> some preferences, such as favourites and saved addresses, are stored in your browser.</li></ul>
+      <h2>How we use it</h2>
+      <ul><li>To process and deliver your orders.</li><li>To show your order history and order updates.</li><li>To provide support and improve GoMandu.</li><li>To keep the service safe and prevent fraud.</li></ul>
+      <h2>Who sees it</h2>
+      <p>We share the details needed to fulfil an order (such as your name, phone number and delivery address) with the restaurant and delivery partner handling it. We do not sell your personal information.</p>
+      <h2>Your choices</h2>
+      <p>You can update your details from <em>My Account</em>. To ask us to correct or delete your information, email ${mail}.</p>
+      <h2>Keeping it safe</h2>
+      <p>See our <a href="#security">Security</a> page. No system is perfectly secure, so please protect your password.</p>
+      <h2>Contact</h2><p>Questions about privacy: ${mail}.</p>` },
+
+    security: { title: "Security", body: () => `
+      <p class="ip-meta">Trust &amp; safety</p><h1>Security</h1>
+      <p class="ip-lead">We work to keep your account and orders safe. You can help too.</p>
+      <h2>What we do</h2>
+      <ul><li>Accounts are protected by a password and a secure sign-in session.</li><li>You only see your own orders and details.</li><li>We limit access to customer details to what is needed to complete an order.</li></ul>
+      <h2>Stay safe</h2>
+      <div class="ip-grid">${tile("🔑", "Strong password", "Use a long, unique password and never share it.")}${tile("🚫", "Beware of scams", "GoMandu will never ask for your password or OTP by phone, SMS or email.")}${tile("🚪", "Log out", "Always log out on shared or public devices.")}</div>
+      <h2>Found a problem?</h2>
+      <p>If you notice a security issue or suspicious activity, tell us right away at ${mail}, or use <a href="#report-fraud">Report a Fraud</a>.</p>` },
+
+    terms: { title: "Terms of Service", body: () => `
+      <p class="ip-meta">Last updated: October 2026</p><h1>Terms of Service</h1>
+      <p class="ip-lead">By using GoMandu you agree to these terms. Please read them.</p>
+      <h2>1. Our service</h2><p>GoMandu lets you order food from partner restaurants for delivery. Grocery delivery and ride booking are not yet available.</p>
+      <h2>2. Your account</h2><p>Give accurate information, keep your password private, and tell us if you suspect unauthorised use. You are responsible for activity on your account.</p>
+      <h2>3. Orders and prices</h2><p>Prices, menus and availability are set by the restaurants and may change. The total is shown before you place your order. Orders are confirmed once accepted by the restaurant.</p>
+      <h2>4. Payment</h2><p>Currently payment is <strong>cash on delivery</strong> in Nepali rupees (NPR). Please keep the correct amount ready.</p>
+      <h2>5. Delivery</h2><p>Delivery times are estimates and can vary with traffic, weather and kitchen load. Please give a correct address and phone number and be reachable.</p>
+      <h2>6. Cancellations and issues</h2><p>If something is wrong with your order, contact support quickly via <a href="#help">Help &amp; Support</a>. Orders already being prepared may not be cancelled.</p>
+      <h2>7. Coupons</h2><p>Coupons follow the conditions shown with them, such as minimum order value, and may be changed or withdrawn.</p>
+      <h2>8. Acceptable use</h2><p>Do not misuse the app, place fake orders, abuse riders or staff, or try to break or access the service without permission. We may suspend accounts that do.</p>
+      <h2>9. Liability</h2><p>We work hard to provide a reliable service, but we cannot guarantee it will always be uninterrupted or error-free. To the extent allowed by law, GoMandu is not liable for indirect losses.</p>
+      <h2>10. Changes</h2><p>We may update these terms. Continued use means you accept the updated terms.</p>
+      <h2>Contact</h2><p>${mail}</p>` },
+
+    help: { title: "Help & Support", body: () => `
+      <p class="ip-meta">We are here to help</p><h1>Help &amp; Support</h1>
+      <p class="ip-lead">Find quick answers below, or contact our team.</p>
+      ${faq([
+        ["How do I place an order?", "Sign up or log in, pick a restaurant, add dishes to your cart, then go to Checkout, confirm your name, phone and address, and tap Place Order."],
+        ["How do I pay?", "Payment is cash on delivery. Pay the rider when your food arrives."],
+        ["How do I track my order?", "Open <strong>My Orders</strong> in your dashboard to see the status: placed, accepted, preparing, on the way, delivered."],
+        ["My order is late. What should I do?", "Check My Orders for the latest status. If it is still delayed, tap <strong>Get help</strong> on the order or email us."],
+        ["Something is missing or wrong in my order.", "Tap <strong>Get help</strong> on the order in My Orders and tell us what happened. We will sort it out."],
+        ["Can I cancel my order?", "Contact support as soon as possible. If the restaurant has not started preparing it, we can usually help."],
+        ["How do I use a coupon?", "Open <strong>Coupons</strong> or the cart, enter the code, and tap Apply. Check the minimum order amount on the coupon."],
+        ["I forgot my password.", `Email ${mail} from your registered email and we will help you get back in.`],
+        ["Is grocery delivery or ride booking available?", "Not yet. They are coming soon. Right now GoMandu delivers food."]
+      ])}
+      <h2>Still need help?</h2>
+      <p>Email us at ${mail}. If you have an account, you can also open <em>Support</em> from your dashboard.</p>
+      <h2>Send us a message</h2>
+      ${formHtml("form-help", "Send message", [
+        ["name", "Your name", "text", true, ""], ["email", "Email", "email", true, ""],
+        ["order", "Order number (if any)", "text", false, "e.g. 105"],
+        ["msg", "How can we help?", "textarea", true, ""]])}` },
+
+    "report-fraud": { title: "Report a Fraud", body: () => `
+      <p class="ip-meta">Trust &amp; safety</p><h1>Report a fraud</h1>
+      <p class="ip-lead">Seen something suspicious? Tell us and we will look into it.</p>
+      <div class="ip-note"><strong>Remember:</strong> GoMandu will never ask for your password, OTP or card/bank details by phone, SMS or social media. Never share them.</div>
+      <h2>What to report</h2>
+      <ul><li>Fake websites, apps or social pages using the GoMandu name.</li><li>Calls or messages asking for money, OTPs or passwords.</li><li>Someone pretending to be a GoMandu rider or staff.</li><li>Unauthorised orders or activity on your account.</li></ul>
+      <h2>Submit a report</h2>
+      ${formHtml("form-fraud", "Report fraud", [
+        ["type", "Type of fraud", "select", true, ["Fake website / app / page", "Suspicious call or message", "Fake rider or staff", "Unauthorised account activity", "Other"]],
+        ["name", "Your name", "text", false, ""], ["contact", "Your phone or email", "text", true, ""],
+        ["details", "What happened? Include links, numbers or dates.", "textarea", true, ""]])}` },
+
+    blog: { title: "Blog", body: () => `
+      <p class="ip-meta">Stories &amp; updates</p><h1>GoMandu Blog</h1>
+      <p class="ip-lead">Food stories, restaurant spotlights and product news.</p>
+      <div class="ip-note">Our blog is launching soon. Posts about local food, partner restaurants and new GoMandu features will appear here.</div>
+      <div class="ip-actions">${signup}${home}</div>` },
+
+    "grocery-soon": { title: "Grocery Delivery — Coming Soon", body: () => soon("🥬", "Grocery delivery", "Daily essentials delivered so you can skip the queue.") },
+    "ride-soon": { title: "Ride Booking — Coming Soon", body: () => soon("🛵", "Ride booking", "Get around Kathmandu quickly, safely and affordably.") }
+  };
+
+  const view = $("info-page"), card = $("info-card");
+  const main = document.querySelector("#public-home > main");
+
+  function route() {
+    const key = decodeURIComponent(location.hash.slice(1));
+    const page = Object.prototype.hasOwnProperty.call(PAGES, key) ? PAGES[key] : null;
+    if (page) {
+      card.innerHTML = page.body();
+      document.title = page.title + " | GoMandu";
+      view.hidden = false; if (main) main.hidden = true;
+      window.scrollTo(0, 0);
+    } else {
+      view.hidden = true; if (main) main.hidden = false;
+      document.title = BASE_TITLE;
+      const t = key && document.getElementById(key);
+      if (t && t.scrollIntoView) t.scrollIntoView();
+    }
+  }
+  window.addEventListener("hashchange", route);
+
+  /* Forms -> mailto */
+  card.addEventListener("submit", e => {
+    const form = e.target.closest("[data-mailform]"); if (!form) return;
+    e.preventDefault();
+    const subjects = { "form-careers": "Career application", "form-rest": "Restaurant partner application", "form-rider": "Delivery partner application", "form-help": "Support request", "form-fraud": "Fraud report" };
+    const lines = Array.from(form.elements).filter(el => el.name && el.value.trim())
+      .map(el => el.closest("label").firstChild.textContent.trim() + ": " + el.value.trim());
+    location.href = "mailto:" + SUPPORT_EMAIL + "?subject=" + encodeURIComponent(subjects[form.id] || "GoMandu") + "&body=" + encodeURIComponent(lines.join("\n"));
+  });
+
+  /* App store buttons are not live yet */
+  document.querySelectorAll(".store-btn").forEach(b => b.addEventListener("click", e => {
+    e.preventDefault();
+    if (typeof window.showToast === "function") window.showToast("Our mobile app is coming soon!");
+    else alert("Our mobile app is coming soon!");
+  }));
+
+  route();
+})();
+</script>
 </body>
 </html>
