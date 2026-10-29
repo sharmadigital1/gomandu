@@ -3231,11 +3231,15 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   byId("gma-filter").addEventListener("change", renderOrders);
   byId("gma-search").addEventListener("input", renderOrders);
 
+  ordersContainer.addEventListener("click", async event => {
   const deliveryButton = event.target.closest("[data-save-delivery]");
 
-if (deliveryButton) {
+  if (!deliveryButton) return;
+
   const card = deliveryButton.closest("[data-order-id]");
   const orderId = Number(deliveryButton.dataset.saveDelivery);
+
+  if (!card || !orderId) return;
 
   const name = card.querySelector(".gma-delivery-name").value.trim();
   const phone = card.querySelector(".gma-delivery-phone").value.trim();
@@ -3255,6 +3259,15 @@ if (deliveryButton) {
         delivery_notes: notes
       })
     });
+
+    showMessage(`Delivery details saved for order #${orderId}.`, "success");
+    await loadOrders();
+  } catch (error) {
+    showMessage(error.message, "error");
+    deliveryButton.disabled = false;
+    deliveryButton.textContent = "Save Delivery Details";
+  }
+});
 
     showMessage(`Delivery details saved for order #$DIL0.`, "success");
     await loadOrders();
