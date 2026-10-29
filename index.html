@@ -3311,15 +3311,6 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   }
 });
 
-      showMessage(`Order #${orderId} updated to ${statusLabel(select.value)}.`, "success");
-      await loadOrders();
-    } catch (error) {
-      showMessage(error.message, "error");
-      button.disabled = false;
-      button.textContent = "Update Status";
-    }
-  });
-
   const appEl = document.getElementById("customer-app");
   if (appEl && !appEl.hidden) checkAdminAccess();
 })();
@@ -3483,4 +3474,3 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
 
 </body>
 </html>
-  
