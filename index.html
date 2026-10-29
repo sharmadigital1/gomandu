@@ -3118,6 +3118,7 @@ async function submitAuth() {
         <option value="out_for_delivery">Out for delivery</option>
         <option value="delivered">Delivered</option>
         <option value="cancelled">Cancelled</option>
+        <option value="unassigned_delivery">Needs delivery person</option>
       </select>
     </div>
 
@@ -3268,15 +3269,30 @@ async function submitAuth() {
     const search = byId("gma-search").value.trim().toLowerCase();
 
     const filtered = orders.filter(order => {
-      const matchesStatus = filter === "all" || order.order_status === filter;
-      const searchable = [
-        order.id,
-        order.customer_name,
-        order.phone,
-        order.address
-      ].join(" ").toLowerCase();
+     const orderStatus = String(order.order_status || "").toLowerCase();
 
-      return matchesStatus && searchable.includes(search);
+const isUnassigned =
+  !String(order.delivery_person_name || "").trim();
+
+const matchesStatus =
+  filter === "all" ||
+  (
+    filter === "unassigned_delivery"
+      ? isUnassigned &&
+        !["delivered", "cancelled"].includes(orderStatus)
+      : orderStatus === filter
+  );
+
+const searchable = [
+  order.id,
+  order.customer_name,
+  order.phone,
+  order.address,
+  order.delivery_person_name,
+  order.delivery_person_phone
+].join(" ").toLowerCase();
+
+return matchesStatus && searchable.includes(search);
     });
 
     if (!filtered.length) {
