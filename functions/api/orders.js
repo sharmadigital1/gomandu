@@ -199,6 +199,13 @@ if (!customer) {
 
 export async function onRequestGet({ request, env }) {
   try {
+    if (!env.DB) {
+      return Response.json(
+        { error: "Database is not connected" },
+        { status: 500, headers: { "Cache-Control": "no-store" } }
+      );
+    }
+
     const customer = await getSessionCustomer(request, env);
 
     if (!customer) {
@@ -209,7 +216,14 @@ export async function onRequestGet({ request, env }) {
     }
 
     const result = await env.DB.prepare(`
-      SELECT id, total_amount, order_status, created_at
+      SELECT
+        id,
+        total_amount,
+        order_status,
+        created_at,
+        delivery_person_name,
+        delivery_person_phone,
+        delivery_notes
       FROM orders
       WHERE customer_id = ?
       ORDER BY id DESC
