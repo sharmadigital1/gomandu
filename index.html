@@ -2201,6 +2201,16 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       return `<article class="gm-order"><div class="gm-order-top"><span>Order #${esc(id)}</span><span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></div>
         <small>${esc(date)}</small>${items ? "<ul>" + items + "</ul>" : ""}
         <p><strong>Total: NPR ${esc(total)}</strong></p>
+                <div class="gm-delivery-assignment">
+          <h4>🚚 Delivery Person</h4>
+          ${o.delivery_person_name || o.delivery_person_phone ? `
+            ${o.delivery_person_name ? `<p><strong>Name:</strong> ${esc(o.delivery_person_name)}</p>` : ""}
+            ${o.delivery_person_phone ? `<p><strong>Phone:</strong> <a href="tel:${esc(o.delivery_person_phone)}">${esc(o.delivery_person_phone)}</a></p>` : ""}
+            ${o.delivery_notes ? `<p><strong>Note:</strong> ${esc(o.delivery_notes)}</p>` : ""}
+          ` : `
+            <p>Delivery person has not been assigned yet.</p>
+          `}
+        </div>
         <div class="gm-order-actions">${s === "delivered" ? (reviewedOrders().has(String(id)) ? '<span class="gm-status">Reviewed</span>' : `<button type="button" class="gm-btn gm-primary" data-rate-order="${esc(id)}">Rate order</button>`) : ""}${canReorder ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(id)}">Reorder</button>` : ""}
         <button type="button" class="gm-btn gm-outline" data-help-order="${esc(id)}">Get help</button></div></article>`;
     }).join("");
