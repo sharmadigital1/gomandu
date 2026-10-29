@@ -3073,7 +3073,9 @@ async function submitAuth() {
       const statusOptions = statuses.map(([value, label]) =>
         `<option value="${value}" ${order.order_status === value ? "selected" : ""}>${label}</option>`
       ).join("");
-
+const deliveryName = escapeHtml(order.delivery_person_name || "");
+const deliveryPhone = escapeHtml(order.delivery_person_phone || "");
+const deliveryNotes = escapeHtml(order.delivery_notes || "");
       return `
         <article class="gma-order" data-order-id="${Number(order.id)}">
           <div class="gma-order-top">
@@ -3089,7 +3091,46 @@ async function submitAuth() {
           <p><strong>Payment:</strong> ${escapeHtml(order.payment_method || "—")} · ${escapeHtml(order.payment_status || "—")}</p>
 
           <div class="gma-items"><strong>Items</strong>${itemHtml}</div>
+<div class="gma-delivery-box">
+  <h4>Delivery Assignment</h4>
 
+  <label>
+    Delivery Person Name
+    <input
+      type="text"
+      class="gma-delivery-name"
+      maxlength="100"
+      value="${deliveryName}"
+      placeholder="Enter delivery person name"
+    >
+  </label>
+
+  <label>
+    Delivery Person Phone
+    <input
+      type="tel"
+      class="gma-delivery-phone"
+      maxlength="30"
+      value="${deliveryPhone}"
+      placeholder="Enter phone number"
+    >
+  </label>
+
+  <label>
+    Delivery Notes
+    <textarea
+      class="gma-delivery-notes"
+      maxlength="500"
+      placeholder="Optional delivery instructions"
+    >${deliveryNotes}</textarea>
+  </label>
+
+  <button
+    type="button"
+    class="gma-btn gma-primary"
+    data-save-delivery="${Number(order.id)}"
+  >Save Delivery Details</button>
+</div>
           <div class="gma-order-bottom">
             <strong>Total: NPR ${money(order.total_amount)}</strong>
             <select class="gma-status-select" aria-label="New status for order ${Number(order.id)}">
@@ -3190,9 +3231,44 @@ async function submitAuth() {
   byId("gma-filter").addEventListener("change", renderOrders);
   byId("gma-search").addEventListener("input", renderOrders);
 
-  ordersContainer.addEventListener("click", async event => {
-    const button = event.target.closest("[data-save-order]");
-    if (!button) return;
+  const deliveryButton = event.target.closest("[data-save-delivery]");
+
+if (deliveryButton) {
+  const card = deliveryButton.closest("[data-order-id]");
+  const orderId = Number(deliveryButton.dataset.saveDelivery);
+
+  const name = card.querySelector(".gma-delivery-name").value.trim();
+  const phone = card.querySelector(".gma-delivery-phone").value.trim();
+  const notes = card.querySelector(".gma-delivery-notes").value.trim();
+
+  deliveryButton.disabled = true;
+  deliveryButton.textContent = "Saving...";
+
+  try {
+    await api("/api/admin-assign-delivery", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        order_id: orderId,
+        delivery_person_name: name,
+        delivery_person_phone: phone,
+        delivery_notes: notes
+      })
+    });
+
+    showMessage(`Delivery details saved for order #$DIL0.`, "success");
+    await loadOrders();
+  } catch (error) {
+    showMessage(error.message, "error");
+    deliveryButton.disabled = false;
+    deliveryButton.textContent = "Save Delivery Details";
+  }
+
+  return;
+}
+
+const button = event.target.closest("[data-save-order]");
+if (!button) return;
 
     const card = button.closest("[data-order-id]");
     const orderId = Number(button.dataset.saveOrder);
