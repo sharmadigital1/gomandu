@@ -3363,6 +3363,55 @@ async function submitAuth() {
             <option value="orders">Most orders</option>
             <option value="recent">Most recent</option>
           </select>
+          <!-- RIDER MANAGEMENT -->
+<section class="gmx-tab" id="gmx-tab-riders" hidden>
+  <div class="gmx-card">
+    <div class="gmx-card-head">
+      <h3>Add New Rider</h3>
+    </div>
+
+    <form id="gm-rider-form" class="gmx-form">
+      <label>
+        Rider Name
+        <input id="gm-rider-name" type="text"
+          placeholder="Enter rider name" required>
+      </label>
+
+      <label>
+        Phone Number
+        <input id="gm-rider-phone" type="tel"
+          placeholder="Enter phone number" required>
+      </label>
+
+      <label>
+        Email Address
+        <input id="gm-rider-email" type="email"
+          placeholder="Enter email address">
+      </label>
+
+      <label>
+        Rider Status
+        <select id="gm-rider-status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </label>
+
+      <button type="submit" class="gmx-btn gmx-btn-primary">
+        Add Rider
+      </button>
+
+      <p id="gm-rider-message" role="status"></p>
+    </form>
+  </div>
+
+  <div class="gmx-card" style="margin-top:14px">
+    <h3>Rider List</h3>
+    <div id="gm-rider-list">
+      No riders loaded yet.
+    </div>
+  </div>
+</section>
         </div>
         <div class="gmx-card"><div id="gmx-cust-list"></div></div>
       </section>
@@ -3943,14 +3992,14 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
 
     careers: { title: "Careers", body: () => `
       <p class="ip-meta">Join us</p><h1>Careers at GoMandu</h1>
-      <p class="ip-lead">Help us make everyday life in Kathmandu easier.</p>
+      <p class="ip-lead">Help us make everyday life in Bhairahawa easier.</p>
       <p>We are a small, growing team and we are always happy to meet kind, curious people. There are no formal openings posted right now, but you can introduce yourself and we will keep your details for the next opportunity.</p>
       <h2>Areas we hire in</h2>
       <div class="ip-grid">${tile("💻", "Engineering", "Web, mobile and backend.")}${tile("📞", "Customer support", "Help customers and restaurants quickly.")}${tile("🤝", "Operations &amp; growth", "Onboard restaurants and grow new areas.")}${tile("🎨", "Design &amp; content", "Brand, UI and storytelling.")}</div>
       <h2>Introduce yourself</h2>
       ${formHtml("form-careers", "Send application", [
         ["name", "Full name", "text", true, ""], ["email", "Email", "email", true, ""],
-        ["area", "Area of interest", "select", true, ["Engineering", "Customer support", "Operations & growth", "Design & content", "Other"]],
+        ["area", "Area of interest", "select", true, ["Engineering", "Customer support", "Operations & growth", "Design & content", "Gomandu Rider", "Other"]],
         ["link", "CV / LinkedIn / portfolio link", "url", false, "https://"],
         ["msg", "Tell us about yourself", "textarea", true, "A few lines about you and what you would like to do"]], "Please attach your CV in the email that opens.")}` },
 
@@ -4358,6 +4407,27 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   };
   $("gmx-menu-source").addEventListener("change", renderers.menu);
   $("gmx-menu-search").addEventListener("input", renderers.menu);
+    /* ---------- Admin tab switching ---------- */
+  const adminNav = $("gmx-nav");
+
+  if (adminNav) {
+    adminNav.addEventListener("click", event => {
+      const button = event.target.closest("[data-atab]");
+      if (!button) return;
+
+      const tabName = button.dataset.atab;
+
+      adminNav.querySelectorAll("[data-atab]").forEach(item => {
+        item.classList.toggle("active", item === button);
+      });
+
+      document.querySelectorAll("#gm-admin-panel .gmx-tab").forEach(tab => {
+        tab.hidden = tab.id !== "gmx-tab-" + tabName;
+      });
+
+      if (renderers[tabName]) renderers[tabName]();
+    });
+  }
 })();
 </script>
 </body>
