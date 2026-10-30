@@ -3586,7 +3586,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
   Select Active Rider
   <select class="gma-rider-select">
     <option value="">Choose a rider</option>
-    ${activeRiderOptions(deliveryName)}
+    ${window.GMRiders ? window.GMRiders.options(order.delivery_person_name || "") : ""}
   </select>
 </label>
 
@@ -3717,6 +3717,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
 
   byId("gm-admin-refresh").addEventListener("click", loadOrders);
   byId("gma-filter").addEventListener("change", renderOrders);
+  window.addEventListener("gma:riders", renderOrders); // rider list changed: refresh the rider dropdowns
   byId("gma-search").addEventListener("input", renderOrders);
 ordersContainer.addEventListener("change", event => {
   const select = event.target.closest(".gma-rider-select");
@@ -3725,7 +3726,7 @@ ordersContainer.addEventListener("change", event => {
   const card = select.closest("[data-order-id]");
   if (!card) return;
 
-  const rider = getRiders().find(r =>
+  const rider = (window.GMRiders ? window.GMRiders.get() : []).find(r =>
     r.status === "active" && r.name === select.value
   );
 
@@ -4443,23 +4444,20 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   /* ---------- Riders (kept in this browser until a riders API exists) ---------- */
   const RIDER_KEY = "gm:admin:riders";
   const getRiders = () => { try { const v = JSON.parse(localStorage.getItem(RIDER_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
-  const putRiders = list => { try { localStorage.setItem(RIDER_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } };
-  renderers.riders = () => 
-   
+  const putRiders = list => { try { localStorage.setItem(RIDER_KEY, JSON.stringify(list)); window.dispatchEvent(new Event("gma:riders")); return true; } catch (e) { return false; } };
+  renderers.riders = () => {
     const list = getRiders(), box = $("gm-rider-list");
     box.innerHTML = list.length
       ? `<div class="gmx-scroll"><table class="gmx-table"><thead><tr><th>Rider</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${list.map((r, i) => `<tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.phone)}</td><td>${esc(r.email)}</td><td>${r.status === "active" ? "Active" : "Inactive"}</td><td><button type="button" class="gmx-btn" data-rider-toggle="${i}">${r.status === "active" ? "Deactivate" : "Activate"}</button> <button type="button" class="gmx-btn" data-rider-del="${i}">Remove</button></td></tr>`).join("")}</tbody></table></div>`
       : "No riders added yet.";
   };
-   function activeRiderOptions(selectedName = "") {
-  return getRiders()
-    .filter(r => r.status === "active")
-    .map(r => `
-      <option value="${esc(r.name)}" ${r.name === selectedName ? "selected" : ""}>
-        ${esc(r.name)} — ${esc(r.phone)}
-      </option>
-    `).join("");
-}
+  function activeRiderOptions(selectedName = "") {
+    return getRiders()
+      .filter(r => r.status === "active")
+      .map(r => `<option value="${esc(r.name)}"${r.name === selectedName ? " selected" : ""}>${esc(r.name)} — ${esc(r.phone)}</option>`).join("");
+  }
+  /* The orders script (earlier IIFE) reads riders through this shared object. */
+  window.GMRiders = { get: getRiders, options: activeRiderOptions };
   $("gm-rider-form").addEventListener("submit", e => {
     e.preventDefault();
     const name = $("gm-rider-name").value.trim(), phone = $("gm-rider-phone").value.trim();
