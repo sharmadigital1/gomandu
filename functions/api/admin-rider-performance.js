@@ -80,7 +80,33 @@ export async function onRequestGet({ request, env }) {
     100.0 * SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END)
     / NULLIF(COUNT(*), 0),
     1
-  ) AS completion_rate
+  ) AS completion_rate,
+
+  SUM(CASE
+    WHEN order_status = 'delivered'
+      AND date(delivered_at, '+05:45') = date('now', '+05:45')
+    THEN 1 ELSE 0
+  END) AS today_delivered,
+
+  CASE
+    WHEN SUM(CASE
+      WHEN order_status = 'delivered'
+        AND date(delivered_at, '+05:45') = date('now', '+05:45')
+      THEN 1 ELSE 0
+    END) >= 7
+    THEN
+      SUM(CASE
+        WHEN order_status = 'delivered'
+          AND date(delivered_at, '+05:45') = date('now', '+05:45')
+        THEN 1 ELSE 0
+      END) * 60
+    ELSE
+      SUM(CASE
+        WHEN order_status = 'delivered'
+          AND date(delivered_at, '+05:45') = date('now', '+05:45')
+        THEN 1 ELSE 0
+      END) * 40
+  END AS today_earnings
 
 FROM orders
 WHERE delivery_person_name IS NOT NULL
