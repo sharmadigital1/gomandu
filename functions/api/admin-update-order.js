@@ -109,7 +109,7 @@ export async function onRequestPost({ request, env }) {
      WHEN ? = 'delivered' THEN COALESCE(delivered_at, ?)
      ELSE delivered_at
    END
- WHERE id = ?``
+ WHERE id = ?`
     ).bind(status, status, deliveredAt, orderId).run();
     if (!result.meta?.changes) {
       return Response.json(
