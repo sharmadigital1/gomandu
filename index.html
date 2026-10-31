@@ -4739,7 +4739,29 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   }
 
   renderers["rider-performance"] = loadRiderPerformance;
+  /* ---------- Admin tab switching ---------- */
+  const adminNav = $("gmx-nav");
 
+  if (adminNav) {
+    adminNav.addEventListener("click", event => {
+      const button = event.target.closest("[data-atab]");
+      if (!button) return;
+
+      const tabName = button.dataset.atab;
+
+      adminNav.querySelectorAll("[data-atab]").forEach(item => {
+        item.classList.toggle("active", item === button);
+      });
+
+      document.querySelectorAll("#gm-admin-panel .gmx-tab").forEach(tab => {
+        tab.hidden = tab.id !== "gmx-tab-" + tabName;
+      });
+
+      if (renderers[tabName]) {
+        renderers[tabName]();
+      }
+    });
+  }
   const performanceRefresh = $("gm-rider-performance-refresh");
 
   if (performanceRefresh) {
