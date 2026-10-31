@@ -3245,6 +3245,9 @@ async function submitAuth() {
   <button type="button" class="gmx-nav-item" data-atab="riders">
     <span class="gmx-i">🛵</span><span>Rider Management</span>
   </button>
+  <button type="button" class="gmx-nav-item" data-atab="rider-performance">
+  <span class="gmx-i">📈</span><span>Rider Performance</span>
+</button>
   <button type="button" class="gmx-nav-item" data-atab="delivery">
     <span class="gmx-i">🚚</span><span>Delivery Management</span>
   </button>
@@ -3433,7 +3436,21 @@ async function submitAuth() {
     </div>
   </div>
 </section>
+<section class="gmx-tab" id="gmx-tab-rider-performance" hidden>
+  <div class="gmx-card">
+    <div class="gmx-card-head">
+      <h3>Rider Performance</h3>
+      <button type="button" class="gmx-btn"
+        id="gm-rider-performance-refresh">
+        Refresh
+      </button>
+    </div>
 
+    <div id="gm-rider-performance-list">
+      Loading rider performance...
+    </div>
+  </div>
+</section>
       <!-- PLACEHOLDER for admin sections that are not built yet -->
       <section class="gmx-tab" id="gmx-tab-soon" hidden>
         <div class="gmx-card"><div class="gmx-empty"><strong id="gmx-soon-name"></strong> is not available yet. It will appear here once it is built.</div></div>
@@ -4662,6 +4679,72 @@ const name = riderSelect ? riderSelect.value.trim() : "";
       alert(error.message);
     }
   });
+    /* ---------- Rider Performance Dashboard ---------- */
+
+  async function loadRiderPerformance() {
+    const box = $("gm-rider-performance-list");
+    if (!box) return;
+
+    box.textContent = "Loading rider performance...";
+
+    try {
+      const response = await fetch("/api/admin-rider-performance", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Could not load performance.");
+      }
+
+      const list = data.performance || [];
+
+      box.innerHTML = list.length
+        ? `<div class="gmx-scroll">
+            <table class="gmx-table">
+              <thead>
+                <tr>
+                  <th>Rider</th>
+                  <th>Phone</th>
+                  <th>Total Assigned</th>
+                  <th>Delivered</th>
+                  <th>Out for Delivery</th>
+                  <th>Accepted</th>
+                  <th>Cancelled</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${list.map(r => `
+                  <tr>
+                    <td><strong>${esc(r.rider_name || "")}</strong></td>
+                    <td>${esc(r.rider_phone || "")}</td>
+                    <td>${Number(r.total_assigned || 0)}</td>
+                    <td>${Number(r.delivered || 0)}</td>
+                    <td>${Number(r.out_for_delivery || 0)}</td>
+                    <td>${Number(r.accepted || 0)}</td>
+                    <td>${Number(r.cancelled || 0)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>`
+        : "No assigned rider orders found.";
+
+    } catch (error) {
+      box.textContent = error.message;
+    }
+  }
+
+  renderers["rider-performance"] = loadRiderPerformance;
+
+  const performanceRefresh = $("gm-rider-performance-refresh");
+
+  if (performanceRefresh) {
+    performanceRefresh.addEventListener("click", loadRiderPerformance);
+  }
 })();
 </script>
 </body>
