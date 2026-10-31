@@ -3344,6 +3344,12 @@ async function submitAuth() {
               <input id="gm-restaurant-photo" type="url" placeholder="https://example.com/restaurant.jpg">
             </label>
             <img id="gm-restaurant-preview" class="gmx-preview" alt="Restaurant photo preview" hidden>
+            <label for="gm-restaurant-phone">Phone number
+              <input id="gm-restaurant-phone" type="tel" maxlength="30" placeholder="e.g. 9820000000">
+            </label>
+            <label for="gm-restaurant-address">Address
+              <input id="gm-restaurant-address" type="text" maxlength="200" placeholder="e.g. Aawa road, Bhairahawa">
+            </label>
             <label for="gm-restaurant-active">Visibility
               <select id="gm-restaurant-active">
                 <option value="1">Active — show to customers</option>
@@ -3860,6 +3866,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   const nameInput = $("gm-restaurant-name");
   const photoInput = $("gm-restaurant-photo");
   const activeInput = $("gm-restaurant-active");
+  const phoneInput = $("gm-restaurant-phone");
+  const addressInput = $("gm-restaurant-address");
   const idInput = $("gm-restaurant-id");
   const preview = $("gm-restaurant-preview");
   const list = $("gm-restaurant-list");
@@ -3918,6 +3926,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
       return `<article class="gmx-rest-row">
         ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
         <div class="info"><strong>${safeText(r.name)}</strong>
+          ${r.phone || r.address ? `<div class="gmx-muted" style="margin-top:4px;font-size:12px">${r.phone ? "📞 " + safeText(r.phone) : ""}${r.phone && r.address ? " · " : ""}${r.address ? "📍 " + safeText(r.address) : ""}</div>` : ""}
           <div style="margin-top:6px"><span class="gmx-pill ${active ? "on" : "off"}">${active ? "Active — visible" : "Inactive — hidden"}</span></div>
         </div>
         <button type="button" data-edit="${Number(r.id)}">Edit</button>
@@ -3949,6 +3958,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
     const name = nameInput.value.trim();
     const photo_url = photoInput.value.trim();
     const active = Number(activeInput.value);
+    const phone = phoneInput.value.trim();
+    const address = addressInput.value.trim();
     if (name.length < 2 || name.length > 100) {
       message.textContent = "Name must be between 2 and 100 characters."; return;
     }
@@ -3957,7 +3968,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
     }
     saveButton.disabled = true; message.textContent = "Saving…";
     try {
-      const payload = { name, photo_url, active };
+      const payload = { name, photo_url, phone, address, active };
       if (idInput.value) payload.id = Number(idInput.value);
       await api("/api/admin-restaurants", { method: "POST", body: JSON.stringify(payload) });
       message.textContent = "Restaurant saved successfully.";
@@ -3977,7 +3988,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
       const r = restaurants.find(item => Number(item.id) === Number(editButton.dataset.edit));
       if (!r) return;
       idInput.value = r.id; nameInput.value = r.name || "";
-      photoInput.value = r.photo_url || ""; activeInput.value = Number(r.active) === 1 ? "1" : "0";
+      photoInput.value = r.photo_url || ""; phoneInput.value = r.phone || ""; addressInput.value = r.address || ""; activeInput.value = Number(r.active) === 1 ? "1" : "0";
       saveButton.textContent = "Update restaurant"; updatePreview();
       form.scrollIntoView({ behavior: "smooth", block: "start" }); return;
     }
@@ -3988,7 +3999,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
       try {
         await api("/api/admin-restaurants", {
           method: "POST",
-          body: JSON.stringify({ id: Number(r.id), name: r.name, photo_url: r.photo_url || "", active: Number(r.active) === 1 ? 0 : 1 })
+          body: JSON.stringify({ id: Number(r.id), name: r.name, photo_url: r.photo_url || "", phone: r.phone || "", address: r.address || "", active: Number(r.active) === 1 ? 0 : 1 })
         });
         message.textContent = "Restaurant visibility updated.";
         await loadRestaurants();
