@@ -3386,7 +3386,46 @@ async function submitAuth() {
         </div>
         <div class="gmx-card"><div id="gmx-cust-list"></div></div>
       </section>
+<!-- RESTAURANT MANAGEMENT -->
+<section class="gmx-tab" id="gmx-tab-restaurants" hidden>
+  <div class="gmx-card">
+    <div class="gmx-card-head">
+      <h3>Restaurant Management</h3>
+    </div>
 
+    <div class="gmx-card">
+  <h3>Add New Restaurant</h3>
+
+  <form id="gm-restaurant-form">
+    <label>Restaurant Name</label>
+    <input type="text" id="gm-restaurant-name"
+      placeholder="Enter restaurant name" required>
+
+    <label>Restaurant Photo URL</label>
+    <input type="url" id="gm-restaurant-photo"
+      placeholder="Paste restaurant photo URL">
+
+    <label>Phone Number</label>
+    <input type="tel" id="gm-restaurant-phone"
+      placeholder="Enter phone number">
+
+    <label>Address</label>
+    <input type="text" id="gm-restaurant-address"
+      placeholder="Enter restaurant address">
+
+    <button type="submit" class="gmx-btn">
+      Add Restaurant
+    </button>
+  </form>
+
+  <div id="gm-restaurant-message"></div>
+</div>
+
+<div id="gm-restaurants-list">
+  Loading restaurants...
+</div>
+  </div>
+</section>
       <!-- RIDER MANAGEMENT -->
 <section class="gmx-tab" id="gmx-tab-riders" hidden>
   <div class="gmx-card">
@@ -4492,7 +4531,64 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   }
 
   const getRiders = () => riderCache;
+/* ---------- Restaurant Management ---------- */
 
+async function loadRestaurants() {
+  const box = $("gm-restaurants-list");
+  if (!box) return;
+
+  box.textContent = "Loading restaurants...";
+
+  try {
+    const response = await fetch("/api/admin-restaurants", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not load restaurants.");
+    }
+
+    const list = data.restaurants || [];
+
+    box.innerHTML = list.length
+      ? `<div class="gmx-scroll">
+          <table class="gmx-table">
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Restaurant</th>
+                <th>Phone</th>
+                <th>Address</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.map(r => `
+                <tr>
+                  <td>${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="" style="width:60px;height:45px;object-fit:cover">` : "—"}</td>
+                  <td>${esc(r.name || "")}</td>
+                  <td>${esc(r.phone || "")}</td>
+                  <td>${esc(r.address || "")}</td>
+                  <td>${Number(r.active) === 1 ? "Active" : "Inactive"}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>`
+      : "No restaurants added yet.";
+
+  } catch (error) {
+    box.textContent = error.message;
+  }
+}
+
+renderers.restaurants = loadRestaurants;
+
+/* ---------- End Restaurant Management ---------- */
   function activeRiderOptions(selectedName = "") {
     return getRiders()
       .filter(r => r.status === "active")
