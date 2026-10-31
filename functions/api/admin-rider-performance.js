@@ -107,6 +107,35 @@ export async function onRequestGet({ request, env }) {
         THEN 1 ELSE 0
       END) * 40
   END AS today_earnings
+    ,
+
+  SUM(CASE
+    WHEN order_status = 'delivered'
+      AND strftime('%Y-%m', delivered_at, '+05:45') =
+          strftime('%Y-%m', 'now', '+05:45')
+    THEN 1 ELSE 0
+  END) AS monthly_delivered,
+
+  SUM(CASE
+    WHEN order_status = 'delivered'
+      AND strftime('%Y-%m', delivered_at, '+05:45') =
+          strftime('%Y-%m', 'now', '+05:45')
+    THEN
+      CASE
+        WHEN (
+          SELECT COUNT(*)
+          FROM orders daily
+          WHERE daily.delivery_person_name = orders.delivery_person_name
+            AND daily.delivery_person_phone = orders.delivery_person_phone
+            AND daily.order_status = 'delivered'
+            AND date(daily.delivered_at, '+05:45') =
+                date(orders.delivered_at, '+05:45')
+        ) >= 7
+        THEN 60
+        ELSE 40
+      END
+    ELSE 0
+  END) AS monthly_earnings
 
 FROM orders
 WHERE delivery_person_name IS NOT NULL
