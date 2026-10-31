@@ -4452,38 +4452,160 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   $("gmx-menu-source").addEventListener("change", renderers.menu);
   $("gmx-menu-search").addEventListener("input", renderers.menu);
   /* ---------- Riders (kept in this browser until a riders API exists) ---------- */
-  const RIDER_KEY = "gm:admin:riders";
-  const getRiders = () => { try { const v = JSON.parse(localStorage.getItem(RIDER_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; } };
-  const putRiders = list => { try { localStorage.setItem(RIDER_KEY, JSON.stringify(list)); window.dispatchEvent(new Event("gma:riders")); return true; } catch (e) { return false; } };
-  renderers.riders = () => {
-    const list = getRiders(), box = $("gm-rider-list");
-    box.innerHTML = list.length
-      ? `<div class="gmx-scroll"><table class="gmx-table"><thead><tr><th>Rider</th><th>Phone</th><th>Email</th><th>Status</th><th></th></tr></thead><tbody>${list.map((r, i) => `<tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.phone)}</td><td>${esc(r.email)}</td><td>${r.status === "active" ? "Active" : "Inactive"}</td><td><button type="button" class="gmx-btn" data-rider-toggle="${i}">${r.status === "active" ? "Deactivate" : "Activate"}</button> <button type="button" class="gmx-btn" data-rider-del="${i}">Remove</button></td></tr>`).join("")}</tbody></table></div>`
-      : "No riders added yet.";
-  };
+    /* ---------- Riders: Cloudflare D1 API ---------- */
+  let riderCache = [];
+
+  async function loadRiders() {
+    const response = await fetch("/api/admin-riders", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not load riders.");
+    }
+
+    riderCache = Array.isArray(data.riders) ? data.riders : [];
+    window.dispatchEvent(new Event("gma:riders"));
+
+    return riderCache;
+  }
+
+  const getRiders = () => riderCache;
+
   function activeRiderOptions(selectedName = "") {
     return getRiders()
       .filter(r => r.status === "active")
-      .map(r => `<option value="${esc(r.name)}"${r.name === selectedName ? " selected" : ""}>${esc(r.name)} — ${esc(r.phone)}</option>`).join("");
+      .map(r => `
+        <option value="${esc(r.name)}"${r.name === selectedName ? " selected" : ""}>
+          ${esc(r.name)} — ${esc(r.phone)}
+        </option>
+      `).join("");
   }
-  /* The orders script (earlier IIFE) reads riders through this shared object. */
-  window.GMRiders = { get: getRiders, options: activeRiderOptions };
-  $("gm-rider-form").addEventListener("submit", e => {
+
+  window.GMRiders = {
+    get: getRiders,
+    options: activeRiderOptions,
+    refresh: loadRiders
+  };
+
+  renderers.riders = async () => {
+    const box = $("gm-rider-list");
+    box.textContent = "Loading riders...";
+
+    try {
+      const list = await loadRiders();
+
+      box.innerHTML = list.length
+        ? `<div class="gmx-scroll"><table class="gmx-table">
+            <thead><tr>
+              <th>Rider</th><th>Phone</th><th>Email</th><th>Status</th><th>Action</th>
+            </tr></thead>
+            <tbody>${list.map(r => `
+              <tr>
+                <td><strong>${esc(r.name)}</strong></td>
+                <td>${esc(r.phone)}</td>
+                <td>${esc(r.email || "")}</td>
+                <td>${r.status === "active" ? "Active" : "Inactive"}</td>
+                <td>
+                  <button type="button" class="gmx-btn"
+                    data-rider-toggle="${Number(r.id)}"
+                    data-status="${r.status}">
+                    ${r.status === "active" ? "Deactivate" : "Activate"}
+                  </button>
+                  <button type="button" class="gmx-btn"
+                    data-rider-del="${Number(r.id)}">Remove</button>
+                </td>
+              </tr>
+            `).join("")}</tbody>
+          </table></div>`
+        : "No riders added yet.";
+    } catch (error) {
+      box.textContent = error.message;
+    }
+  };
+
+  $("gm-rider-form").addEventListener("submit", async e => {
     e.preventDefault();
-    const name = $("gm-rider-name").value.trim(), phone = $("gm-rider-phone").value.trim();
-    if (!name || !phone) { $("gm-rider-message").textContent = "Name and phone number are required."; return; }
-    const list = getRiders();
-    list.push({ name, phone, email: $("gm-rider-email").value.trim(), status: $("gm-rider-status").value });
-    $("gm-rider-message").textContent = putRiders(list) ? "Rider added." : "Could not save in this browser.";
-    e.target.reset(); renderers.riders();
+
+    const name = $("gm-rider-name").value.trim();
+    const phone = $("gm-rider-phone").value.trim();
+    const email = $("gm-rider-email").value.trim();
+    const status = $("gm-rider-status").value;
+    const message = $("gm-rider-message");
+
+    if (!name || !phone) {
+      message.textContent = "Name and phone number are required.";
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin-riders", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone, email, status })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not add rider.");
+
+      message.textContent = "Rider added successfully.";
+      e.target.reset();
+      await renderers.riders();
+    } catch (error) {
+      message.textContent = error.message;
+    }
   });
-  $("gm-rider-list").addEventListener("click", e => {
-    const t = e.target.closest("[data-rider-toggle]"), d = e.target.closest("[data-rider-del]");
-    const list = getRiders();
-    if (t) { const r = list[Number(t.dataset.riderToggle)]; if (r) r.status = r.status === "active" ? "inactive" : "active"; }
-    else if (d) list.splice(Number(d.dataset.riderDel), 1);
-    else return;
-    putRiders(list); renderers.riders();
+
+  $("gm-rider-list").addEventListener("click", async e => {
+    const toggle = e.target.closest("[data-rider-toggle]");
+    const remove = e.target.closest("[data-rider-del]");
+
+    if (!toggle && !remove) return;
+
+    try {
+      let response;
+
+      if (toggle) {
+        const rider = riderCache.find(
+          r => Number(r.id) === Number(toggle.dataset.riderToggle)
+        );
+        if (!rider) throw new Error("Rider not found.");
+
+        response = await fetch("/api/admin-riders", {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: rider.id,
+            name: rider.name,
+            phone: rider.phone,
+            email: rider.email || "",
+            status: rider.status === "active" ? "inactive" : "active"
+          })
+        });
+      } else {
+        if (!confirm("Remove this rider?")) return;
+
+        response = await fetch("/api/admin-riders", {
+          method: "DELETE",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: Number(remove.dataset.riderDel) })
+        });
+      }
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Rider action failed.");
+
+      await renderers.riders();
+    } catch (error) {
+      alert(error.message);
+    }
   });
 })();
 </script>
