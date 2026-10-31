@@ -77,6 +77,9 @@ export async function onRequestPost({ request, env }) {
     const body = await request.json();
     const orderId = Number(body.order_id);
     const status = String(body.order_status || "");
+    const deliveredAt = status === "delivered"
+  ? new Date().toISOString()
+  : null;
 
     const allowedStatuses = [
       "new",
@@ -100,10 +103,14 @@ export async function onRequestPost({ request, env }) {
 
     const result = await env.DB.prepare(
       `UPDATE orders
-       SET order_status = ?
-       WHERE id = ?`
-    ).bind(status, orderId).run();
-
+ SET
+   order_status = ?,
+   delivered_at = CASE
+     WHEN ? = 'delivered' THEN COALESCE(delivered_at, ?)
+     ELSE delivered_at
+   END
+ WHERE id = ?``
+    ).bind(status, status, deliveredAt, orderId).run();
     if (!result.meta?.changes) {
       return Response.json(
         { error: "Order not found" },
