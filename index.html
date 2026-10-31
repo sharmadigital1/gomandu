@@ -3386,46 +3386,6 @@ async function submitAuth() {
         </div>
         <div class="gmx-card"><div id="gmx-cust-list"></div></div>
       </section>
-<!-- RESTAURANT MANAGEMENT -->
-<section class="gmx-tab" id="gmx-tab-restaurants" hidden>
-  <div class="gmx-card">
-    <div class="gmx-card-head">
-      <h3>Restaurant Management</h3>
-    </div>
-
-    <div class="gmx-card">
-  <h3>Add New Restaurant</h3>
-
-  <form id="gm-restaurant-form">
-    <label>Restaurant Name</label>
-    <input type="text" id="gm-restaurant-name"
-      placeholder="Enter restaurant name" required>
-
-    <label>Restaurant Photo URL</label>
-    <input type="url" id="gm-restaurant-photo"
-      placeholder="Paste restaurant photo URL">
-
-    <label>Phone Number</label>
-    <input type="tel" id="gm-restaurant-phone"
-      placeholder="Enter phone number">
-
-    <label>Address</label>
-    <input type="text" id="gm-restaurant-address"
-      placeholder="Enter restaurant address">
-
-    <button type="submit" class="gmx-btn">
-      Add Restaurant
-    </button>
-  </form>
-
-  <div id="gm-restaurant-message"></div>
-</div>
-
-<div id="gm-restaurants-list">
-  Loading restaurants...
-</div>
-  </div>
-</section>
       <!-- RIDER MANAGEMENT -->
 <section class="gmx-tab" id="gmx-tab-riders" hidden>
   <div class="gmx-card">
@@ -3732,6 +3692,7 @@ const deliveryNotes = escapeHtml(order.delivery_notes || "");
       loadAdminReviews();
     } catch (error) {
       showMessage(error.message, "error");
+      window.dispatchEvent(new CustomEvent("gma:refresh-failed", { detail: error.message }));
       if (error.message.includes("permission") || error.message.includes("log in")) {
         resetAdmin();
       }
@@ -4007,6 +3968,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
 
   $("gm-restaurant-cancel").addEventListener("click", clearForm);
   $("gm-restaurant-refresh").addEventListener("click", loadRestaurants);
+  window.gmxLoadRestaurants = loadRestaurants;
 
   list.addEventListener("click", async event => {
     const editButton = event.target.closest("[data-edit]");
@@ -4320,7 +4282,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   const fmtDate = d => d ? d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
 
   /* ---------- Tabs ---------- */
-  const TITLES = { overview: "Overview", orders: "Orders", restaurants: "Restaurants", menu: "Menu items", riders: "Rider Management", delivery: "Delivery Management", customers: "Customers", payments: "Payment Management", refunds: "Refund Management", coupons: "Coupons", support: "Support Management", notifications: "Notifications", reports: "Reports & Analytics", settings: "Settings", reviews: "Reviews" };
+  const TITLES = { overview: "Overview", orders: "Orders", restaurants: "Restaurants", menu: "Menu items", riders: "Rider Management", "rider-performance": "Rider Performance", delivery: "Delivery Management", customers: "Customers", payments: "Payment Management", refunds: "Refund Management", coupons: "Coupons", support: "Support Management", notifications: "Notifications", reports: "Reports & Analytics", settings: "Settings", reviews: "Reviews" };
   let tab = "overview";
   const renderers = {};
   function showTab(name) {
@@ -4353,11 +4315,17 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   window.addEventListener("gma:orders", e => {
     orders = Array.isArray(e.detail) ? e.detail : [];
     loadedAt = new Date();
-    $("gmx-updated").textContent = "Updated " + loadedAt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    $("gmx-updated").textContent = "Updated " + loadedAt.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", second: "2-digit" });
     const n = orders.filter(o => norm(o) === "new").length;
     const b = $("gmx-badge-orders"); if (b) { b.textContent = n; b.hidden = !n; }
     if (renderers[tab] && tab !== "orders" && tab !== "reviews" && tab !== "restaurants") renderers[tab]();
   });
+  /* Top "Refresh": orders reload in the orders script; also reload this tab's own data. */
+  $("gm-admin-refresh").addEventListener("click", () => {
+    $("gmx-updated").textContent = "Refreshing…";
+    if (tab === "restaurants") renderers.restaurants();
+  });
+  window.addEventListener("gma:refresh-failed", e => { $("gmx-updated").textContent = "Refresh failed: " + (e.detail || "try again"); });
   window.addEventListener("gma:reviews", e => {
     reviews = Array.isArray(e.detail) ? e.detail : [];
     if (tab === "overview") renderers.overview();
@@ -4531,106 +4499,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   }
 
   const getRiders = () => riderCache;
-/* ---------- Restaurant Management ---------- */
-
-async function loadRestaurants() {
-  const box = $("gm-restaurants-list");
-  if (!box) return;
-
-  box.textContent = "Loading restaurants...";
-
-  try {
-    const response = await fetch("/api/admin-restaurants", {
-      method: "GET",
-      credentials: "same-origin",
-      cache: "no-store"
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || "Could not load restaurants.");
-    }
-
-    const list = data.restaurants || [];
-
-    box.innerHTML = list.length
-      ? `<div class="gmx-scroll">
-          <table class="gmx-table">
-            <thead>
-              <tr>
-                <th>Photo</th>
-                <th>Restaurant</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${list.map(r => `
-                <tr>
-                  <td>${r.photo_url ? `<img src="${esc(r.photo_url)}" alt="" style="width:60px;height:45px;object-fit:cover">` : "—"}</td>
-                  <td>${esc(r.name || "")}</td>
-                  <td>${esc(r.phone || "")}</td>
-                  <td>${esc(r.address || "")}</td>
-                  <td>${Number(r.active) === 1 ? "Active" : "Inactive"}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>`
-      : "No restaurants added yet.";
-
-  } catch (error) {
-    box.textContent = error.message;
-  }
-}
-
-renderers.restaurants = loadRestaurants;
-const restaurantForm = $("gm-restaurant-form");
-
-if (restaurantForm) {
-  restaurantForm.addEventListener("submit", async event => {
-    event.preventDefault();
-
-    const message = $("gm-restaurant-message");
-    const submitButton = restaurantForm.querySelector('[type="submit"]');
-
-    submitButton.disabled = true;
-    message.textContent = "Adding restaurant...";
-
-    try {
-      const response = await fetch("/api/admin-restaurants", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: $("gm-restaurant-name").value.trim(),
-          photo_url: $("gm-restaurant-photo").value.trim(),
-          phone: $("gm-restaurant-phone").value.trim(),
-          address: $("gm-restaurant-address").value.trim(),
-          active: 1
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to add restaurant.");
-      }
-
-      message.textContent = "Restaurant added successfully!";
-      restaurantForm.reset();
-      await loadRestaurants();
-
-    } catch (error) {
-      message.textContent = error.message;
-    } finally {
-      submitButton.disabled = false;
-    }
-  });
-}
-/* ---------- End Restaurant Management ---------- */
+/* Restaurants tab is handled by the Restaurant Manager script above. */
+renderers.restaurants = () => { if (window.gmxLoadRestaurants) window.gmxLoadRestaurants(); };
   function activeRiderOptions(selectedName = "") {
     return getRiders()
       .filter(r => r.status === "active")
@@ -4889,29 +4759,6 @@ if (restaurantForm) {
   }
 
   renderers["rider-performance"] = loadRiderPerformance;
-  /* ---------- Admin tab switching ---------- */
-  const adminNav = $("gmx-nav");
-
-  if (adminNav) {
-    adminNav.addEventListener("click", event => {
-      const button = event.target.closest("[data-atab]");
-      if (!button) return;
-
-      const tabName = button.dataset.atab;
-
-      adminNav.querySelectorAll("[data-atab]").forEach(item => {
-        item.classList.toggle("active", item === button);
-      });
-
-      document.querySelectorAll("#gm-admin-panel .gmx-tab").forEach(tab => {
-        tab.hidden = tab.id !== "gmx-tab-" + tabName;
-      });
-
-      if (renderers[tabName]) {
-        renderers[tabName]();
-      }
-    });
-  }
   const performanceRefresh = $("gm-rider-performance-refresh");
 
   if (performanceRefresh) {
