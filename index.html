@@ -4565,17 +4565,64 @@ const name = riderSelect ? riderSelect.value.trim() : "";
 
   $("gm-rider-list").addEventListener("click", async e => {
     const toggle = e.target.closest("[data-rider-toggle]");
+     $("gm-rider-list").addEventListener("click", async e => {
+    const toggle = e.target.closest("[data-rider-toggle]");
+    const edit = e.target.closest("[data-rider-edit]");
     const remove = e.target.closest("[data-rider-del]");
 
-    if (!toggle && !remove) return;
+    if (!toggle && !edit && !remove) return;
 
     try {
       let response;
 
-      if (toggle) {
+      if (edit) {
+        const rider = riderCache.find(
+          r => Number(r.id) === Number(edit.dataset.riderEdit)
+        );
+
+        if (!rider) throw new Error("Rider not found.");
+
+        const name = prompt("Rider name:", rider.name);
+        if (name === null) return;
+
+        const phone = prompt("Rider phone:", rider.phone);
+        if (phone === null) return;
+
+        const email = prompt("Rider email:", rider.email || "");
+        if (email === null) return;
+
+        const status = prompt(
+          "Status type: active or inactive",
+          rider.status
+        );
+        if (status === null) return;
+
+        if (!name.trim() || !phone.trim()) {
+          throw new Error("Name and phone are required.");
+        }
+
+        if (!["active", "inactive"].includes(status.trim().toLowerCase())) {
+          throw new Error("Status must be active or inactive.");
+        }
+
+        response = await fetch("/api/admin-riders", {
+          method: "PATCH",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: rider.id,
+            name: name.trim(),
+            phone: phone.trim(),
+            email: email.trim(),
+            status: status.trim().toLowerCase()
+          })
+        });
+
+      } else if (toggle) {
         const rider = riderCache.find(
           r => Number(r.id) === Number(toggle.dataset.riderToggle)
         );
+
         if (!rider) throw new Error("Rider not found.");
 
         response = await fetch("/api/admin-riders", {
@@ -4590,6 +4637,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
             status: rider.status === "active" ? "inactive" : "active"
           })
         });
+
       } else {
         if (!confirm("Remove this rider?")) return;
 
@@ -4597,14 +4645,21 @@ const name = riderSelect ? riderSelect.value.trim() : "";
           method: "DELETE",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: Number(remove.dataset.riderDel) })
+          body: JSON.stringify({
+            id: Number(remove.dataset.riderDel)
+          })
         });
       }
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Rider action failed.");
+
+      if (!response.ok) {
+        throw new Error(data.error || "Rider action failed.");
+      }
 
       await renderers.riders();
+      alert(edit ? "Rider updated successfully." : "Action completed successfully.");
+
     } catch (error) {
       alert(error.message);
     }
