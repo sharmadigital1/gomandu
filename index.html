@@ -4718,6 +4718,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
     <th>Completion Rate (%)</th>
     <th>Today Delivered</th>
     <th>Today's Earnings (Rs.)</th>
+    <th>Monthly Delivered</th>
+<th>Monthly Earnings (Rs.)</th>
   </tr>
 </thead>
               <tbody>
@@ -4734,6 +4736,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
 <td>${Number(r.completion_rate || 0)}%</td>
 <td>${Number(r.today_delivered || 0)}</td>
 <td>Rs. ${Number(r.today_earnings || 0)}</td>
+<td>${Number(r.monthly_delivered || 0)}</td>
+<td>Rs. ${Number(r.monthly_earnings || 0)}</td>
                   </tr>
                 `).join("")}
               </tbody>
