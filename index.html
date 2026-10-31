@@ -4706,16 +4706,18 @@ const name = riderSelect ? riderSelect.value.trim() : "";
         ? `<div class="gmx-scroll">
             <table class="gmx-table">
               <thead>
-                <tr>
-                  <th>Rider</th>
-                  <th>Phone</th>
-                  <th>Total Assigned</th>
-                  <th>Delivered</th>
-                  <th>Out for Delivery</th>
-                  <th>Accepted</th>
-                  <th>Cancelled</th>
-                </tr>
-              </thead>
+  <tr>
+    <th>Rider</th>
+    <th>Phone</th>
+    <th>Total Assigned</th>
+    <th>Delivered</th>
+    <th>Out for Delivery</th>
+    <th>Accepted</th>
+    <th>Cancelled</th>
+    <th>Pending Orders</th>
+    <th>Completion Rate (%)</th>
+  </tr>
+</thead>
               <tbody>
                 ${list.map(r => `
                   <tr>
@@ -4726,6 +4728,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
                     <td>${Number(r.out_for_delivery || 0)}</td>
                     <td>${Number(r.accepted || 0)}</td>
                     <td>${Number(r.cancelled || 0)}</td>
+                    <td>${Number(r.pending_orders || 0)}</td>
+<td>${Number(r.completion_rate || 0)}%</td>
                   </tr>
                 `).join("")}
               </tbody>
