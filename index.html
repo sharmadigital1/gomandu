@@ -2475,6 +2475,9 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     });
     if (!list.length) { box.innerHTML = empty(orders.length ? "No orders in this category." : "No orders yet. Place your first order from Home!"); return; }
     box.innerHTML = list.map(o => {
+      const riderName = o.delivery_person_name || "";
+const riderPhone = o.delivery_person_phone || "";
+const riderNotes = o.delivery_notes || "";
       const s = statusOf(o), id = o.id || o.order_id;
       const items = (o.items || []).map(i => "<li>" + esc(i.name || i.product_name || i.menu_key) + " × " + esc(i.quantity || i.qty || 1) + "</li>").join("");
       const date = parseTime(o.created_at) ? parseTime(o.created_at).toLocaleString() : "";
@@ -2483,6 +2486,13 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       return `<article class="gm-order"><div class="gm-order-top"><span>Order #${esc(id)}</span><span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></div>
         <small>${esc(date)}</small>${items ? "<ul>" + items + "</ul>" : ""}
         <p><strong>Total: NPR ${esc(total)}</strong></p>
+        ${riderName || riderPhone ? `
+  <div class="gm-delivery-info">
+    <p><strong>Delivery Person:</strong> ${esc(riderName || "Not assigned")}</p>
+    <p><strong>Phone:</strong> ${esc(riderPhone || "Not available")}</p>
+    ${riderNotes ? `<p><strong>Delivery Notes:</strong> ${esc(riderNotes)}</p>` : ""}
+  </div>
+` : ""}
         <div class="gm-order-actions">${s === "delivered" ? (reviewedOrders().has(String(id)) ? '<span class="gm-status">Reviewed</span>' : `<button type="button" class="gm-btn gm-primary" data-rate-order="${esc(id)}">Rate order</button>`) : ""}${canReorder ? `<button type="button" class="gm-btn gm-outline" data-reorder="${esc(id)}">Reorder</button>` : ""}
         <button type="button" class="gm-btn gm-outline" data-help-order="${esc(id)}">Get help</button></div></article>`;
     }).join("");
