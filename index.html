@@ -4716,6 +4716,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
     <th>Cancelled</th>
     <th>Pending Orders</th>
     <th>Completion Rate (%)</th>
+    <th>Today Delivered</th>
+<th>Today's Earnings (Rs.)</th>
   </tr>
 </thead>
               <tbody>
@@ -4730,6 +4732,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
                     <td>${Number(r.cancelled || 0)}</td>
                     <td>${Number(r.pending_orders || 0)}</td>
 <td>${Number(r.completion_rate || 0)}%</td>
+<td>${Number(r.today_delivered || 0)}</td>
+<td>Rs. ${Number(r.today_earnings || 0)}</td>
                   </tr>
                 `).join("")}
               </tbody>
