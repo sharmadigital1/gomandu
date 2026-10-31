@@ -4587,7 +4587,49 @@ async function loadRestaurants() {
 }
 
 renderers.restaurants = loadRestaurants;
+const restaurantForm = $("gm-restaurant-form");
 
+if (restaurantForm) {
+  restaurantForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const message = $("gm-restaurant-message");
+    const submitButton = restaurantForm.querySelector('[type="submit"]');
+
+    submitButton.disabled = true;
+    message.textContent = "Adding restaurant...";
+
+    try {
+      const response = await fetch("/api/admin-restaurants", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: $("gm-restaurant-name").value.trim(),
+          photo_url: $("gm-restaurant-photo").value.trim(),
+          phone: $("gm-restaurant-phone").value.trim(),
+          address: $("gm-restaurant-address").value.trim(),
+          active: 1
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to add restaurant.");
+      }
+
+      message.textContent = "Restaurant added successfully!";
+      restaurantForm.reset();
+      await loadRestaurants();
+
+    } catch (error) {
+      message.textContent = error.message;
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
 /* ---------- End Restaurant Management ---------- */
   function activeRiderOptions(selectedName = "") {
     return getRiders()
