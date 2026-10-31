@@ -4517,6 +4517,8 @@ const name = riderSelect ? riderSelect.value.trim() : "";
                     ${r.status === "active" ? "Deactivate" : "Activate"}
                   </button>
                   <button type="button" class="gmx-btn"
+    data-rider-edit="${Number(r.id)}">Edit</button>
+                  <button type="button" class="gmx-btn"
                     data-rider-del="${Number(r.id)}">Remove</button>
                 </td>
               </tr>
