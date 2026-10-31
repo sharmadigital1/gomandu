@@ -59,18 +59,34 @@ export async function onRequestGet({ request, env }) {
 
     const result = await env.DB.prepare(`
       SELECT
-        delivery_person_name AS rider_name,
-        delivery_person_phone AS rider_phone,
-        COUNT(*) AS total_assigned,
-        SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
-        SUM(CASE WHEN order_status = 'out_for_delivery' THEN 1 ELSE 0 END) AS out_for_delivery,
-        SUM(CASE WHEN order_status = 'accepted' THEN 1 ELSE 0 END) AS accepted,
-        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled
-      FROM orders
-      WHERE delivery_person_name IS NOT NULL
-        AND TRIM(delivery_person_name) != ''
-      GROUP BY delivery_person_name, delivery_person_phone
-      ORDER BY total_assigned DESC
+  delivery_person_name AS rider_name,
+  delivery_person_phone AS rider_phone,
+  COUNT(*) AS total_assigned,
+
+  SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END) AS delivered,
+
+  SUM(CASE WHEN order_status = 'out_for_delivery' THEN 1 ELSE 0 END) AS out_for_delivery,
+
+  SUM(CASE WHEN order_status = 'accepted' THEN 1 ELSE 0 END) AS accepted,
+
+  SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) AS cancelled,
+
+  SUM(CASE
+    WHEN order_status IN ('accepted', 'out_for_delivery')
+    THEN 1 ELSE 0
+  END) AS pending_orders,
+
+  ROUND(
+    100.0 * SUM(CASE WHEN order_status = 'delivered' THEN 1 ELSE 0 END)
+    / NULLIF(COUNT(*), 0),
+    1
+  ) AS completion_rate
+
+FROM orders
+WHERE delivery_person_name IS NOT NULL
+  AND TRIM(delivery_person_name) != ''
+GROUP BY delivery_person_name, delivery_person_phone
+ORDER BY total_assigned DESC
     `).all();
 
     return Response.json(
