@@ -151,8 +151,11 @@ export async function onRequestDelete({ request, env }) {
     ).bind(id).run();
 
     return json({ success: true });
-  } catch (error) {
+    } catch (error) {
     console.error("Restaurant deletion failed:", error);
-    return json({ error: "Unable to delete restaurant" }, 500);
+    return json({
+      error: "Unable to delete restaurant",
+      detail: String(error.message || error)
+    }, 500);
   }
 }
