@@ -66,31 +66,52 @@ export async function onRequestPost({ request, env }) {
   try {
     const data = await request.json();
 
+    const id = Number(data.id);
     const name = String(data.name || "").trim();
     const photoUrl = String(data.photo_url || "").trim();
     const phone = String(data.phone || "").trim();
     const address = String(data.address || "").trim();
+    const cuisine = String(data.cuisine || "").trim();
     const active = data.active === 0 ? 0 : 1;
 
-    if (!name) {
-      return json({ error: "Restaurant name is required" }, 400);
+    if (name.length < 2 || name.length > 100) {
+      return json({ error: "Restaurant name must be 2–100 characters" }, 400);
+    }
+
+    if (id) {
+      if (!Number.isInteger(id) || id < 1) {
+        return json({ error: "Valid restaurant ID is required" }, 400);
+      }
+
+      await env.DB.prepare(`
+        UPDATE restaurants
+        SET name = ?, photo_url = ?, phone = ?, address = ?,
+            cuisine = ?, active = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(
+        name, photoUrl, phone, address, cuisine, active, id
+      ).run();
+
+      return json({ success: true, id });
     }
 
     const result = await env.DB.prepare(`
       INSERT INTO restaurants
-        (name, photo_url, phone, address, active)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(name, photoUrl, phone, address, active).run();
+        (name, photo_url, phone, address, cuisine, active)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      name, photoUrl, phone, address, cuisine, active
+    ).run();
 
     return json({
       success: true,
       id: result.meta.last_row_id
     });
   } catch (error) {
-    console.error("Restaurant creation failed:", error);
-    return json({ error: "Unable to add restaurant" }, 500);
+    console.error("Restaurant save failed:", error);
+    return json({ error: "Unable to save restaurant" }, 500);
   }
-}
+}}
 
 export async function onRequestPatch({ request, env }) {
   if (!(await verifyAdmin(request, env))) {
@@ -113,8 +134,9 @@ export async function onRequestPatch({ request, env }) {
         name = ?,
         photo_url = ?,
         phone = ?,
-        address = ?,
-        active = ?,
+       address = ?,
+cuisine = ?,
+active = ?,
         updated_at = datetime('now')
       WHERE id = ?
     `).bind(
@@ -122,7 +144,8 @@ export async function onRequestPatch({ request, env }) {
       String(data.photo_url || "").trim(),
       String(data.phone || "").trim(),
       String(data.address || "").trim(),
-      data.active === 0 ? 0 : 1,
+String(data.cuisine || "").trim(),
+data.active === 0 ? 0 : 1,
       id
     ).run();
 
