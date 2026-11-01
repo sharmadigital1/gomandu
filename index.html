@@ -4267,7 +4267,6 @@ function renderList() {
     const phone = phoneInput.value.trim();
     const address = addressInput.value.trim();
     const cuisine = cuisineInput.value.trim();
-    featuredInput.value = Number(r.featured) === 1 ? "1" : "0";
     const featured = Number(featuredInput.value);
     if (name.length < 2 || name.length > 100) {
       message.textContent = "Name must be between 2 and 100 characters."; return;
@@ -4332,6 +4331,7 @@ if (deleteButton) {
       if (!r) return;
       idInput.value = r.id; nameInput.value = r.name || "";
       photoInput.value = r.photo_url || ""; phoneInput.value = r.phone || ""; addressInput.value = r.address || ""; activeInput.value = Number(r.active) === 1 ? "1" : "0";
+      cuisineInput.value = r.cuisine || ""; featuredInput.value = Number(r.featured) === 1 ? "1" : "0";
       saveButton.textContent = "Update restaurant"; updatePreview();
       form.scrollIntoView({ behavior: "smooth", block: "start" }); return;
     }
