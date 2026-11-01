@@ -3931,6 +3931,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
         </div>
         <button type="button" data-edit="${Number(r.id)}">Edit</button>
         <button type="button" data-toggle="${Number(r.id)}">${active ? "Deactivate" : "Activate"}</button>
+        <button type="button" data-delete="${Number(r.id)}" style="background:#dc2626;color:white">Delete</button>
       </article>`;
     }).join("");
   }
@@ -3990,6 +3991,34 @@ window.gmxLoadRestaurants = loadRestaurants;
   list.addEventListener("click", async event => {
     const editButton = event.target.closest("[data-edit]");
     const toggleButton = event.target.closest("[data-toggle]");
+    const deleteButton = event.target.closest("[data-delete]");
+
+if (deleteButton) {
+  const id = Number(deleteButton.dataset.delete);
+  const r = restaurants.find(item => Number(item.id) === id);
+
+  if (!r) return;
+
+  if (!confirm(`Are you sure you want to delete ${r.name}?`)) return;
+
+  deleteButton.disabled = true;
+  message.textContent = "Deleting restaurant...";
+
+  try {
+    await api("/api/admin-restaurants", {
+      method: "DELETE",
+      body: JSON.stringify({ id })
+    });
+
+    message.textContent = "Restaurant deleted successfully.";
+    await loadRestaurants();
+  } catch (error) {
+    message.textContent = error.message;
+    deleteButton.disabled = false;
+  }
+
+  return;
+}
     if (editButton) {
       const r = restaurants.find(item => Number(item.id) === Number(editButton.dataset.edit));
       if (!r) return;
