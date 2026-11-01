@@ -1,4 +1,3 @@
-
 async function sha256Hex(value) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
@@ -87,10 +86,10 @@ export async function onRequestPost({ request, env }) {
       await env.DB.prepare(`
         UPDATE restaurants
         SET name = ?, photo_url = ?, phone = ?, address = ?,
-            cuisine = ?,featured = ?, active = ?, updated_at = datetime('now')
+            cuisine = ?, featured = ?, active = ?, updated_at = datetime('now')
         WHERE id = ?
       `).bind(
-        name, photoUrl, phone, address, cuisine, active, id
+        name, photoUrl, phone, address, cuisine, featured, active, id
       ).run();
 
       return json({ success: true, id });
@@ -112,7 +111,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
     console.error("Restaurant save failed:", error);
     return json({ error: "Unable to save restaurant" }, 500);
   }
-}}
+}
 
 export async function onRequestPatch({ request, env }) {
   if (!(await verifyAdmin(request, env))) {
