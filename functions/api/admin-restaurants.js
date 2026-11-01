@@ -72,6 +72,7 @@ export async function onRequestPost({ request, env }) {
     const phone = String(data.phone || "").trim();
     const address = String(data.address || "").trim();
     const cuisine = String(data.cuisine || "").trim();
+    const featured = data.featured === 1 ? 1 : 0;
     const active = data.active === 0 ? 0 : 1;
 
     if (name.length < 2 || name.length > 100) {
@@ -86,7 +87,7 @@ export async function onRequestPost({ request, env }) {
       await env.DB.prepare(`
         UPDATE restaurants
         SET name = ?, photo_url = ?, phone = ?, address = ?,
-            cuisine = ?, active = ?, updated_at = datetime('now')
+            cuisine = ?,featured = ?, active = ?, updated_at = datetime('now')
         WHERE id = ?
       `).bind(
         name, photoUrl, phone, address, cuisine, active, id
@@ -97,10 +98,10 @@ export async function onRequestPost({ request, env }) {
 
     const result = await env.DB.prepare(`
       INSERT INTO restaurants
-        (name, photo_url, phone, address, cuisine, active)
-      VALUES (?, ?, ?, ?, ?, ?)
+        (name, photo_url, phone, address, cuisine, featured, active)
+VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(
-      name, photoUrl, phone, address, cuisine, active
+     name, photoUrl, phone, address, cuisine, featured, active
     ).run();
 
     return json({
@@ -129,22 +130,17 @@ export async function onRequestPatch({ request, env }) {
     }
 
     await env.DB.prepare(`
-      UPDATE restaurants
-      SET
-        name = ?,
-        photo_url = ?,
-        phone = ?,
-       address = ?,
-cuisine = ?,
-active = ?,
-        updated_at = datetime('now')
-      WHERE id = ?
+     UPDATE restaurants
+SET name = ?, photo_url = ?, phone = ?, address = ?,
+    cuisine = ?, featured = ?, active = ?, updated_at = datetime('now')
+WHERE id = ?
     `).bind(
       name,
       String(data.photo_url || "").trim(),
       String(data.phone || "").trim(),
       String(data.address || "").trim(),
 String(data.cuisine || "").trim(),
+data.featured === 1 ? 1 : 0,
 data.active === 0 ? 0 : 1,
       id
     ).run();
