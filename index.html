@@ -3215,6 +3215,156 @@ async function submitAuth() {
       width: 100%;
     }
   }
+ 
+/* ===== GoMandu Premium Restaurant Dashboard ===== */
+
+.gmx-restaurant-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.gmx-restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gmx-restaurant-header h2 {
+  margin: 0 0 5px;
+  font-size: 25px;
+  font-weight: 800;
+  color: #171717;
+}
+
+.gmx-restaurant-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.gmx-stat-card {
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.045);
+  border-top: 4px solid #ed2638;
+}
+
+.gmx-stat-card:nth-child(2) {
+  border-top-color: #079447;
+}
+
+.gmx-stat-card:nth-child(3) {
+  border-top-color: #252525;
+}
+
+.gmx-stat-card:nth-child(4) {
+  border-top-color: #f5b900;
+}
+
+.gmx-stat-card span {
+  display: block;
+  color: #666;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.gmx-stat-card strong {
+  display: block;
+  font-size: 30px;
+  margin-top: 8px;
+  color: #171717;
+}
+
+.gmx-restaurant-form-card,
+.gmx-restaurant-filter-card,
+.gmx-restaurant-list-card {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.04);
+}
+
+.gmx-restaurant-dashboard .gmx-card-head h3,
+.gmx-restaurant-filter-card h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #171717;
+}
+
+.gmx-restaurant-dashboard .gmx-form {
+  max-width: 760px;
+  gap: 14px;
+}
+
+.gmx-restaurant-dashboard input,
+.gmx-restaurant-dashboard select {
+  border-radius: 9px;
+  border: 1px solid #dedede;
+  min-height: 43px;
+  padding: 10px 12px;
+}
+
+.gmx-restaurant-dashboard input:focus,
+.gmx-restaurant-dashboard select:focus {
+  outline: none;
+  border-color: #ed2638;
+  box-shadow: 0 0 0 3px rgba(237,38,56,.10);
+}
+
+.gmx-restaurant-dashboard .gmx-btn-primary {
+  background: #ed2638;
+  color: white;
+  border-color: #ed2638;
+  font-weight: 700;
+}
+
+.gmx-restaurant-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.gmx-restaurant-list-card #gm-restaurants-list {
+  margin-top: 15px;
+}
+
+.gmx-restaurant-dashboard .gmx-preview {
+  max-width: 220px;
+  max-height: 160px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+@media (max-width: 800px) {
+  .gmx-restaurant-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gmx-restaurant-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .gmx-restaurant-header h2 {
+    font-size: 21px;
+  }
+
+  .gmx-restaurant-form-card,
+  .gmx-restaurant-filter-card,
+  .gmx-restaurant-list-card {
+    padding: 13px;
+  }
+}
+ 
 </style>
 
 <div id="gm-admin-entry" class="gma-wrap" style="padding:12px 14px" hidden>
@@ -3330,44 +3480,132 @@ async function submitAuth() {
         <div id="gma-orders" class="gma-orders"></div>
       </section>
 
-      <!-- RESTAURANTS -->
-      <section class="gmx-tab" id="gmx-tab-restaurants" hidden>
-        <div id="gm-manage-restaurants" class="gmx-card">
-          <div class="gmx-card-head"><h3>Add or edit a restaurant</h3></div>
-          <p class="gmx-muted">Add restaurants, update photos, or hide restaurants from customers.</p>
-          <form id="gm-restaurant-form" class="gmx-form">
-            <input type="hidden" id="gm-restaurant-id" value="">
-            <label for="gm-restaurant-name">Restaurant name
-              <input id="gm-restaurant-name" type="text" maxlength="100" required placeholder="e.g. Kathmandu Momo House">
-            </label>
-            <label for="gm-restaurant-photo">Photo URL (HTTPS)
-              <input id="gm-restaurant-photo" type="url" placeholder="https://example.com/restaurant.jpg">
-            </label>
-            <img id="gm-restaurant-preview" class="gmx-preview" alt="Restaurant photo preview" hidden>
-            <label for="gm-restaurant-phone">Phone number
-              <input id="gm-restaurant-phone" type="tel" maxlength="30" placeholder="e.g. 9820000000">
-            </label>
-            <label for="gm-restaurant-address">Address
-              <input id="gm-restaurant-address" type="text" maxlength="200" placeholder="e.g. Aawa road, Bhairahawa">
-            </label>
-            <label for="gm-restaurant-active">Visibility
-              <select id="gm-restaurant-active">
-                <option value="1">Active — show to customers</option>
-                <option value="0">Inactive — hide from customers</option>
-              </select>
-            </label>
-            <div class="gmx-row">
-              <button type="submit" id="gm-restaurant-save" class="gmx-btn gmx-btn-primary">Save restaurant</button>
-              <button type="button" id="gm-restaurant-cancel" class="gmx-btn">Clear form</button>
-            </div>
-            <p id="gm-restaurant-message" class="gmx-muted" role="status" aria-live="polite"></p>
-          </form>
+      
+<!-- RESTAURANTS -->
+<section class="gmx-tab" id="gmx-tab-restaurants" hidden>
+
+  <div class="gmx-restaurant-dashboard">
+
+    <!-- HEADER -->
+    <div class="gmx-restaurant-header">
+      <div>
+        <h2>Restaurant Management</h2>
+        <p class="gmx-muted">Manage restaurants, visibility and performance.</p>
+      </div>
+      <button type="button" id="gm-restaurant-refresh" class="gmx-btn gmx-btn-primary">
+        ↻ Refresh
+      </button>
+    </div>
+
+    <!-- SUMMARY CARDS -->
+    <div class="gmx-restaurant-stats">
+      <div class="gmx-stat-card">
+        <span>Total Restaurants</span>
+        <strong id="gm-total-restaurants">0</strong>
+      </div>
+      <div class="gmx-stat-card">
+        <span>Active Restaurants</span>
+        <strong id="gm-active-restaurants">0</strong>
+      </div>
+      <div class="gmx-stat-card">
+        <span>Inactive Restaurants</span>
+        <strong id="gm-inactive-restaurants">0</strong>
+      </div>
+      <div class="gmx-stat-card">
+        <span>Featured Restaurants</span>
+        <strong id="gm-featured-restaurants">0</strong>
+      </div>
+    </div>
+
+    <!-- ADD / EDIT FORM -->
+    <div class="gmx-card gmx-restaurant-form-card" id="gm-manage-restaurants">
+      <div class="gmx-card-head">
+        <h3>＋ Add / Edit Restaurant</h3>
+      </div>
+
+      <p class="gmx-muted">Add restaurants and manage their information.</p>
+
+      <form id="gm-restaurant-form" class="gmx-form">
+        <input type="hidden" id="gm-restaurant-id" value="">
+
+        <label for="gm-restaurant-name">Restaurant name
+          <input id="gm-restaurant-name" type="text" maxlength="100"
+            required placeholder="e.g. Kathmandu Momo House">
+        </label>
+
+        <label for="gm-restaurant-photo">Photo URL (HTTPS)
+          <input id="gm-restaurant-photo" type="url"
+            placeholder="https://example.com/restaurant.jpg">
+        </label>
+
+        <img id="gm-restaurant-preview" class="gmx-preview"
+          alt="Restaurant photo preview" hidden>
+
+        <label for="gm-restaurant-phone">Phone number
+          <input id="gm-restaurant-phone" type="tel" maxlength="30"
+            placeholder="e.g. 9820000000">
+        </label>
+
+        <label for="gm-restaurant-address">Address
+          <input id="gm-restaurant-address" type="text" maxlength="200"
+            placeholder="e.g. Aawa road, Bhairahawa">
+        </label>
+
+        <label for="gm-restaurant-active">Visibility
+          <select id="gm-restaurant-active">
+            <option value="1">Active — show to customers</option>
+            <option value="0">Inactive — hide from customers</option>
+          </select>
+        </label>
+
+        <div class="gmx-row">
+          <button type="submit" id="gm-restaurant-save"
+            class="gmx-btn gmx-btn-primary">Save restaurant</button>
+          <button type="button" id="gm-restaurant-cancel"
+            class="gmx-btn">Clear form</button>
         </div>
-        <div class="gmx-card" style="margin-top:14px">
-          <div class="gmx-card-head"><h3>Restaurant list</h3><button type="button" id="gm-restaurant-refresh" class="gmx-btn">↻ Refresh list</button></div>
-          <div id="gm-restaurants-list" aria-live="polite">Loading restaurants…</div>
-        </div>
-      </section>
+
+        <p id="gm-restaurant-message" class="gmx-muted"
+          role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <!-- SEARCH AND FILTERS -->
+    <div class="gmx-card gmx-restaurant-filter-card">
+      <h3>Find Restaurants</h3>
+      <div class="gmx-restaurant-filters">
+        <input type="search" id="gm-restaurant-search"
+          placeholder="Search restaurant by name...">
+
+        <select id="gm-restaurant-status-filter">
+          <option value="all">All Status</option>
+          <option value="1">Active</option>
+          <option value="0">Inactive</option>
+        </select>
+
+        <select id="gm-restaurant-sort">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- RESTAURANT LIST -->
+    <div class="gmx-card gmx-restaurant-list-card">
+      <div class="gmx-card-head">
+        <h3>Our Restaurants</h3>
+        <span class="gmx-muted" id="gm-restaurant-count">0 Restaurants</span>
+      </div>
+
+      <div id="gm-restaurants-list" aria-live="polite">
+        Loading restaurants…
+      </div>
+    </div>
+
+  </div>
+</section>
+
 
       <!-- MENU -->
       <section class="gmx-tab" id="gmx-tab-menu" hidden>
@@ -3915,26 +4153,16 @@ const name = riderSelect ? riderSelect.value.trim() : "";
     return data;
   }
 
-  function renderList() {
-    if (!restaurants.length) {
-      list.textContent = "No restaurants yet. Add your first restaurant above.";
-      return;
+  
+["gm-restaurant-search", "gm-restaurant-status-filter", "gm-restaurant-sort"]
+  .forEach(id => {
+    const control = $(id);
+    if (control) {
+      control.addEventListener("input", renderList);
+      control.addEventListener("change", renderList);
     }
-    list.innerHTML = restaurants.map(r => {
-      const photo = safePhoto(r.photo_url || "");
-      const active = Number(r.active) === 1;
-      return `<article class="gmx-rest-row">
-        ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
-        <div class="info"><strong>${safeText(r.name)}</strong>
-          ${r.phone || r.address ? `<div class="gmx-muted" style="margin-top:4px;font-size:12px">${r.phone ? "📞 " + safeText(r.phone) : ""}${r.phone && r.address ? " · " : ""}${r.address ? "📍 " + safeText(r.address) : ""}</div>` : ""}
-          <div style="margin-top:6px"><span class="gmx-pill ${active ? "on" : "off"}">${active ? "Active — visible" : "Inactive — hidden"}</span></div>
-        </div>
-        <button type="button" data-edit="${Number(r.id)}">Edit</button>
-        <button type="button" data-toggle="${Number(r.id)}">${active ? "Deactivate" : "Activate"}</button>
-        <button type="button" data-delete="${Number(r.id)}" style="background:#dc2626;color:white">Delete</button>
-      </article>`;
-    }).join("");
-  }
+  });
+
 
   async function loadRestaurants() {
     if (loading) return;
