@@ -4154,6 +4154,58 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   }
 
   
+function renderList() {
+  const total = restaurants.length;
+  const activeCount = restaurants.filter(r => Number(r.active) === 1).length;
+
+  $("gm-total-restaurants").textContent = total;
+  $("gm-active-restaurants").textContent = activeCount;
+  $("gm-inactive-restaurants").textContent = total - activeCount;
+
+  const featuredEl = $("gm-featured-restaurants");
+  if (featuredEl) {
+    featuredEl.textContent = restaurants.filter(r => Number(r.featured) === 1).length;
+  }
+
+  const search = ($("gm-restaurant-search")?.value || "").trim().toLowerCase();
+  const status = $("gm-restaurant-status-filter")?.value || "all";
+  const sort = $("gm-restaurant-sort")?.value || "newest";
+
+  let filtered = restaurants.filter(r =>
+    String(r.name || "").toLowerCase().includes(search) &&
+    (status === "all" || Number(r.active) === Number(status))
+  );
+
+  if (sort === "newest") filtered.sort((a, b) => Number(b.id) - Number(a.id));
+  if (sort === "oldest") filtered.sort((a, b) => Number(a.id) - Number(b.id));
+  if (sort === "name") filtered.sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+
+  const countEl = $("gm-restaurant-count");
+  if (countEl) countEl.textContent = `${filtered.length} Restaurants`;
+
+  if (!filtered.length) {
+    list.textContent = total ? "No matching restaurants found." : "No restaurants yet.";
+    return;
+  }
+
+  list.innerHTML = filtered.map(r => {
+    const photo = safePhoto(r.photo_url || "");
+    const active = Number(r.active) === 1;
+
+    return `<article class="gmx-rest-row">
+      ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
+      <div class="info">
+        <strong>${safeText(r.name)}</strong>
+        ${r.phone || r.address ? `<div class="gmx-muted" style="margin-top:4px;font-size:12px">${r.phone ? "📞 " + safeText(r.phone) : ""}${r.phone && r.address ? " · " : ""}${r.address ? "📍 " + safeText(r.address) : ""}</div>` : ""}
+        <div style="margin-top:6px"><span class="gmx-pill ${active ? "on" : "off"}">${active ? "Active — visible" : "Inactive — hidden"}</span></div>
+      </div>
+      <button type="button" data-edit="${Number(r.id)}">Edit</button>
+      <button type="button" data-toggle="${Number(r.id)}">${active ? "Deactivate" : "Activate"}</button>
+      <button type="button" data-delete="${Number(r.id)}" style="background:#dc2626;color:white">Delete</button>
+    </article>`;
+  }).join("");
+}
+
 ["gm-restaurant-search", "gm-restaurant-status-filter", "gm-restaurant-sort"]
   .forEach(id => {
     const control = $(id);
