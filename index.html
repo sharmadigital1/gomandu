@@ -3365,7 +3365,7 @@ async function submitAuth() {
         </div>
         <div class="gmx-card" style="margin-top:14px">
           <div class="gmx-card-head"><h3>Restaurant list</h3><button type="button" id="gm-restaurant-refresh" class="gmx-btn">↻ Refresh list</button></div>
-          <div id="gm-restaurant-list" aria-live="polite">Loading restaurants…</div>
+          <div id="gm-restaurants-list" aria-live="polite">Loading restaurants…</div>
         </div>
       </section>
 
@@ -3978,9 +3978,15 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   });
 
   $("gm-restaurant-cancel").addEventListener("click", clearForm);
-  $("gm-restaurant-refresh").addEventListener("click", loadRestaurants);
-  window.gmxLoadRestaurants = loadRestaurants;
 
+const restaurantRefresh = $("gm-restaurant-refresh");
+if (restaurantRefresh) {
+  restaurantRefresh.addEventListener("click", () => {
+    loadRestaurants();
+  });
+}
+
+window.gmxLoadRestaurants = loadRestaurants;
   list.addEventListener("click", async event => {
     const editButton = event.target.closest("[data-edit]");
     const toggleButton = event.target.closest("[data-toggle]");
