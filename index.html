@@ -3564,7 +3564,12 @@ async function submitAuth() {
           <input id="gm-restaurant-address" type="text" maxlength="200"
             placeholder="e.g. Aawa road, Bhairahawa">
         </label>
-
+<label for="gm-restaurant-featured">Featured Restaurant
+  <select id="gm-restaurant-featured">
+    <option value="0">Normal Restaurant</option>
+    <option value="1">⭐ Featured Restaurant</option>
+  </select>
+</label>
         <label for="gm-restaurant-active">Visibility
           <select id="gm-restaurant-active">
             <option value="1">Active — show to customers</option>
@@ -4121,6 +4126,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   const phoneInput = $("gm-restaurant-phone");
   const addressInput = $("gm-restaurant-address");
   const cuisineInput = $("gm-restaurant-cuisine");
+  const featuredInput = $("gm-restaurant-featured");
   const idInput = $("gm-restaurant-id");
   const preview = $("gm-restaurant-preview");
   const list = $("gm-restaurants-list");
@@ -4258,6 +4264,7 @@ function renderList() {
     const phone = phoneInput.value.trim();
     const address = addressInput.value.trim();
     const cuisine = cuisineInput.value.trim();
+    const featured = Number(featuredInput.value);
     if (name.length < 2 || name.length > 100) {
       message.textContent = "Name must be between 2 and 100 characters."; return;
     }
@@ -4266,7 +4273,7 @@ function renderList() {
     }
     saveButton.disabled = true; message.textContent = "Saving…";
     try {
-      const payload = { name, photo_url, phone, address, cuisine, active };
+      const payload = { name, photo_url, phone, address, cuisine, featured, active };
       if (idInput.value) payload.id = Number(idInput.value);
       await api("/api/admin-restaurants", { method: "POST", body: JSON.stringify(payload) });
       message.textContent = "Restaurant saved successfully.";
