@@ -4217,6 +4217,9 @@ function renderList() {
       ${photo ? `<img src="${safeText(photo)}" alt="" loading="lazy">` : `<div class="ph"></div>`}
       <div class="info">
         <strong>${safeText(r.name)}</strong>
+        ${Number(r.featured) === 1
+  ? `<span style="display:inline-block;background:#fff4cc;color:#9a6700;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;margin-top:5px;">⭐ FEATURED</span>`
+  : ""}
         ${r.cuisine ? `<div class="gmx-muted" style="margin-top:4px;font-size:12px">🍽️ ${safeText(r.cuisine)}</div>` : ""}
         ${r.phone || r.address ? `<div class="gmx-muted" style="margin-top:4px;font-size:12px">${r.phone ? "📞 " + safeText(r.phone) : ""}${r.phone && r.address ? " · " : ""}${r.address ? "📍 " + safeText(r.address) : ""}</div>` : ""}
         <div style="margin-top:6px"><span class="gmx-pill ${active ? "on" : "off"}">${active ? "Active — visible" : "Inactive — hidden"}</span></div>
@@ -4264,6 +4267,7 @@ function renderList() {
     const phone = phoneInput.value.trim();
     const address = addressInput.value.trim();
     const cuisine = cuisineInput.value.trim();
+    featuredInput.value = Number(r.featured) === 1 ? "1" : "0";
     const featured = Number(featuredInput.value);
     if (name.length < 2 || name.length > 100) {
       message.textContent = "Name must be between 2 and 100 characters."; return;
@@ -4345,6 +4349,7 @@ if (deleteButton) {
   phone: r.phone || "",
   address: r.address || "",
   cuisine: r.cuisine || "",
+           featured: Number(r.featured) === 1 ? 1 : 0,
   active: Number(r.active) === 1 ? 0 : 1
 })
         });
