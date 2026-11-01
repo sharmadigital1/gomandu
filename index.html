@@ -311,6 +311,9 @@
   margin-bottom: 90px;
 }
     
+
+    .gm-featured-label { display:inline-block; margin-top:5px; color:#a66b00; background:#fff4cc; border-radius:20px; padding:3px 8px; font-size:11px; font-weight:800; }
+    .gm-restaurant-placeholder { min-height:150px; display:grid; place-items:center; background:#fff0e6; font-size:44px; }
 </style>
 <style id="gm-overview-css">
   /* ===== Customer dashboard: Overview tab ===== */
@@ -1522,7 +1525,7 @@
 (() => {
   // Sample restaurant and menu data.
   // Replace names, prices and image URLs with your real restaurant data.
-  const restaurants = [
+  let restaurants = [
     {
       id: "momo-house",
       name: "Kathmandu Momo House",
@@ -1634,37 +1637,39 @@
 
   
 function renderRestaurants() {
-  el("gm-restaurant-grid").innerHTML = restaurants.map(r => `
+  const grid = el("gm-restaurant-grid");
+  if (!grid) return;
+  const featured = restaurants.filter(r => Number(r.featured) === 1);
+  const visible = featured;
+  if (!visible.length) {
+    grid.innerHTML = '<div class="gm-empty">No featured restaurants yet. Please check all restaurants.</div>';
+    return;
+  }
+  grid.innerHTML = visible.map(r => `
     <article class="gm-restaurant-card"
-      data-restaurant="${r.id}"
+      data-restaurant="${String(r.id).replace(/["&<>']/g, "")}"
       tabindex="0"
       role="button"
-      aria-label="Open ${r.name}">
-
-      <img src="${r.image}" alt="${r.name}" loading="lazy">
-
+      aria-label="Open ${String(r.name || "Restaurant").replace(/[&<>"]/g, "")}">
+      ${r.image ? `<img src="${r.image}" alt="${String(r.name || "Restaurant").replace(/[&<>"]/g, "")}" loading="lazy">` : `<div class="gm-restaurant-placeholder">🍽️</div>`}
       <div class="gm-restaurant-info">
-        <h3>${r.name}</h3>
+        <h3>${String(r.name || "Restaurant").replace(/[&<>"]/g, "")}</h3>
+        <span class="gm-featured-label">⭐ Featured</span>
       </div>
     </article>
   `).join("");
 
-  el("gm-restaurant-grid")
-    .querySelectorAll("[data-restaurant]")
-    .forEach(card => {
-      const open = () => openRestaurant(card.dataset.restaurant);
-
-      card.addEventListener("click", open);
-
-      card.addEventListener("keydown", e => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          open();
-        }
-      });
+  grid.querySelectorAll("[data-restaurant]").forEach(card => {
+    const open = () => openRestaurant(card.dataset.restaurant);
+    card.addEventListener("click", open);
+    card.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
     });
+  });
 }
-
 
   function openRestaurant(id) {
     activeRestaurant = restaurants.find(r => r.id === id);
@@ -1674,6 +1679,14 @@ function renderRestaurants() {
     el("gm-menu-view").hidden = false;
     el("gm-menu-title").textContent = activeRestaurant.name;
     if (window.GMUI) GMUI.showTab("menu");
+
+    // Restaurant records come from D1. Menu items still need a menu API.
+    if (!Array.isArray(activeRestaurant.foods) || !activeRestaurant.foods.length) {
+      el("gm-food-list").innerHTML =
+        '<div class="gm-empty">This restaurant has not added its menu yet. Please check back soon.</div>';
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
 
     // Food items show as text and price only; no food images.
     el("gm-food-list").innerHTML = activeRestaurant.foods.map(food => `
@@ -1967,9 +1980,49 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   }
 });
 
+  async function refreshRestaurants() {
+    const response = await fetch("/api/restaurants", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Could not load restaurants.");
+
+    const rows = Array.isArray(data.restaurants) ? data.restaurants : [];
+    const synced = rows
+      .filter(r => Number(r.active ?? 1) === 1)
+      .map(r => {
+        const photo = String(r.photo_url || "");
+        let safeImage = "";
+        try {
+          const u = new URL(photo, window.location.origin);
+          if (u.protocol === "https:") safeImage = u.href;
+        } catch (_) {}
+        return {
+          id: String(r.id),
+          name: String(r.name || "Restaurant"),
+          category: String(r.cuisine || "Restaurant"),
+          image: safeImage,
+          photo_url: safeImage,
+          featured: Number(r.featured) === 1 ? 1 : 0,
+          active: Number(r.active) === 0 ? 0 : 1,
+          phone: String(r.phone || ""),
+          address: String(r.address || ""),
+          foods: []
+        };
+      });
+
+    restaurants.splice(0, restaurants.length, ...synced);
+    renderRestaurants();
+    window.dispatchEvent(new Event("gm:restaurants-updated"));
+    return restaurants;
+  }
+
   // Small API used by the sidebar views (second script block).
   window.GM = {
     restaurants,
+    refreshRestaurants,
     get cart() { return cart; },
     addToCart,
     openRestaurant,
@@ -1991,6 +2044,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     el("gm-menu-view").hidden = true;
     renderRestaurants();
     renderCart();
+    refreshRestaurants().catch(error => console.error("Customer restaurants sync failed:", error));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -2103,6 +2157,10 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
 
   /* ---------------- Sample data (replace with real data / API later) ---------------- */
   const REST = GM.restaurants;
+  window.addEventListener("gm:restaurants-updated", () => {
+    if (typeof renderers.home === "function") renderers.home();
+    if (typeof renderers.restaurants === "function") renderers.restaurants();
+  });
 
   const MART = {
     id: "mart", name: "GoMandu Mart", category: "Grocery • Essentials",
@@ -2224,7 +2282,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     const on = kind === "rest" ? isFavRest(id) : isFavFood(id);
     return `<button type="button" class="gm-heart${on ? " on" : ""}" data-fav-${kind}="${esc(id)}" aria-pressed="${on}" aria-label="${on ? "Remove from favorites" : "Save to favorites"}">${on ? "♥" : "♡"}</button>`;
   }
-  const avgPrice = r => Math.round(r.foods.reduce((s, f) => s + f.price, 0) / r.foods.length);
+  const avgPrice = r => r.foods && r.foods.length ? Math.round(r.foods.reduce((s, f) => s + Number(f.price || 0), 0) / r.foods.length) : 0;
   function restCard(r) {
     return `<article class="gm-restaurant-card gm-rest-card" data-open-restaurant="${esc(r.id)}" tabindex="0" role="button" aria-label="Open ${esc(r.name)}">
       <img src="${esc(r.image)}" alt="${esc(r.name)}" loading="lazy">
@@ -2315,9 +2373,14 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   renderers.home = () => {
     const offersEl = $("gm-home-offers");
     offersEl.innerHTML = OFFERS.slice(0, 3).map(offerCard).join("");
-    $("gm-restaurant-grid").innerHTML = REST.map(restCard).join("");
-    const reco = REST.map(r => ({ r, f: r.foods[1] || r.foods[0] })).slice(0, 6);
-    $("gm-home-reco").innerHTML = reco.map(x => foodRow(x.r, x.f, true)).join("");
+    const featured = REST.filter(r => Number(r.featured) === 1);
+    $("gm-restaurant-grid").innerHTML = featured.length
+      ? featured.map(restCard).join("")
+      : empty("No featured restaurants yet. Please check back soon.");
+    const reco = REST.flatMap(r => (r.foods || []).slice(0, 1).map(f => ({ r, f }))).slice(0, 6);
+    $("gm-home-reco").innerHTML = reco.length
+      ? reco.map(x => foodRow(x.r, x.f, true)).join("")
+      : empty("Recommended dishes will appear when restaurants add their menus.");
   };
 
   function offerCard(o) {
@@ -2364,13 +2427,14 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
 
   // Restaurants (browse + filter)
   const restState = { cuisine: "All", sort: "az", favOnly: false };
-  const CUISINES = ["All", ...Array.from(new Set(REST.flatMap(r => r.category.split("•").map(s => s.trim()))))];
   renderers.restaurants = () => {
-    $("gm-rest-chips").innerHTML = CUISINES.map(c =>
+    const cuisines = ["All", ...Array.from(new Set(REST.map(r => String(r.category || "Restaurant").trim()).filter(Boolean)))];
+    if (!cuisines.includes(restState.cuisine)) restState.cuisine = "All";
+    $("gm-rest-chips").innerHTML = cuisines.map(c =>
       `<button type="button" class="gm-chip${restState.cuisine === c ? " active" : ""}" data-cuisine="${esc(c)}">${esc(c)}</button>`).join("");
     $("gm-rest-sort").value = restState.sort;
     $("gm-rest-favonly").checked = restState.favOnly;
-    let list = REST.filter(r => restState.cuisine === "All" || r.category.split("•").map(s => s.trim()).includes(restState.cuisine));
+    let list = REST.filter(r => restState.cuisine === "All" || String(r.category || "Restaurant").trim() === restState.cuisine);
     if (restState.favOnly) list = list.filter(r => isFavRest(r.id));
     list = list.slice().sort((a, b) =>
       restState.sort === "za" ? b.name.localeCompare(a.name) :
@@ -4249,6 +4313,9 @@ function renderList() {
       const data = await api("/api/admin-restaurants");
       restaurants = Array.isArray(data.restaurants) ? data.restaurants : [];
       renderList();
+      if (window.GM && typeof window.GM.refreshRestaurants === "function") {
+        window.GM.refreshRestaurants().catch(error => console.warn("Customer restaurant refresh:", error));
+      }
     } catch (error) { list.textContent = error.message; }
     finally { loading = false; }
   }
