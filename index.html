@@ -3540,7 +3540,21 @@ async function submitAuth() {
 
         <img id="gm-restaurant-preview" class="gmx-preview"
           alt="Restaurant photo preview" hidden>
-
+<label for="gm-restaurant-cuisine">Cuisine / Food Category
+  <select id="gm-restaurant-cuisine">
+    <option value="">Select Cuisine</option>
+    <option value="Momo">Momo</option>
+    <option value="Chinese">Chinese</option>
+    <option value="Indian">Indian</option>
+    <option value="Thakali">Thakali</option>
+    <option value="Pizza">Pizza</option>
+    <option value="Burger">Burger</option>
+    <option value="Fast Food">Fast Food</option>
+    <option value="Newari">Newari</option>
+    <option value="Continental">Continental</option>
+    <option value="Multi Cuisine">Multi Cuisine</option>
+  </select>
+</label>
         <label for="gm-restaurant-phone">Phone number
           <input id="gm-restaurant-phone" type="tel" maxlength="30"
             placeholder="e.g. 9820000000">
@@ -4106,6 +4120,7 @@ const name = riderSelect ? riderSelect.value.trim() : "";
   const activeInput = $("gm-restaurant-active");
   const phoneInput = $("gm-restaurant-phone");
   const addressInput = $("gm-restaurant-address");
+  const cuisineInput = $("gm-restaurant-cuisine");
   const idInput = $("gm-restaurant-id");
   const preview = $("gm-restaurant-preview");
   const list = $("gm-restaurants-list");
@@ -4241,6 +4256,7 @@ function renderList() {
     const active = Number(activeInput.value);
     const phone = phoneInput.value.trim();
     const address = addressInput.value.trim();
+    const cuisine = cuisineInput.value.trim();
     if (name.length < 2 || name.length > 100) {
       message.textContent = "Name must be between 2 and 100 characters."; return;
     }
@@ -4249,7 +4265,7 @@ function renderList() {
     }
     saveButton.disabled = true; message.textContent = "Saving…";
     try {
-      const payload = { name, photo_url, phone, address, active };
+      const payload = { name, photo_url, phone, address, cuisine, active };
       if (idInput.value) payload.id = Number(idInput.value);
       await api("/api/admin-restaurants", { method: "POST", body: JSON.stringify(payload) });
       message.textContent = "Restaurant saved successfully.";
