@@ -1,6 +1,6 @@
 const PROJECT_ID = "gomandu-7026e";
 const ADMIN_ORIGIN =
-  "https://gomandu-admin.neerxpressbhwbranch.workers.dev";
+  "https://admin.go-mandu.com";
 
 const headers = {
   "Content-Type": "application/json",
