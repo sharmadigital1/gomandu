@@ -7,7 +7,7 @@ const headers = {
   "Cache-Control": "no-store",
   "Access-Control-Allow-Origin": ADMIN_ORIGIN,
   "Access-Control-Allow-Headers": "Authorization, Content-Type",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Vary": "Origin"
 };
 
