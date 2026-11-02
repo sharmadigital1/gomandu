@@ -183,3 +183,72 @@ export async function onRequestGet({ request, env }) {
     }, 401);
   }
 }
+export async function onRequestPost({ request, env }) {
+  try {
+    if (request.headers.get("Origin") !== ADMIN_ORIGIN) {
+      return json({ success: false, message: "Origin not allowed" }, 403);
+    }
+
+    if (!env.DB) {
+      return json({ success: false, message: "Database unavailable" }, 500);
+    }
+
+    const authHeader = request.headers.get("Authorization") || "";
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : "";
+
+    if (!token) {
+      return json({ success: false, message: "Login required" }, 401);
+    }
+
+    const firebaseUser = await verifyFirebaseToken(token);
+    const isAdmin = await verifyAdmin(firebaseUser.sub, token);
+
+    if (!isAdmin) {
+      return json({ success: false, message: "Admin access denied" }, 403);
+    }
+
+    const body = await request.json();
+    const orderId = body.orderId;
+    const status = body.status;
+
+    const allowedStatuses = [
+      "new",
+      "accepted",
+      "preparing",
+      "out_for_delivery",
+      "delivered",
+      "cancelled"
+    ];
+
+    if (
+      !Number.isSafeInteger(Number(orderId)) ||
+      Number(orderId) <= 0 ||
+      !allowedStatuses.includes(status)
+    ) {
+      return json({ success: false, message: "Invalid order ID or status" }, 400);
+    }
+
+    const result = await env.DB.prepare(`
+      UPDATE orders
+      SET order_status = ?
+      WHERE id = ?
+    `).bind(status, Number(orderId)).run();
+
+    if (!result.meta || result.meta.changes === 0) {
+      return json({ success: false, message: "Order not found" }, 404);
+    }
+
+    return json({
+      success: true,
+      message: "Order status updated successfully"
+    });
+
+  } catch (error) {
+    return json({
+      success: false,
+      message: "Order update failed"
+    }, 500);
+  }
+}
