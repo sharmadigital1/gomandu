@@ -959,7 +959,18 @@
     class="gm-btn gm-outline">
     📍 Choose Location on Map
   </button>
+  
+  <div id="gm-map-container" style="display:none;">
+  <div id="gm-customer-map" style="height:350px;width:100%;"></div>
+  <button type="button" id="gm-confirm-location">
+    Confirm Location
+  </button>
+</div>
+  <input type="hidden" id="gm-customer-lat">
+  <input type="hidden" id="gm-customer-lng">
 
+  <p id="gm-delivery-distance"></p>
+  <p id="gm-delivery-charge"></p>
   <div class="gm-pay-box">
     <strong>Delivery time:</strong> as soon as possible<br>
     <strong>Payment:</strong> Cash on delivery
@@ -1893,15 +1904,14 @@ const mapButton = el("gm-pick-location");
 
 if (mapButton) {
   mapButton.addEventListener("click", () => {
-    const address =
-      el("gm-delivery-address").value.trim() ||
-      "Bharatpur, Nepal";
+    const mapContainer = el("gm-map-container");
 
-    const mapUrl =
-      "https://www.google.com/maps/search/?api=1&query=" +
-      encodeURIComponent(address);
+    mapContainer.style.display = "block";
 
-    window.open(mapUrl, "_blank");
+    if (!window.gmCustomerMapLoaded) {
+      window.gmCustomerMapLoaded = true;
+      initCustomerMap();
+    }
   });
 }
 
@@ -5199,6 +5209,43 @@ renderers.restaurants = () => { if (window.gmxLoadRestaurants) window.gmxLoadRes
     performanceRefresh.addEventListener("click", loadRiderPerformance);
   }
 })();
+  let gmCustomerMap;
+let gmCustomerMarker;
+
+function initCustomerMap() {
+  const mapElement = document.getElementById("gm-customer-map");
+
+  gmCustomerMap = new google.maps.Map(mapElement, {
+    center: { lat: 27.7000, lng: 83.4500 },
+    zoom: 14
+  });
+
+  gmCustomerMarker = new google.maps.Marker({
+    position: gmCustomerMap.getCenter(),
+    map: gmCustomerMap,
+    draggable: true
+  });
+}
+  const confirmLocationBtn =
+  document.getElementById("gm-confirm-location");
+
+if (confirmLocationBtn) {
+  confirmLocationBtn.addEventListener("click", () => {
+    const position = gmCustomerMarker.getPosition();
+
+    document.getElementById("gm-customer-lat").value =
+      position.lat();
+
+    document.getElementById("gm-customer-lng").value =
+      position.lng();
+
+    document.getElementById("gm-delivery-distance").textContent =
+      "Location selected successfully";
+
+    document.getElementById("gm-map-container").style.display = "none";
+  });
+}
+  
 </script>
 </body>
 </html>
