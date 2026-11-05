@@ -156,7 +156,8 @@ const longitude =
       `INSERT INTO orders
        (customer_name, phone, address, delivery_latitude, delivery_longitude,
  total_amount, customer_id, payment_method, payment_status, order_status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))
+      `
     ).bind(
       customerName,
 phone,
