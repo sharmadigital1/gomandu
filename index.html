@@ -62,6 +62,18 @@
     .btn-ghost { background: #fff; color: var(--dark); border: 1px solid var(--line); }
     .btn-ghost:hover { border-color: var(--dark); }
 
+    /* Auth Modal Modal */
+    .gmx-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10; place-items: center; backdrop-filter: blur(4px); }
+    .gmx-modal-box { background: #fff; padding: 32px; border-radius: 20px; width: min(400px, 90%); box-shadow: 0 20px 40px rgba(0,0,0,0.15); position: relative; }
+    .gmx-modal-close { position: absolute; top: 16px; right: 20px; font-size: 22px; background: none; border: 0; color: var(--muted); }
+    .gmx-modal h3 { margin: 0 0 20px; font-size: 22px; letter-spacing: -.5px; }
+    .gmx-form-field { display: grid; gap: 6px; margin-bottom: 16px; font-size: 13px; font-weight: 700; text-align: left; }
+    .gmx-form-field input { border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font-weight: 400; width: 100%; }
+    .gmx-form-field input:focus { outline: 2px solid #e6394655; border-color: var(--red); }
+    .gmx-modal-toggle { font-size: 13px; color: var(--muted); margin-top: 14px; text-align: center; }
+    .gmx-modal-toggle span { color: var(--red); font-weight: 700; cursor: pointer; }
+    .gmx-modal-toggle span:hover { text-decoration: underline; }
+
     /* Hero */
     .hero { background: linear-gradient(115deg, #fff0e6, #fff9f3); padding: 70px 0; overflow: hidden; }
     .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 36px; }
@@ -157,35 +169,7 @@
     .footer-col h4 { font-size: 16px; font-weight: 700; margin: 0 0 16px; color: #fff; }
     .footer-col ul { list-style: none; padding: 0; margin: 0; }
     .footer-col ul li { margin-bottom: 12px; }
-    .footer-col ul li a { color: #8b8f96; font-size: 14px; text-decoration: none; transition: color .2s; }
-    .footer-col ul li a:hover { color: #fff; }
-    .footer-bottom { border-top: 1px solid #23262b; padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: #6b7078; font-size: 13px; }
-  </style>
-</head>
-<body>
-
-  <!-- Header -->
-  <header>
-    <div class="container nav">
-      <a href="#" class="logo">Go<span>Mandu</span></a>
-      <div class="nav-links">
-        <a href="#services">Services</a>
-        <a href="#menu">Order Food</a>
-        <a href="#how">How It Works</a>
-        <div class="auth-buttons">
-          <button class="btn btn-ghost" onclick="alert('Login System Coming Soon!')">Log In</button>
-          <button class="btn btn-primary" onclick="alert('Sign Up System Coming Soon!')">Sign Up</button>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container hero-grid">
-      <div>
-        <span class="eyebrow">Super Fast Logistics</span>
-        <h1>Everything you need, delivered <span>instantly.</span></h1>
+    
 </script>
 </body>
 </html>
