@@ -53,6 +53,15 @@ if (!customer) {
     const customerName = String(body.customer_name || "").trim();
     const phone = String(body.phone || "").trim();
     const address = String(body.address || "").trim();
+    const latitude =
+  body.latitude == null || body.latitude === ""
+    ? null
+    : Number(body.latitude);
+
+const longitude =
+  body.longitude == null || body.longitude === ""
+    ? null
+    : Number(body.longitude);
     const items = body.items;
 
     if (
@@ -145,15 +154,17 @@ if (!customer) {
 
     const orderResult = await env.DB.prepare(
       `INSERT INTO orders
-       (customer_name, phone, address, total_amount, customer_id,
-        payment_method, payment_status, order_status, created_at)
-       VALUES (?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`
+       (customer_name, phone, address, delivery_latitude, delivery_longitude,
+ total_amount, customer_id, payment_method, payment_status, order_status, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))
     ).bind(
       customerName,
-      phone,
-      address,
-      total,
-      String(customer.id)
+phone,
+address,
+latitude,
+longitude,
+total,
+String(customer.id)
     ).run();
 
     const orderId = orderResult.meta?.last_row_id;
