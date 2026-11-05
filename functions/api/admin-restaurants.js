@@ -1,179 +1,461 @@
-async function sha256Hex(value) {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value)
-  );
 
-  return Array.from(
-    new Uint8Array(digest),
-    b => b.toString(16).padStart(2, "0")
-  ).join("");
-}
+const PROJECT_ID = "gomandu-7026";
+const ADMIN_ORIGIN = "https://admin.go-mandu.com";
 
-async function verifyAdmin(request, env) {
-  const cookie = request.headers.get("Cookie") || "";
-  const match = cookie.match(
-    /(?:^|;\s*)gm_session=([a-f0-9]{64})(?:;|$)/
-  );
+const headers = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store",
+  "Access-Control-Allow-Origin": ADMIN_ORIGIN,
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+  "Vary": "Origin"
+};
 
-  if (!match || !env.DB) return false;
-
-  const tokenHash = await sha256Hex(match[1]);
-
-  const session = await env.DB.prepare(`
-    SELECT c.id, c.is_admin
-    FROM customer_sessions s
-    JOIN customers c ON c.id = s.customer_id
-    WHERE s.token_hash = ?
-      AND s.expires_at > datetime('now')
-  `).bind(tokenHash).first();
-
-  return !!session && Number(session.is_admin) === 1;
-}
-
-const json = (data, status = 200) =>
-  Response.json(data, {
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
     status,
-    headers: { "Cache-Control": "no-store" }
+    headers
+  });
+}
+
+function decodeBase64Url(value) {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+  const binary = atob(padded);
+
+  return Uint8Array.from(binary, c => c.charCodeAt(0));
+}
+
+async function verifyFirebaseToken(token) {
+  const parts = token.split(".");
+
+  if (parts.length !== 3) {
+    throw new Error("Invalid token");
+  }
+
+  const header = JSON.parse(
+    new TextDecoder().decode(decodeBase64Url(parts[0]))
+  );
+
+  const payload = JSON.parse(
+    new TextDecoder().decode(decodeBase64Url(parts[1]))
+  );
+
+  if (header.alg !== "RS256" || !header.kid) {
+    throw new Error("Invalid token header");
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  if (
+    payload.aud !== PROJECT_ID ||
+    payload.iss !== `https://securetoken.google.com/${PROJECT_ID}` ||
+    !payload.sub ||
+    payload.exp <= now ||
+    payload.iat > now + 60
+  ) {
+    throw new Error("Invalid token claims");
+  }
+
+  const response = await fetch(
+    "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+  );
+
+  if (!response.ok) {
+    throw new Error("Unable to load signing keys");
+  }
+
+  const jwks = await response.json();
+  const jwk = jwks.keys.find(key => key.kid === header.kid);
+
+  if (!jwk) {
+    throw new Error("Signing key not found");
+  }
+
+  const publicKey = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256"
+    },
+    false,
+    ["verify"]
+  );
+
+  const valid = await crypto.subtle.verify(
+    "RSASSA-PKCS1-v1_5",
+    publicKey,
+    decodeBase64Url(parts[2]),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+  );
+
+  if (!valid) {
+    throw new Error("Invalid token signature");
+  }
+
+  return payload;
+}
+
+async function verifyAdmin(uid, token) {
+  const url =
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}` +
+    `/databases/(default)/documents/admins/${encodeURIComponent(uid)}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
 
-export async function onRequestGet({ request, env }) {
-  if (!(await verifyAdmin(request, env))) {
-    return json({ error: "Admin access required" }, 403);
+  if (!response.ok) {
+    return false;
+  }
+
+  const document = await response.json();
+
+  return document.fields?.role?.stringValue === "admin";
+}
+
+async function authenticateAdmin(request) {
+  if (request.headers.get("Origin") !== ADMIN_ORIGIN) {
+    return {
+      success: false,
+      status: 403,
+      message: "Origin not allowed"
+    };
+  }
+
+  const authHeader = request.headers.get("Authorization") || "";
+
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : "";
+
+  if (!token) {
+    return {
+      success: false,
+      status: 401,
+      message: "Login required"
+    };
   }
 
   try {
-    const result = await env.DB.prepare(
-      "SELECT * FROM restaurants ORDER BY id DESC"
-    ).all();
+    const firebaseUser = await verifyFirebaseToken(token);
+
+    const isAdmin = await verifyAdmin(firebaseUser.sub, token);
+
+    if (!isAdmin) {
+      return {
+        success: false,
+        status: 403,
+        message: "Admin access denied"
+      };
+    }
+
+    return {
+      success: true
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      status: 401,
+      message: "Authentication failed"
+    };
+  }
+}
+
+function getRestaurantData(data) {
+  return {
+    name: String(data.name || "").trim(),
+    photo_url: String(data.photo_url || "").trim(),
+    phone: String(data.phone || "").trim(),
+    address: String(data.address || "").trim(),
+    cuisine: String(data.cuisine || "").trim(),
+    featured: data.featured === 1 || data.featured === true ? 1 : 0,
+    active: data.active === 0 || data.active === false ? 0 : 1
+  };
+}
+
+function validRestaurant(data) {
+  return data.name.length >= 2 && data.name.length <= 100;
+}
+
+export async function onRequestOptions() {
+  return new Response(null, {
+    status: 204,
+    headers
+  });
+}
+
+// GET: Load restaurants
+export async function onRequestGet({ request, env }) {
+  const auth = await authenticateAdmin(request);
+
+  if (!auth.success) {
+    return json({
+      success: false,
+      message: auth.message
+    }, auth.status);
+  }
+
+  if (!env.DB) {
+    return json({
+      success: false,
+      message: "Database unavailable"
+    }, 500);
+  }
+
+  try {
+    const result = await env.DB.prepare(`
+      SELECT *
+      FROM restaurants
+      ORDER BY id DESC
+    `).all();
 
     return json({
       success: true,
       restaurants: result.results || []
     });
+
   } catch (error) {
-    console.error("Restaurant list failed:", error);
-    return json({ error: "Unable to load restaurants" }, 500);
+    return json({
+      success: false,
+      message: "Could not load restaurants"
+    }, 500);
   }
 }
 
+// POST: Add a new restaurant or update an existing one
 export async function onRequestPost({ request, env }) {
-  if (!(await verifyAdmin(request, env))) {
-    return json({ error: "Admin access required" }, 403);
+  const auth = await authenticateAdmin(request);
+
+  if (!auth.success) {
+    return json({
+      success: false,
+      message: auth.message
+    }, auth.status);
+  }
+
+  if (!env.DB) {
+    return json({
+      success: false,
+      message: "Database unavailable"
+    }, 500);
   }
 
   try {
-    const data = await request.json();
+    const body = await request.json();
+    const data = getRestaurantData(body);
 
-    const id = Number(data.id);
-    const name = String(data.name || "").trim();
-    const photoUrl = String(data.photo_url || "").trim();
-    const phone = String(data.phone || "").trim();
-    const address = String(data.address || "").trim();
-    const cuisine = String(data.cuisine || "").trim();
-    const featured = data.featured === 1 ? 1 : 0;
-    const active = data.active === 0 ? 0 : 1;
-
-    if (name.length < 2 || name.length > 100) {
-      return json({ error: "Restaurant name must be 2–100 characters" }, 400);
+    if (!validRestaurant(data)) {
+      return json({
+        success: false,
+        message: "Restaurant name must be 2–100 characters"
+      }, 400);
     }
 
-    if (id) {
-      if (!Number.isInteger(id) || id < 1) {
-        return json({ error: "Valid restaurant ID is required" }, 400);
+    const id = Number(body.id);
+
+    if (body.id !== undefined && body.id !== null && body.id !== "") {
+      if (!Number.isSafeInteger(id) || id < 1) {
+        return json({
+          success: false,
+          message: "Valid restaurant ID is required"
+        }, 400);
       }
 
-      await env.DB.prepare(`
+      const result = await env.DB.prepare(`
         UPDATE restaurants
-        SET name = ?, photo_url = ?, phone = ?, address = ?,
-            cuisine = ?, featured = ?, active = ?, updated_at = datetime('now')
+        SET name = ?,
+            photo_url = ?,
+            phone = ?,
+            address = ?,
+            cuisine = ?,
+            featured = ?,
+            active = ?,
+            updated_at = datetime('now')
         WHERE id = ?
       `).bind(
-        name, photoUrl, phone, address, cuisine, featured, active, id
+        data.name,
+        data.photo_url,
+        data.phone,
+        data.address,
+        data.cuisine,
+        data.featured,
+        data.active,
+        id
       ).run();
 
-      return json({ success: true, id });
+      if (!result.meta || result.meta.changes === 0) {
+        return json({
+          success: false,
+          message: "Restaurant not found"
+        }, 404);
+      }
+
+      return json({
+        success: true,
+        message: "Restaurant updated successfully",
+        id
+      });
     }
 
     const result = await env.DB.prepare(`
       INSERT INTO restaurants
         (name, photo_url, phone, address, cuisine, featured, active)
-VALUES (?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(
-     name, photoUrl, phone, address, cuisine, featured, active
+      data.name,
+      data.photo_url,
+      data.phone,
+      data.address,
+      data.cuisine,
+      data.featured,
+      data.active
     ).run();
 
     return json({
       success: true,
+      message: "Restaurant added successfully",
       id: result.meta.last_row_id
     });
+
   } catch (error) {
-    console.error("Restaurant save failed:", error);
-    return json({ error: "Unable to save restaurant" }, 500);
+    return json({
+      success: false,
+      message: "Could not save restaurant"
+    }, 500);
   }
 }
 
+// PATCH: Update a restaurant
 export async function onRequestPatch({ request, env }) {
-  if (!(await verifyAdmin(request, env))) {
-    return json({ error: "Admin access required" }, 403);
+  const auth = await authenticateAdmin(request);
+
+  if (!auth.success) {
+    return json({
+      success: false,
+      message: auth.message
+    }, auth.status);
+  }
+
+  if (!env.DB) {
+    return json({
+      success: false,
+      message: "Database unavailable"
+    }, 500);
   }
 
   try {
-    const data = await request.json();
+    const body = await request.json();
+    const id = Number(body.id);
+    const data = getRestaurantData(body);
 
-    const id = Number(data.id);
-    const name = String(data.name || "").trim();
-
-    if (!Number.isInteger(id) || id < 1 || !name) {
-      return json({ error: "Valid restaurant details are required" }, 400);
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      !validRestaurant(data)
+    ) {
+      return json({
+        success: false,
+        message: "Valid restaurant details are required"
+      }, 400);
     }
 
-    await env.DB.prepare(`
-     UPDATE restaurants
-SET name = ?, photo_url = ?, phone = ?, address = ?,
-    cuisine = ?, featured = ?, active = ?, updated_at = datetime('now')
-WHERE id = ?
+    const result = await env.DB.prepare(`
+      UPDATE restaurants
+      SET name = ?,
+          photo_url = ?,
+          phone = ?,
+          address = ?,
+          cuisine = ?,
+          featured = ?,
+          active = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
     `).bind(
-      name,
-      String(data.photo_url || "").trim(),
-      String(data.phone || "").trim(),
-      String(data.address || "").trim(),
-String(data.cuisine || "").trim(),
-data.featured === 1 ? 1 : 0,
-data.active === 0 ? 0 : 1,
+      data.name,
+      data.photo_url,
+      data.phone,
+      data.address,
+      data.cuisine,
+      data.featured,
+      data.active,
       id
     ).run();
 
-    return json({ success: true });
+    if (!result.meta || result.meta.changes === 0) {
+      return json({
+        success: false,
+        message: "Restaurant not found"
+      }, 404);
+    }
+
+    return json({
+      success: true,
+      message: "Restaurant updated successfully"
+    });
+
   } catch (error) {
-    console.error("Restaurant update failed:", error);
-    return json({ error: "Unable to update restaurant" }, 500);
+    return json({
+      success: false,
+      message: "Could not update restaurant"
+    }, 500);
   }
 }
 
+// DELETE: Delete a restaurant
 export async function onRequestDelete({ request, env }) {
-  if (!(await verifyAdmin(request, env))) {
-    return json({ error: "Admin access required" }, 403);
+  const auth = await authenticateAdmin(request);
+
+  if (!auth.success) {
+    return json({
+      success: false,
+      message: auth.message
+    }, auth.status);
+  }
+
+  if (!env.DB) {
+    return json({
+      success: false,
+      message: "Database unavailable"
+    }, 500);
   }
 
   try {
-    const data = await request.json();
-    const id = Number(data.id);
+    const body = await request.json();
+    const id = Number(body.id);
 
-    if (!Number.isInteger(id) || id < 1) {
-      return json({ error: "Valid restaurant ID is required" }, 400);
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return json({
+        success: false,
+        message: "Valid restaurant ID is required"
+      }, 400);
     }
 
-    await env.DB.prepare(
-      "DELETE FROM restaurants WHERE id = ?"
-    ).bind(id).run();
+    const result = await env.DB.prepare(`
+      DELETE FROM restaurants
+      WHERE id = ?
+    `).bind(id).run();
 
-    return json({ success: true });
-    } catch (error) {
-    console.error("Restaurant deletion failed:", error);
+    if (!result.meta || result.meta.changes === 0) {
+      return json({
+        success: false,
+        message: "Restaurant not found"
+      }, 404);
+    }
+
     return json({
-      error: "Unable to delete restaurant",
-      detail: String(error.message || error)
+      success: true,
+      message: "Restaurant deleted successfully"
+    });
+
+  } catch (error) {
+    return json({
+      success: false,
+      message: "Could not delete restaurant"
     }, 500);
   }
 }
