@@ -46,9 +46,11 @@
     .nav { min-height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .logo { color: var(--red); font-size: 27px; font-weight: 900; text-decoration: none; letter-spacing: -1px; }
     .logo span { color: var(--dark); }
-    .nav-links { display: flex; gap: 26px; }
+    .nav-links { display: flex; align-items: center; gap: 26px; }
     .nav-links a { text-decoration: none; font-size: 14px; font-weight: 700; color: #3c4046; }
     .nav-links a:hover { color: var(--red); }
+    .auth-buttons { display: flex; align-items: center; gap: 12px; }
+    
     .btn {
       border: 0; border-radius: 12px; padding: 12px 20px;
       font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
@@ -110,7 +112,7 @@
     .food-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     .food-card { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; transition: transform .2s, box-shadow .2s; }
     .food-card:hover { transform: translateY(-4px); box-shadow: 0 14px 34px #0000000d; }
-    .food-image { height: 170px; display: block; width: 100%; overflow: hidden; position: relative; }
+    .food-image { height: 170px; display: block; width: 100%; overflow: hidden; position: relative; background: #fff2e9; }
     .food-image img { width: 100%; height: 100%; object-fit: cover; }
     .tag { position: absolute; top: 12px; left: 12px; padding: 6px 9px; border-radius: 7px; background: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .food-info { padding: 16px; }
@@ -148,9 +150,16 @@
 
     /* Footer */
     footer { background: #0b0b0c; color: #fff; padding: 64px 0 28px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 40px; margin-bottom: 40px; }
     .footer-logo { font-size: 38px; font-weight: 900; letter-spacing: -1.5px; color: #fff; text-decoration: none; display: inline-block; margin-bottom: 15px; }
     .footer-logo span { color: var(--red); }
-    .footer-tagline { color: #8b8f96; font-size: 14px; }
+    .footer-tagline { color: #8b8f96; font-size: 14px; line-height: 1.6; max-width: 320px; }
+    .footer-col h4 { font-size: 16px; font-weight: 700; margin: 0 0 16px; color: #fff; }
+    .footer-col ul { list-style: none; padding: 0; margin: 0; }
+    .footer-col ul li { margin-bottom: 12px; }
+    .footer-col ul li a { color: #8b8f96; font-size: 14px; text-decoration: none; transition: color .2s; }
+    .footer-col ul li a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid #23262b; padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; color: #6b7078; font-size: 13px; }
   </style>
 </head>
 <body>
@@ -163,8 +172,11 @@
         <a href="#services">Services</a>
         <a href="#menu">Order Food</a>
         <a href="#how">How It Works</a>
+        <div class="auth-buttons">
+          <button class="btn btn-ghost" onclick="alert('Login System Coming Soon!')">Log In</button>
+          <button class="btn btn-primary" onclick="alert('Sign Up System Coming Soon!')">Sign Up</button>
+        </div>
       </div>
-      <a href="#menu" class="btn btn-primary">Order Now</a>
     </div>
   </header>
 
@@ -174,29 +186,6 @@
       <div>
         <span class="eyebrow">Super Fast Logistics</span>
         <h1>Everything you need, delivered <span>instantly.</span></h1>
-        <p class="lead">Get top restaurants' food, fresh groceries, and daily travel solutions right at your doorstep inside one single ecosystem.</p>
-        <div class="search">
-          <input type="text" placeholder="Enter your delivery location...">
-          <a href="#menu" class="btn btn-primary">Find Food</a>
-        </div>
-        <p class="tagline">Popular: Momo, Burgers, Newari Set, Chowmein</p>
-        <div class="hero-stats">
-          <div><strong>50k+</strong><small>Downloads</small></div>
-          <div><strong>200+</strong><small>Partners</small></div>
-          <div><strong>15 min</strong><small>Avg Delivery</small></div>
-        </div>
-      </div>
-      <div class="hero-art">
-        <img src="https://unsplash.com" alt="Delicious Food">
-      </div>
-    </div>
-  </section>
-
-  <!-- Services Section -->
-  <section class="services" id="services">
-    <div class="container">
-      <div class="section-head">
-        <h2>Our On-Demand Services</h2>
 </script>
 </body>
 </html>
