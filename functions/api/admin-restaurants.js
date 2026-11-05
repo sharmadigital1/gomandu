@@ -183,8 +183,8 @@ function validRestaurant(data) {
 }
 
 export async function onRequestOptions() {
-  return new Response(null, {
-    status: 204,
+  return new Response("OK", {
+    status: 200,
     headers
   });
 }
