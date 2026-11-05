@@ -1535,10 +1535,9 @@
 function renderRestaurants() {
   const grid = el("gm-restaurant-grid");
   if (!grid) return;
-  const featured = restaurants.filter(r => Number(r.featured) === 1);
-  const visible = featured;
+  const visible = restaurants.filter(r => Number(r.active ?? 1) === 1);
   if (!visible.length) {
-    grid.innerHTML = '<div class="gm-empty">No featured restaurants yet. Please check all restaurants.</div>';
+    grid.innerHTML = '<div class="gm-empty">No restaurants available right now. Please check back soon.</div>';
     return;
   }
   grid.innerHTML = visible.map(r => `
@@ -1550,7 +1549,7 @@ function renderRestaurants() {
       ${r.image ? `<img src="${r.image}" alt="${String(r.name || "Restaurant").replace(/[&<>"]/g, "")}" loading="lazy">` : `<div class="gm-restaurant-placeholder">🍽️</div>`}
       <div class="gm-restaurant-info">
         <h3>${String(r.name || "Restaurant").replace(/[&<>"]/g, "")}</h3>
-        <span class="gm-featured-label">⭐ Featured</span>
+        ${Number(r.featured) === 1 ? '<span class="gm-featured-label">⭐ Featured</span>' : ''}
       </div>
     </article>
   `).join("");
