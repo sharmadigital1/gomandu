@@ -1903,18 +1903,46 @@ el("gm-checkout-button").addEventListener("click", async () => {
 const mapButton = el("gm-pick-location");
 
 if (mapButton) {
-  mapButton.addEventListener("click", () => {
+  mapButton.addEventListener("click", async () => {
     const mapContainer = el("gm-map-container");
-
     mapContainer.style.display = "block";
 
-    if (!window.gmCustomerMapLoaded) {
-      window.gmCustomerMapLoaded = true;
+    if (window.google && window.google.maps) {
       initCustomerMap();
+      return;
+    }
+
+    if (window.gmMapsLoading) return;
+    window.gmMapsLoading = true;
+
+    try {
+      const response = await fetch("/api/maps-key");
+      const data = await response.json();
+
+      if (!data.success || !data.key) {
+        throw new Error("Google Maps key missing");
+      }
+
+      const script = document.createElement("script");
+      script.src =
+        "https://maps.googleapis.com/maps/api/js?key=" +
+        encodeURIComponent(data.key) +
+        "&callback=initCustomerMap";
+      script.async = true;
+      script.defer = true;
+
+      script.onerror = () => {
+        window.gmMapsLoading = false;
+        alert("Google Maps load failed.");
+      };
+
+      document.head.appendChild(script);
+    } catch (error) {
+      window.gmMapsLoading = false;
+      alert("Map load failed. Please try again.");
     }
   });
 }
-
 
 el("gm-checkout-form").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -1952,6 +1980,8 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
         customer_name: el("gm-delivery-name").value.trim(),
         phone: el("gm-delivery-phone").value.trim(),
         address: el("gm-delivery-address").value.trim(),
+        latitude: Number(el("gm-customer-lat").value) || null,
+longitude: Number(el("gm-customer-lng").value) || null,
         coupon_code: (window.GMUI && GMUI.couponCode()) || undefined,
         items: cart.map((item) => ({
          menu_key: item.menu_key || item.key,
