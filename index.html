@@ -3339,6 +3339,12 @@ async function loadCustomerMenu() {
 
     console.log("GoMandu Firebase Menu Loaded:", items.length);
 
+console.table(restaurants.map(r => ({
+  restaurant: r.name,
+  menuCount: r.foods.length,
+  foods: r.foods.map(f => f.name).join(", ")
+})));
+
   } catch (error) {
     console.error("Firebase Menu Load Error:", error);
   }
