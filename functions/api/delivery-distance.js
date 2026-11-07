@@ -37,15 +37,6 @@ function coordinates(location) {
   return { latitude, longitude };
 }
 
-function restaurantLocations(env) {
-  try {
-    const locations = JSON.parse(env.RESTAURANT_LOCATIONS || "{}");
-    return locations && typeof locations === "object" && !Array.isArray(locations) ? locations : null;
-  } catch (_) {
-    return null;
-  }
-}
-
 export async function onRequestOptions({ request }) {
   return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
@@ -54,11 +45,20 @@ export async function onRequestPost({ request, env }) {
   if (!env.GOOGLE_MAPS_API_KEY) {
     return json(request, { success: false, message: "Delivery service is not configured." }, 503);
   }
+  if (!env.DB) {
+    return json(request, { success: false, message: "Database is not connected." }, 503);
+  }
 
   try {
     const body = await request.json();
-    const restaurantId = String(body.restaurant_id || "").trim();
-    const origin = coordinates(restaurantLocations(env)?.[restaurantId]);
+    const restaurantId = Number(body.restaurant_id);
+    if (!Number.isSafeInteger(restaurantId) || restaurantId < 1) {
+      return json(request, { success: false, message: "Invalid restaurant." }, 400);
+    }
+    const restaurant = await env.DB.prepare(
+      "SELECT latitude, longitude FROM restaurants WHERE id = ? AND active = 1 LIMIT 1"
+    ).bind(restaurantId).first();
+    const origin = coordinates(restaurant);
     const destination = coordinates(body.destination);
     if (!origin || !destination) {
       return json(request, { success: false, message: "This restaurant is not configured for delivery, or the delivery location is invalid." }, 400);
