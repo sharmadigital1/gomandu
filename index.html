@@ -1597,6 +1597,27 @@
     if (cart.length) refreshDeliveryQuote();
   });
 
+  function useCurrentLocation() {
+    const message = el("gm-checkout-message");
+    if (!navigator.geolocation) {
+      message.textContent = "Your browser does not support current location. Please choose the location on the map.";
+      return;
+    }
+    message.textContent = "Getting your current location…";
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        el("gm-customer-lat").value = position.coords.latitude;
+        el("gm-customer-lng").value = position.coords.longitude;
+        el("gm-delivery-distance").textContent = "Current location selected. Calculating delivery charge…";
+        window.dispatchEvent(new Event("gm:location-selected"));
+      },
+      () => {
+        message.textContent = "Location permission was not allowed. Please choose your location on the map.";
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
   
 function renderRestaurants() {
   const grid = el("gm-restaurant-grid");
@@ -1835,6 +1856,9 @@ el("gm-checkout-button").addEventListener("click", async () => {
     alert("Please add items to your cart first.");
     return;
   }
+  // Called from the checkout click so the browser can show its location
+  // permission prompt. The map button remains available as a fallback.
+  if (!el("gm-customer-lat").value || !el("gm-customer-lng").value) useCurrentLocation();
   if (window.GMUI) return; // the sidebar script opens checkout and loads the profile
 
   el("gm-checkout-view").hidden = false;
@@ -2036,6 +2060,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     refreshRestaurants,
     get cart() { return cart; },
     get deliveryQuote() { return deliveryQuote; },
+    useCurrentLocation,
     addToCart,
     openRestaurant,
     autofill: autofillCheckoutFromProfile,
@@ -2499,6 +2524,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   renderers.checkout = () => {
     updateCheckoutView();
     if (!GM.cart.length) return;
+    if (!$("gm-customer-lat").value || !$("gm-customer-lng").value) GM.useCurrentLocation();
     const sel = $("gm-saved-address");
     $("gm-saved-address-label").hidden = sel.hidden = !addresses.length;
     sel.innerHTML = `<option value="">— Choose a saved address —</option>` +
