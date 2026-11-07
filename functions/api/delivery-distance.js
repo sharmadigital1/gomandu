@@ -37,6 +37,15 @@ function coordinates(location) {
   return { latitude, longitude };
 }
 
+function restaurantLocations(env) {
+  try {
+    const locations = JSON.parse(env.RESTAURANT_LOCATIONS || "{}");
+    return locations && typeof locations === "object" && !Array.isArray(locations) ? locations : null;
+  } catch (_) {
+    return null;
+  }
+}
+
 export async function onRequestOptions({ request }) {
   return new Response(null, { status: 204, headers: corsHeaders(request) });
 }
@@ -48,10 +57,11 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const body = await request.json();
-    const origin = coordinates(body.origin);
+    const restaurantId = String(body.restaurant_id || "").trim();
+    const origin = coordinates(restaurantLocations(env)?.[restaurantId]);
     const destination = coordinates(body.destination);
     if (!origin || !destination) {
-      return json(request, { success: false, message: "Invalid restaurant or delivery coordinates." }, 400);
+      return json(request, { success: false, message: "This restaurant is not configured for delivery, or the delivery location is invalid." }, 400);
     }
 
     const routeResponse = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
