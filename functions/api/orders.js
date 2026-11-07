@@ -13,9 +13,6 @@ function locationOf(value) {
   return Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180 ? { latitude, longitude } : null;
 }
 function chargeFor(km) { return km <= 1 ? 20 : km <= 2 ? 30 : km <= 4 ? 40 : km <= 10 ? 50 : 50 + Math.ceil(km - 10) * 20; }
-function locationConfig(env) {
-  try { const parsed = JSON.parse(env.RESTAURANT_LOCATIONS || "{}"); return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null; } catch (_) { return null; }
-}
 async function routeQuote(env, origin, destination) {
   if (!env.GOOGLE_MAPS_API_KEY) throw new Error("Delivery service is not configured");
   const response = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
@@ -38,8 +35,9 @@ export async function onRequestPost({ request, env }) {
   try {
     const body = await request.json(), customerName = String(body.customer_name || "").trim(), phone = String(body.phone || "").trim(), address = String(body.address || "").trim();
     const destination = locationOf({ latitude: body.latitude, longitude: body.longitude }), restaurantId = String(body.restaurant_id || "").trim(), items = body.items;
-    if (customerName.length < 2 || customerName.length > 100 || !/^[0-9+\-\s()]{7,20}$/.test(phone) || address.length < 5 || address.length > 500 || !destination || !/^[a-z0-9-]+$/i.test(restaurantId) || !Array.isArray(items) || !items.length || items.length > 32) return fail("Please check your order details");
-    const restaurant = locationConfig(env)?.[restaurantId], origin = locationOf(restaurant);
+    if (customerName.length < 2 || customerName.length > 100 || !/^[0-9+\-\s()]{7,20}$/.test(phone) || address.length < 5 || address.length > 500 || !destination || !/^\d+$/.test(restaurantId) || !Array.isArray(items) || !items.length || items.length > 32) return fail("Please check your order details");
+    const restaurant = await env.DB.prepare("SELECT id, name, latitude, longitude FROM restaurants WHERE id = ? AND active = 1 LIMIT 1").bind(Number(restaurantId)).first();
+    const origin = locationOf(restaurant);
     if (!origin) return fail("This restaurant is not configured for delivery", 422);
     const quantities = new Map();
     for (const item of items) {
