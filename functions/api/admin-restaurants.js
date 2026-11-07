@@ -172,6 +172,8 @@ function getRestaurantData(data) {
     photo_url: String(data.photo_url || "").trim(),
     phone: String(data.phone || "").trim(),
     address: String(data.address || "").trim(),
+    latitude: Number(data.latitude),
+    longitude: Number(data.longitude),
     cuisine: String(data.cuisine || "").trim(),
     featured: data.featured === 1 || data.featured === true ? 1 : 0,
     active: data.active === 0 || data.active === false ? 0 : 1
@@ -179,7 +181,9 @@ function getRestaurantData(data) {
 }
 
 function validRestaurant(data) {
-  return data.name.length >= 2 && data.name.length <= 100;
+  return data.name.length >= 2 && data.name.length <= 100 &&
+    Number.isFinite(data.latitude) && Number.isFinite(data.longitude) &&
+    Math.abs(data.latitude) <= 90 && Math.abs(data.longitude) <= 180;
 }
 
 export async function onRequestOptions() {
@@ -272,6 +276,8 @@ export async function onRequestPost({ request, env }) {
             photo_url = ?,
             phone = ?,
             address = ?,
+            latitude = ?,
+            longitude = ?,
             cuisine = ?,
             featured = ?,
             active = ?,
@@ -282,6 +288,8 @@ export async function onRequestPost({ request, env }) {
         data.photo_url,
         data.phone,
         data.address,
+        data.latitude,
+        data.longitude,
         data.cuisine,
         data.featured,
         data.active,
@@ -304,13 +312,15 @@ export async function onRequestPost({ request, env }) {
 
     const result = await env.DB.prepare(`
       INSERT INTO restaurants
-        (name, photo_url, phone, address, cuisine, featured, active)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+        (name, photo_url, phone, address, latitude, longitude, cuisine, featured, active)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       data.name,
       data.photo_url,
       data.phone,
       data.address,
+      data.latitude,
+      data.longitude,
       data.cuisine,
       data.featured,
       data.active
@@ -370,6 +380,8 @@ export async function onRequestPatch({ request, env }) {
           photo_url = ?,
           phone = ?,
           address = ?,
+          latitude = ?,
+          longitude = ?,
           cuisine = ?,
           featured = ?,
           active = ?,
@@ -380,6 +392,8 @@ export async function onRequestPatch({ request, env }) {
       data.photo_url,
       data.phone,
       data.address,
+        data.latitude,
+        data.longitude,
       data.cuisine,
       data.featured,
       data.active,
