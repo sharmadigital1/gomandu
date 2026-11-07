@@ -1553,20 +1553,8 @@
       longitude: Number(el("gm-customer-lng").value)
     };
     const restaurant = cart[0];
-    // Resolve again from the refreshed restaurant API so an item added while
-    // restaurants were loading can still use its configured coordinates.
-    const currentRestaurant = restaurant && restaurants.find(r => String(r.id) === String(restaurant.restaurantId));
-    const origin = currentRestaurant && Number.isFinite(Number(currentRestaurant.latitude)) &&
-      Number.isFinite(Number(currentRestaurant.longitude))
-      ? { latitude: Number(currentRestaurant.latitude), longitude: Number(currentRestaurant.longitude) }
-      : restaurant && restaurant.origin;
-    if (!restaurant || !origin || !Number.isFinite(destination.latitude) || !Number.isFinite(destination.longitude)) {
+    if (!restaurant || !Number.isFinite(destination.latitude) || !Number.isFinite(destination.longitude)) {
       clearDeliveryQuote("Choose a valid map location to calculate delivery.");
-      return false;
-    }
-    const coords = [origin.latitude, origin.longitude, destination.latitude, destination.longitude].map(Number);
-    if (!coords.every(Number.isFinite)) {
-      clearDeliveryQuote("This restaurant does not have a delivery location configured yet.");
       return false;
     }
     message.textContent = "Calculating delivery charge…";
@@ -1574,7 +1562,7 @@
       const response = await fetch("/api/delivery", {
         method: "POST", credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ origin, destination })
+        body: JSON.stringify({ restaurant_id: restaurant.restaurantId, destination })
       });
       const quote = await response.json().catch(() => ({}));
       if (!response.ok || !quote.success || !Number.isFinite(Number(quote.deliveryCharge))) {
