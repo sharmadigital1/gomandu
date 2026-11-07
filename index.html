@@ -3278,5 +3278,77 @@ if (confirmLocationBtn) {
   
 
 </script>
+  
+<script type="module">
+import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCHp4AMcaaO_b9cplfD7U7Q8jOjqOdwEVI",
+  authDomain: "gomandu-7026e.firebaseapp.com",
+  projectId: "gomandu-7026e",
+  storageBucket: "gomandu-7026e.firebasestorage.app",
+  messagingSenderId: "920036157567",
+  appId: "1:920036157567:web:d3f16b46abaa87e6c2f74a",
+  measurementId: "G-M37S79SG9H"
+};
+
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadCustomerMenu() {
+  try {
+    const snap = await getDocs(collection(db, "menuItems"));
+
+    const items = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    const restaurants = window.GM?.restaurants;
+    if (!restaurants) return;
+
+    restaurants.forEach(restaurant => {
+      const restaurantName = String(restaurant.name || "").trim().toLowerCase();
+
+      const matchedItems = items.filter(item => {
+        const sameId =
+          item.restaurantId &&
+          String(item.restaurantId) === String(restaurant.id);
+
+        const sameName =
+          item.restaurantName &&
+          String(item.restaurantName).trim().toLowerCase() === restaurantName;
+
+        return (sameId || sameName) && item.status === "available";
+      });
+
+      restaurant.foods = matchedItems.map(item => ({
+        id: item.id,
+        name: item.name || "",
+        price: Number(item.price) || 0,
+        category: item.category || "",
+        imageUrl: item.imageUrl || "",
+        menu_key: item.id
+      }));
+    });
+
+    console.log("GoMandu Firebase Menu Loaded:", items.length);
+
+  } catch (error) {
+    console.error("Firebase Menu Load Error:", error);
+  }
+}
+
+window.addEventListener("gm:restaurants-updated", loadCustomerMenu);
+
+if (window.GM) {
+  loadCustomerMenu();
+}
+</script>
 </body>
 </html>
