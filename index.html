@@ -1526,10 +1526,76 @@
 
   let activeRestaurant = null;
   let cart = [];
+  // A quote is only a display aid. /api/orders must calculate prices and delivery again.
+  let deliveryQuote = null;
 
   function money(amount) {
     return Number(amount).toLocaleString("en-IN");
   }
+
+  function cartSubtotal() {
+    return cart.reduce((sum, item) => sum + Number(item.price) * Number(item.qty), 0);
+  }
+
+  function clearDeliveryQuote(message = "Choose your map location to calculate delivery.") {
+    deliveryQuote = null;
+    const distance = el("gm-delivery-distance");
+    const charge = el("gm-delivery-charge");
+    if (distance) distance.textContent = message;
+    if (charge) charge.textContent = "";
+    if (window.GMUI) GMUI.onCart();
+  }
+
+  async function refreshDeliveryQuote() {
+    const message = el("gm-checkout-message");
+    const destination = {
+      latitude: Number(el("gm-customer-lat").value),
+      longitude: Number(el("gm-customer-lng").value)
+    };
+    const restaurant = cart[0];
+    // Resolve again from the refreshed restaurant API so an item added while
+    // restaurants were loading can still use its configured coordinates.
+    const currentRestaurant = restaurant && restaurants.find(r => String(r.id) === String(restaurant.restaurantId));
+    const origin = currentRestaurant && Number.isFinite(Number(currentRestaurant.latitude)) &&
+      Number.isFinite(Number(currentRestaurant.longitude))
+      ? { latitude: Number(currentRestaurant.latitude), longitude: Number(currentRestaurant.longitude) }
+      : restaurant && restaurant.origin;
+    if (!restaurant || !origin || !Number.isFinite(destination.latitude) || !Number.isFinite(destination.longitude)) {
+      clearDeliveryQuote("Choose a valid map location to calculate delivery.");
+      return false;
+    }
+    const coords = [origin.latitude, origin.longitude, destination.latitude, destination.longitude].map(Number);
+    if (!coords.every(Number.isFinite)) {
+      clearDeliveryQuote("This restaurant does not have a delivery location configured yet.");
+      return false;
+    }
+    message.textContent = "Calculating delivery charge…";
+    try {
+      const response = await fetch("/api/delivery", {
+        method: "POST", credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ origin, destination })
+      });
+      const quote = await response.json().catch(() => ({}));
+      if (!response.ok || !quote.success || !Number.isFinite(Number(quote.deliveryCharge))) {
+        throw new Error(quote.message || "Unable to calculate delivery charge.");
+      }
+      deliveryQuote = { distanceKm: Number(quote.distanceKm), deliveryCharge: Number(quote.deliveryCharge), duration: quote.duration || "" };
+      el("gm-delivery-distance").textContent = `Delivery distance: ${money(deliveryQuote.distanceKm)} km${deliveryQuote.duration ? ` · estimated ${deliveryQuote.duration}` : ""}`;
+      el("gm-delivery-charge").textContent = `Delivery charge: NPR ${money(deliveryQuote.deliveryCharge)}`;
+      message.textContent = "Delivery charge updated.";
+      if (window.GMUI) GMUI.onCart();
+      return true;
+    } catch (error) {
+      clearDeliveryQuote(error.message || "Unable to calculate delivery charge.");
+      message.textContent = error.message || "Unable to calculate delivery charge.";
+      return false;
+    }
+  }
+
+  window.addEventListener("gm:location-selected", () => {
+    if (cart.length) refreshDeliveryQuote();
+  });
 
   
 function renderRestaurants() {
@@ -1610,6 +1676,11 @@ function addToCart(restaurant, foodId) {
   );
   if (!food) return;
 
+  if (cart.length && String(cart[0].restaurantId) !== String(restaurant.id)) {
+    alert("For an accurate delivery charge, please order from one restaurant at a time.");
+    return;
+  }
+
   // Keep only ONE declaration of key.
   const key = food.menu_key || (restaurant.id + ":" + food.id);
   const existing = cart.find(item => item.key === key);
@@ -1622,6 +1693,9 @@ function addToCart(restaurant, foodId) {
       menu_key: food.menu_key || key,
       restaurantId: restaurant.id,
       restaurantName: restaurant.name,
+      origin: restaurant.latitude != null && restaurant.longitude != null ? {
+        latitude: Number(restaurant.latitude), longitude: Number(restaurant.longitude)
+      } : null,
       foodId: food.id,
       name: food.name,
       price: food.price,
@@ -1650,9 +1724,7 @@ function addToCart(restaurant, foodId) {
   function renderCartCore() {
     el("gm-cart-count").textContent = cart.reduce((sum, item) => sum + item.qty, 0);
     updateCartToggleCount();
-    el("gm-cart-total").textContent = money(
-      cart.reduce((sum, item) => sum + item.price * item.qty, 0)
-    );
+    el("gm-cart-total").textContent = money(cartSubtotal() + (deliveryQuote ? deliveryQuote.deliveryCharge : 0));
 
     if (!cart.length) {
       el("gm-cart-items").textContent = "Your cart is empty.";
@@ -1689,6 +1761,7 @@ function addToCart(restaurant, foodId) {
 
     item.qty += change;
     if (item.qty <= 0) cart = cart.filter(i => i.key !== key);
+    clearDeliveryQuote();
     renderCart();
   }
 
@@ -1702,6 +1775,7 @@ function addToCart(restaurant, foodId) {
 
   el("gm-clear-cart").addEventListener("click", () => {
     cart = [];
+    clearDeliveryQuote();
     renderCart();
   });
 
@@ -1833,6 +1907,11 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     return;
   }
 
+  // Requote immediately before ordering. The order endpoint must calculate all
+  // prices again server-side; this browser value is never authoritative.
+  const hasQuote = await refreshDeliveryQuote();
+  if (!hasQuote) return;
+
   const submitButton = el("gm-checkout-form").querySelector(
     'button[type="submit"], input[type="submit"]'
   );
@@ -1861,7 +1940,12 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
         phone: el("gm-delivery-phone").value.trim(),
         address: el("gm-delivery-address").value.trim(),
         latitude: Number(el("gm-customer-lat").value) || null,
-longitude: Number(el("gm-customer-lng").value) || null,
+        longitude: Number(el("gm-customer-lng").value) || null,
+        restaurant_id: cart[0].restaurantId,
+        delivery_quote: {
+          distance_km: deliveryQuote.distanceKm,
+          delivery_charge: deliveryQuote.deliveryCharge
+        },
         coupon_code: (window.GMUI && GMUI.couponCode()) || undefined,
         items: cart.map((item) => ({
          menu_key: item.menu_key || item.key,
@@ -1933,6 +2017,9 @@ longitude: Number(el("gm-customer-lng").value) || null,
           active: Number(r.active) === 0 ? 0 : 1,
           phone: String(r.phone || ""),
           address: String(r.address || ""),
+          // Both names are accepted so the restaurant API can use either convention.
+          latitude: Number(r.latitude ?? r.lat),
+          longitude: Number(r.longitude ?? r.lng),
           foods: []
         };
       });
@@ -1948,6 +2035,7 @@ longitude: Number(el("gm-customer-lng").value) || null,
     restaurants,
     refreshRestaurants,
     get cart() { return cart; },
+    get deliveryQuote() { return deliveryQuote; },
     addToCart,
     openRestaurant,
     autofill: autofillCheckoutFromProfile,
@@ -2254,7 +2342,8 @@ longitude: Number(el("gm-customer-lng").value) || null,
     const count = cart.reduce((s, i) => s + i.qty, 0);
     const sub = subtotal();
     const disc = appliedCoupon ? discountFor(appliedCoupon, sub) : 0;
-    const total = sub - disc;
+    const delivery = Number((GM.deliveryQuote && GM.deliveryQuote.deliveryCharge) || 0);
+    const total = sub - disc + delivery;
     $("gm-cart-total").textContent = money(total);
     const line = $("gm-discount-line");
     if (appliedCoupon) {
@@ -2269,8 +2358,9 @@ longitude: Number(el("gm-customer-lng").value) || null,
     sum.innerHTML = cart.map(i => `<div class="gm-sum-line"><span>${esc(i.name)} × ${i.qty}<br><small style="color:#6b7078">${esc(i.restaurantName)}</small></span><span>NPR ${money(i.price * i.qty)}</span></div>`).join("")
       + `<div class="gm-sum-line"><span>Subtotal</span><span>NPR ${money(sub)}</span></div>`
       + (disc ? `<div class="gm-sum-line" style="color:#168653"><span>Coupon ${esc(appliedCoupon)} (estimated)</span><span>−NPR ${money(disc)}</span></div>` : "")
+      + `<div class="gm-sum-line"><span>Delivery${GM.deliveryQuote ? ` (${money(GM.deliveryQuote.distanceKm)} km)` : ""}</span><span>${GM.deliveryQuote ? `NPR ${money(delivery)}` : "Choose location"}</span></div>`
       + `<div class="gm-sum-line total"><span>Total</span><span>NPR ${money(total)}</span></div>`
-      + (disc ? `<p class="gm-cart-note">The final total is confirmed when your order is placed.</p>` : "");
+      + `<p class="gm-cart-note">The final total is confirmed when your order is placed.</p>`;
     updateCheckoutView();
     updateFloating();
     if (current === "coupons") renderCoupons();
@@ -2470,10 +2560,17 @@ const riderNotes = o.delivery_notes || "";
       const items = (o.items || []).map(i => "<li>" + esc(i.name || i.product_name || i.menu_key) + " × " + esc(i.quantity || i.qty || 1) + "</li>").join("");
       const date = parseTime(o.created_at) ? parseTime(o.created_at).toLocaleString() : "";
       const total = o.total_amount != null ? o.total_amount : o.total;
+      const deliveryCharge = Number(o.delivery_charge ?? o.deliveryCharge);
+      const distanceKm = Number(o.delivery_distance_km ?? o.distance_km);
+      const restaurantName = o.restaurant_name || o.restaurant?.name || "GoMandu";
+      const deliveryAddress = o.delivery_address || o.address || "";
+      const paymentMethod = o.payment_method || "Cash on delivery";
       const canReorder = (o.items || []).length && (o.items || []).every(i => resolveKey(i.menu_key));
       return `<article class="gm-order"><div class="gm-order-top"><span>Order #${esc(id)}</span><span class="gm-status${statusClass(s)}">${esc(statusLabel(s))}</span></div>
-        <small>${esc(date)}</small>${items ? "<ul>" + items + "</ul>" : ""}
-        <p><strong>Total: NPR ${esc(total)}</strong></p>
+        <small>${esc(date)}</small><p><strong>${esc(restaurantName)}</strong></p>${items ? "<ul>" + items + "</ul>" : ""}
+        ${deliveryAddress ? `<p><strong>Delivery address:</strong> ${esc(deliveryAddress)}</p>` : ""}
+        ${Number.isFinite(distanceKm) ? `<p><strong>Delivery:</strong> ${esc(money(distanceKm))} km · NPR ${esc(money(Number.isFinite(deliveryCharge) ? deliveryCharge : 0))}</p>` : ""}
+        <p><strong>Payment:</strong> ${esc(paymentMethod)}<br><strong>Total: NPR ${esc(total)}</strong></p>
         ${riderName || riderPhone ? `
   <div class="gm-delivery-info">
     <p><strong>Delivery Person:</strong> ${esc(riderName || "Not assigned")}</p>
@@ -3270,9 +3367,10 @@ if (confirmLocationBtn) {
       position.lng();
 
     document.getElementById("gm-delivery-distance").textContent =
-      "Location selected successfully";
+      "Location selected. Calculating delivery charge…";
 
     document.getElementById("gm-map-container").style.display = "none";
+    window.dispatchEvent(new Event("gm:location-selected"));
   });
 }
   
