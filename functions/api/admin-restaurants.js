@@ -215,6 +215,7 @@ export async function onRequestGet({ request, env }) {
     const result = await env.DB.prepare(`
       SELECT *
       FROM restaurants
+      WHERE active = 1
       ORDER BY id DESC
     `).all();
 
