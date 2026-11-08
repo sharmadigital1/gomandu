@@ -49,11 +49,27 @@ export async function onRequestPost({ request, env }) {
     const keys = [...quantities.keys()], found = await env.DB.prepare(`SELECT menu_key, name, price_npr FROM products WHERE active = 1 AND menu_key IN (${keys.map(() => "?").join(",")})`).bind(...keys).all(), products = found.results || [];
     if (products.length !== keys.length || products.some(p => !Number.isSafeInteger(Number(p.price_npr)) || Number(p.price_npr) < 0)) return fail("A menu item is unavailable. Please refresh your cart.");
     const orderItems = products.map(p => ({ key: p.menu_key, name: p.name, quantity: quantities.get(p.menu_key), price: Number(p.price_npr) }));
-    const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0), couponCode = String(body.coupon_code || "").trim().toUpperCase(), discount = discountFor(couponCode, subtotal, restaurantId), delivery = await routeQuote(env, origin, destination), total = subtotal - discount + delivery.charge;
+    const subtotal = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0), couponCode = String(body.coupon_code || "").trim().toUpperCase(), discount = discountFor(couponCode, subtotal, restaurantId), delivery = await routeQuote(env, origin, destination);
+    // Optional: pay part of the food bill with the customer's cashback wallet (whole rupees only, never the delivery charge).
+    const foodTotal = subtotal - discount;
+    let cashbackUsed = 0;
+    if (body.use_cashback === true) {
+      const wallet = await env.DB.prepare("SELECT COALESCE(SUM(amount), 0) AS balance FROM wallet_transactions WHERE customer_id = ?").bind(customer.id).first();
+      cashbackUsed = Math.max(0, Math.min(Math.floor(Number(wallet?.balance) || 0), foodTotal));
+    }
+    const total = foodTotal - cashbackUsed + delivery.charge;
     const result = await env.DB.prepare(`INSERT INTO orders (customer_name, phone, address, delivery_latitude, delivery_longitude, restaurant_id, restaurant_name, delivery_charge, delivery_distance_km, coupon_code, discount_amount, total_amount, customer_id, payment_method, payment_status, order_status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'cod', 'pending', 'new', datetime('now'))`).bind(customerName, phone, address, destination.latitude, destination.longitude, restaurantId, String(restaurant.name || "Restaurant"), delivery.charge, delivery.distanceKm, couponCode || null, discount, total, String(customer.id)).run();
     const orderId = result.meta?.last_row_id; if (!orderId) throw new Error("Order ID was not returned");
     await env.DB.batch(orderItems.map(i => env.DB.prepare(`INSERT INTO order_items (order_id, menu_key, product_name, quantity, unit_price) VALUES (?, ?, ?, ?, ?)`).bind(orderId, i.key, i.name, i.quantity, i.price)));
-    return Response.json({ success: true, order_id: orderId, currency: "NPR", subtotal, discount_amount: discount, delivery_charge: delivery.charge, delivery_distance_km: delivery.distanceKm, total_amount: total, message: "Order placed successfully" }, { status: 201 });
+    if (cashbackUsed > 0) {
+      // One atomic statement: deducts only if the balance still covers it (blocks double spending).
+      const redeemed = await env.DB.prepare(`INSERT INTO wallet_transactions (customer_id, order_id, type, amount, note) SELECT ?1, ?2, 'redeem', -?3, ?4 WHERE (SELECT COALESCE(SUM(amount), 0) FROM wallet_transactions WHERE customer_id = ?1) >= ?3`).bind(customer.id, orderId, cashbackUsed, `Used on order #${orderId}`).run();
+      if (!redeemed.meta?.changes) {
+        await env.DB.batch([env.DB.prepare("DELETE FROM order_items WHERE order_id = ?").bind(orderId), env.DB.prepare("DELETE FROM orders WHERE id = ?").bind(orderId)]);
+        return fail("Your cashback balance changed. Please review your order and try again.", 409);
+      }
+    }
+    return Response.json({ success: true, order_id: orderId, currency: "NPR", subtotal, discount_amount: discount, delivery_charge: delivery.charge, delivery_distance_km: delivery.distanceKm, total_amount: total, cashback_used: cashbackUsed, message: "Order placed successfully" }, { status: 201 });
   } catch (cause) {
     console.error("Order creation failed:", cause);
     return fail(cause.message === "Delivery service is not configured" ? cause.message : "Unable to place order. Please try again.", cause.message === "Delivery service is not configured" ? 503 : 500);
