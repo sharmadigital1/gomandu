@@ -449,21 +449,39 @@ export async function onRequestDelete({ request, env }) {
       }, 400);
     }
 
-    const result = await env.DB.prepare(`
-      DELETE FROM restaurants
+    const restaurant = await env.DB.prepare(`
+      SELECT id
+      FROM restaurants
       WHERE id = ?
-    `).bind(id).run();
+      LIMIT 1
+    `).bind(id).first();
 
-    if (!result.meta || result.meta.changes === 0) {
+    if (!restaurant) {
       return json({
         success: false,
         message: "Restaurant not found"
       }, 404);
     }
 
+    // Remove this restaurant's menu items, then hide the restaurant.
+    // Keep the restaurant row so existing orders and order history remain valid.
+    await env.DB.batch([
+      env.DB.prepare(`
+        DELETE FROM products
+        WHERE restaurant_id = ?
+      `).bind(id),
+      env.DB.prepare(`
+        UPDATE restaurants
+        SET active = 0,
+            featured = 0,
+            updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(id)
+    ]);
+
     return json({
       success: true,
-      message: "Restaurant deleted successfully"
+      message: "Restaurant and its menu items deleted successfully. Previous orders are preserved."
     });
 
     } catch (error) {
