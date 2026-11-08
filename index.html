@@ -1029,6 +1029,14 @@
         <div id="gm-tab-refer" class="gm-tab-panel" hidden>
           <h2>Refer &amp; Earn Cash</h2>
           <p class="gm-sub">Invite friends to GoMandu. When they place their first order, you both earn cash.</p>
+          <div class="gm-refer-card" id="gm-cashback-card">
+            <div class="gm-refer-balance">
+              <span>Your cashback balance</span>
+              <strong>NPR <span id="gm-cashback-balance">0</span></strong>
+              <small>You get 1% cashback on the food bill of every delivered order.</small>
+            </div>
+            <div id="gm-cashback-list" style="display:grid;gap:8px;font-size:14px"></div>
+          </div>
           <div class="gm-refer-card">
             <div class="gm-refer-balance">
               <span>Your referral earnings</span>
@@ -1409,8 +1417,10 @@
       <h2 id="auth-title">Login</h2>
       <p class="sub" id="auth-sub">Welcome back to GoMandu.</p>
       <label id="name-row" hidden>Full name<input type="text" id="auth-name" autocomplete="name" placeholder="Your name"></label>
-      <label>Email or phone<input type="text" id="auth-id" autocomplete="username" placeholder="you@example.com" required></label>
-      <label>Password<input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••" required minlength="8"></label>
+      <label id="id-row">Email or phone<input type="text" id="auth-id" autocomplete="username" placeholder="you@example.com" required></label>
+      <label id="pass-row"><span id="pass-label">Password</span><input type="password" id="auth-pass" autocomplete="current-password" placeholder="••••••••" required minlength="8"></label>
+      <label id="confirm-row" hidden>Confirm new password<input type="password" id="auth-pass2" autocomplete="new-password" placeholder="••••••••" minlength="8"></label>
+      <p class="note" id="forgot-row" style="text-align:right;margin:-4px 0 8px"><a href="#" onclick="setMode('forgot'); return false">Forgot password?</a></p>
       <button class="btn btn-primary" type="submit" id="auth-submit">Login</button>
       <p class="note"><span id="auth-switch-text">New to GoMandu?</span> <a href="#" id="auth-switch" onclick="toggleAuth(); return false">Sign up</a></p>
     
@@ -1525,7 +1535,45 @@
   if (!app) return;
 
   let activeRestaurant = null;
-  let cart = [];
+
+  // ---- Cart is kept in localStorage so a page refresh does not empty it ----
+  const CART_KEY = "gm:cart:v1";
+  const CART_MAX_AGE_MS = 7 * 24 * 3600 * 1000; // forget carts older than 7 days
+
+  function saveCart() {
+    try {
+      if (cart.length) localStorage.setItem(CART_KEY, JSON.stringify({ savedAt: Date.now(), items: cart }));
+      else localStorage.removeItem(CART_KEY);
+    } catch (e) { /* storage full or blocked: cart just stays in memory */ }
+  }
+
+  function loadSavedCart() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(CART_KEY) || "null");
+      if (!saved || !Array.isArray(saved.items) || Date.now() - Number(saved.savedAt) > CART_MAX_AGE_MS) return [];
+      const items = saved.items
+        .filter(i => i && typeof i.key === "string" && typeof i.name === "string" &&
+          Number.isFinite(Number(i.price)) && Number(i.price) >= 0 &&
+          Number.isInteger(Number(i.qty)) && Number(i.qty) > 0 && Number(i.qty) <= 99 &&
+          i.restaurantId != null)
+        .map(i => ({
+          key: i.key,
+          menu_key: typeof i.menu_key === "string" ? i.menu_key : i.key,
+          restaurantId: String(i.restaurantId),
+          restaurantName: String(i.restaurantName || ""),
+          origin: i.origin && Number.isFinite(Number(i.origin.latitude)) && Number.isFinite(Number(i.origin.longitude))
+            ? { latitude: Number(i.origin.latitude), longitude: Number(i.origin.longitude) } : null,
+          foodId: i.foodId,
+          name: i.name,
+          price: Number(i.price),
+          qty: Number(i.qty)
+        }));
+      // one restaurant per order
+      return items.filter(i => i.restaurantId === (items[0] && items[0].restaurantId));
+    } catch (e) { return []; }
+  }
+
+  let cart = loadSavedCart();
   // A quote is only a display aid. /api/orders must calculate prices and delivery again.
   let deliveryQuote = null;
 
@@ -1727,7 +1775,7 @@ function addToCart(restaurant, foodId) {
   }
 
   function renderCart() {
-    try { renderCartCore(); } finally { if (window.GMUI) GMUI.onCart(); }
+    try { renderCartCore(); } finally { saveCart(); if (window.GMUI) GMUI.onCart(); }
   }
 
   function renderCartCore() {
@@ -2055,6 +2103,9 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     money
   };
 
+  // Show the restored cart (items + counts) once every script has loaded.
+  window.addEventListener("load", () => { if (cart.length) renderCart(); });
+
   // Called after a successful login and session verification.
   window.showCustomerDashboard = function(customer) {
     // Hide the public landing content, but keep the auth dialog and scripts intact.
@@ -2111,7 +2162,24 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   const esc = v => String(v == null ? "" : v).replace(/[&<>"']/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+  async function loadCashback() {
+    const balanceEl = $("gm-cashback-balance"), listEl = $("gm-cashback-list");
+    if (!balanceEl || !listEl) return;
+    const fmt = n => Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    try {
+      const res = await fetch("/api/cashback", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) return;
+      const d = await res.json();
+      balanceEl.textContent = fmt(d.balance);
+      const rows = Array.isArray(d.transactions) ? d.transactions.slice(0, 10) : [];
+      listEl.innerHTML = rows.length
+        ? rows.map(t => `<div style="display:flex;justify-content:space-between;gap:12px"><span>${esc(t.note || ("Order #" + t.order_id))}</span><strong>+ NPR ${esc(fmt(t.amount))}</strong></div>`).join("")
+        : "<span>No cashback yet. You will get 1% back as soon as an order is delivered.</span>";
+    } catch (e) { console.error("Cashback error:", e); }
+  }
+
   async function loadReferral() {
+    loadCashback();
     const c = currentCustomer || {};
     let code = c.referral_code;
     let earned = 0, count = 0;
@@ -2955,15 +3023,27 @@ const riderNotes = o.delivery_notes || "";
 
     function setMode(next) {
       mode = next;
-      const signup = mode === "signup";
-      document.getElementById("auth-title").textContent = signup ? "Create your account" : "Login";
-      document.getElementById("auth-sub").textContent = signup ? "Join GoMandu in a minute." : "Welcome back to GoMandu.";
-      document.getElementById("auth-submit").textContent = signup ? "Sign up" : "Login";
-      document.getElementById("name-row").hidden = !signup;
-      document.getElementById("auth-name").required = signup;
-      document.getElementById("auth-pass").autocomplete = signup ? "new-password" : "current-password";
-      document.getElementById("auth-switch-text").textContent = signup ? "Already have an account?" : "New to GoMandu?";
-      document.getElementById("auth-switch").textContent = signup ? "Login" : "Sign up";
+      const signup = mode === "signup", forgot = mode === "forgot", reset = mode === "reset", login = mode === "login";
+      const $ = id => document.getElementById(id);
+      $("auth-title").textContent = signup ? "Create your account" : forgot ? "Forgot password?" : reset ? "Set new password" : "Login";
+      $("auth-sub").textContent = signup ? "Join GoMandu in a minute."
+        : forgot ? "Enter your email and we will send you a reset link."
+        : reset ? "Choose a new password for your account."
+        : "Welcome back to GoMandu.";
+      $("auth-submit").textContent = signup ? "Sign up" : forgot ? "Send reset link" : reset ? "Update password" : "Login";
+      $("name-row").hidden = !signup;
+      $("auth-name").required = signup;
+      $("id-row").hidden = reset;
+      $("auth-id").required = !reset;
+      $("pass-row").hidden = forgot;
+      $("auth-pass").required = !forgot;
+      $("pass-label").textContent = reset ? "New password" : "Password";
+      $("confirm-row").hidden = !reset;
+      $("auth-pass2").required = reset;
+      $("forgot-row").hidden = !login;
+      $("auth-pass").autocomplete = (signup || reset) ? "new-password" : "current-password";
+      $("auth-switch-text").textContent = signup ? "Already have an account?" : login ? "New to GoMandu?" : "Remembered it?";
+      $("auth-switch").textContent = login ? "Sign up" : "Login";
     }
     function openAuth(next) { setMode(next); if (!authEl.open) authEl.showModal(); }
     function closeAuth() { authEl.close(); }
@@ -2995,7 +3075,70 @@ async function checkSession() {
   }
 }
     
+async function submitForgot() {
+  const email = document.getElementById("auth-id").value.trim();
+  const btn = document.getElementById("auth-submit");
+  if (!email) { showToast("Please enter your email."); return; }
+  btn.disabled = true; btn.textContent = "Sending...";
+  try {
+    const r = await fetch("/api/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ email })
+    });
+    if (r.status === 429) { showToast("Too many requests. Please try again later."); return; }
+    if (r.status === 400) { showToast("Please enter a valid email."); return; }
+    // Same message whether or not the account exists (prevents account guessing).
+    showToast("If an account exists for that email, a reset link has been sent.");
+    setMode("login");
+  } catch (e) {
+    showToast("Could not reach the server. Please try again.");
+  } finally {
+    btn.disabled = false;
+    if (mode === "forgot") btn.textContent = "Send reset link";
+  }
+}
+
+async function submitReset() {
+  const token = new URLSearchParams(location.search).get("reset");
+  const password = document.getElementById("auth-pass").value;
+  const confirm = document.getElementById("auth-pass2").value;
+  const btn = document.getElementById("auth-submit");
+  if (!token) { showToast("Reset link is invalid. Please request a new one."); setMode("forgot"); return; }
+  if (password.length < 8 || password.length > 128) { showToast("Password must be 8–128 characters long."); return; }
+  if (password !== confirm) { showToast("Passwords do not match."); return; }
+  btn.disabled = true; btn.textContent = "Updating...";
+  try {
+    const r = await fetch("/api/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ token, password })
+    });
+    const result = await r.json().catch(() => ({}));
+    if (!r.ok) { showToast(result.error || "Reset link is invalid or expired."); return; }
+    history.replaceState(null, "", location.pathname + location.hash);
+    document.getElementById("auth-pass").value = "";
+    document.getElementById("auth-pass2").value = "";
+    setMode("login");
+    showToast("Password updated! Please log in.");
+  } catch (e) {
+    showToast("Could not reach the server. Please try again.");
+  } finally {
+    btn.disabled = false;
+    if (mode === "reset") btn.textContent = "Update password";
+  }
+}
+
+// Open the reset form when the user arrives from the email link (?reset=TOKEN)
+window.addEventListener("load", () => {
+  if (new URLSearchParams(location.search).get("reset")) openAuth("reset");
+});
+
 async function submitAuth() {
+  if (mode === "forgot") return submitForgot();
+  if (mode === "reset") return submitReset();
   const signup = mode === "signup";
   const name = document.getElementById("auth-name").value.trim();
   const email = document.getElementById("auth-id").value.trim();
@@ -3275,7 +3418,7 @@ async function submitAuth() {
         ["Something is missing or wrong in my order.", "Tap <strong>Get help</strong> on the order in My Orders and tell us what happened. We will sort it out."],
         ["Can I cancel my order?", "Contact support as soon as possible. If the restaurant has not started preparing it, we can usually help."],
         ["How do I use a coupon?", "Open <strong>Coupons</strong> or the cart, enter the code, and tap Apply. Check the minimum order amount on the coupon."],
-        ["I forgot my password.", `Email ${mail} from your registered email and we will help you get back in.`],
+        ["I forgot my password.", `Click “Forgot password?” on the Login screen and we will email you a reset link. Still stuck? Email ${mail} from your registered email.`],
         ["Is grocery delivery or ride booking available?", "Not yet. They are coming soon. Right now GoMandu delivers food."]
       ])}
       <h2>Still need help?</h2>
@@ -3355,23 +3498,52 @@ let gmCustomerMarker;
 
 function initCustomerMap() {
   const mapElement = document.getElementById("gm-customer-map");
+  const FALLBACK = { lat: 27.7000, lng: 83.4500 }; // used only if location is unavailable
 
   gmCustomerMap = new google.maps.Map(mapElement, {
-    center: { lat: 27.7000, lng: 83.4500 },
-    zoom: 14
+    center: FALLBACK,
+    zoom: 14,
+    streetViewControl: false
   });
 
   gmCustomerMarker = new google.maps.Marker({
-    position: gmCustomerMap.getCenter(),
+    position: FALLBACK,
     map: gmCustomerMap,
     draggable: true
   });
+
+  // Tap on the map to move the pin
+  gmCustomerMap.addListener("click", (e) => {
+    gmCustomerMarker.setPosition(e.latLng);
+  });
+
+  function moveTo(lat, lng) {
+    const pos = { lat: Number(lat), lng: Number(lng) };
+    gmCustomerMap.setCenter(pos);
+    gmCustomerMap.setZoom(17);
+    gmCustomerMarker.setPosition(pos);
+  }
+
+  // 1) A location was already picked/detected (checkout fills these hidden fields)
+  const savedLat = parseFloat(document.getElementById("gm-customer-lat").value);
+  const savedLng = parseFloat(document.getElementById("gm-customer-lng").value);
+  if (Number.isFinite(savedLat) && Number.isFinite(savedLng)) { moveTo(savedLat, savedLng); return; }
+
+  // 2) Otherwise ask the browser for the customer's current location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => moveTo(position.coords.latitude, position.coords.longitude),
+      () => { /* denied / unavailable -> stay on fallback */ },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
 }
   const confirmLocationBtn =
   document.getElementById("gm-confirm-location");
 
 if (confirmLocationBtn) {
   confirmLocationBtn.addEventListener("click", () => {
+    if (!gmCustomerMarker) return;
     const position = gmCustomerMarker.getPosition();
 
     document.getElementById("gm-customer-lat").value =
