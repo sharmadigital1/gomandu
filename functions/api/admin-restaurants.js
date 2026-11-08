@@ -466,10 +466,12 @@ export async function onRequestDelete({ request, env }) {
       message: "Restaurant deleted successfully"
     });
 
-  } catch (error) {
+    } catch (error) {
+    console.error("DELETE RESTAURANT ERROR:", error);
+
     return json({
       success: false,
-      message: "Could not delete restaurant"
+      message: error.message || "Could not delete restaurant"
     }, 500);
   }
 }
