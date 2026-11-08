@@ -835,7 +835,12 @@
   <textarea id="gm-delivery-address" name="address"
     autocomplete="street-address" rows="3" required
     placeholder="House, street, area, city"></textarea>
+  <small id="gm-address-hint" style="display:block;color:#6b7078;margin:-4px 0 10px"></small>
 
+  <button type="button" id="gm-use-current-location"
+    class="gm-btn gm-outline" style="margin-right:8px">
+    🎯 Use my current location
+  </button>
   <button type="button" id="gm-pick-location"
     class="gm-btn gm-outline">
     📍 Choose Location on Map
@@ -1633,25 +1638,73 @@
     if (cart.length) refreshDeliveryQuote();
   });
 
+  // ---- Current location: detect automatically, then fill the address from it ----
+  let locating = false;
+  let lastAutoAddress = "";   // address text we filled ourselves (safe to replace later)
+  let lastGeocodedKey = "";
+
+  async function fillAddressFromCoords(lat, lng) {
+    const box = el("gm-delivery-address");
+    const hint = el("gm-address-hint");
+    if (!box) return;
+    const typed = box.value.trim();
+    if (typed && typed !== lastAutoAddress) return; // customer typed it or chose a saved address: never overwrite
+    const key = Number(lat).toFixed(4) + "," + Number(lng).toFixed(4); // ~11 m precision
+    if (typed && key === lastGeocodedKey) return;   // same spot as last time, nothing to do
+    try {
+      const res = await fetch("/api/reverse-geocode", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude: Number(lat), longitude: Number(lng) })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.address) return;
+      const now = box.value.trim();
+      if (now && now !== lastAutoAddress) return;   // customer started typing while we waited
+      box.value = data.address;
+      lastAutoAddress = data.address;
+      lastGeocodedKey = key;
+      if (hint) hint.textContent = "📍 Filled from your current location. Please add your house number or landmark.";
+    } catch (e) { /* address lookup is optional; the customer can type it */ }
+  }
+
   function useCurrentLocation() {
     const message = el("gm-checkout-message");
+    if (locating) return;
     if (!navigator.geolocation) {
       message.textContent = "Your browser does not support current location. Please choose the location on the map.";
       return;
     }
+    locating = true;
     message.textContent = "Getting your current location…";
     navigator.geolocation.getCurrentPosition(
       position => {
-        el("gm-customer-lat").value = position.coords.latitude;
-        el("gm-customer-lng").value = position.coords.longitude;
-        el("gm-delivery-distance").textContent = "Current location selected. Calculating delivery charge…";
+        locating = false;
+        const lat = position.coords.latitude, lng = position.coords.longitude;
+        el("gm-customer-lat").value = lat;
+        el("gm-customer-lng").value = lng;
+        window.gmLocationManual = false;
+        el("gm-delivery-distance").textContent = "📍 Current location selected. Calculating delivery charge…";
         window.dispatchEvent(new Event("gm:location-selected"));
+        fillAddressFromCoords(lat, lng);
       },
-      () => {
-        message.textContent = "Location permission was not allowed. Please choose your location on the map.";
+      error => {
+        locating = false;
+        message.textContent = error && error.code === 1
+          ? "Location is blocked. Allow location for this site in your browser settings, or choose your location on the map."
+          : "Could not detect your location. Tap “Use my current location” to try again, or choose it on the map.";
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
+  }
+
+  const currentLocationButton = el("gm-use-current-location");
+  if (currentLocationButton) {
+    currentLocationButton.addEventListener("click", () => {
+      window.gmLocationManual = false;
+      useCurrentLocation();
+    });
   }
 
   
@@ -1894,7 +1947,7 @@ el("gm-checkout-button").addEventListener("click", async () => {
   }
   // Called from the checkout click so the browser can show its location
   // permission prompt. The map button remains available as a fallback.
-  if (!el("gm-customer-lat").value || !el("gm-customer-lng").value) useCurrentLocation();
+  if (!window.gmLocationManual) useCurrentLocation();
   if (window.GMUI) return; // the sidebar script opens checkout and loads the profile
 
   el("gm-checkout-view").hidden = false;
@@ -2007,6 +2060,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
           delivery_charge: deliveryQuote.deliveryCharge
         },
         coupon_code: (window.GMUI && GMUI.couponCode()) || undefined,
+        use_cashback: !!(window.GMUI && GMUI.useCashback && GMUI.useCashback()),
         items: cart.map((item) => ({
          menu_key: item.menu_key || item.key,
           quantity: item.qty
@@ -2029,6 +2083,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     renderCart();
 
     el("gm-checkout-form").reset();
+    window.gmLocationManual = false;
     if (window.GMUI) GMUI.onOrderPlaced(result);
 
   } catch (error) {
@@ -2097,6 +2152,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     get cart() { return cart; },
     get deliveryQuote() { return deliveryQuote; },
     useCurrentLocation,
+    fillAddressFromCoords,
     addToCart,
     openRestaurant,
     autofill: autofillCheckoutFromProfile,
@@ -2173,7 +2229,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       balanceEl.textContent = fmt(d.balance);
       const rows = Array.isArray(d.transactions) ? d.transactions.slice(0, 10) : [];
       listEl.innerHTML = rows.length
-        ? rows.map(t => `<div style="display:flex;justify-content:space-between;gap:12px"><span>${esc(t.note || ("Order #" + t.order_id))}</span><strong>+ NPR ${esc(fmt(t.amount))}</strong></div>`).join("")
+        ? rows.map(t => { const amt = Number(t.amount) || 0; return `<div style="display:flex;justify-content:space-between;gap:12px"><span>${esc(t.note || ("Order #" + t.order_id))}</span><strong style="color:${amt >= 0 ? "#168653" : "#e63946"}">${amt >= 0 ? "+" : "−"} NPR ${esc(fmt(Math.abs(amt)))}</strong></div>`; }).join("")
         : "<span>No cashback yet. You will get 1% back as soon as an order is delivered.</span>";
     } catch (e) { console.error("Cashback error:", e); }
   }
@@ -2323,6 +2379,8 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   let favRest = [], favFood = [], reviews = [], tickets = [], addresses = [], profile = {}, prefs = { orders: true, offers: true }, readNotifs = [];
   let appliedCoupon = null;
   let ordersCache = null;
+  let cashbackBalance = 0;   // wallet balance (NPR), loaded from /api/cashback
+  let useCashback = false;   // customer ticked "Use my cashback" at checkout
 
   function loadUserState() {
     favRest = sGet("favRest", []); favFood = sGet("favFood", []);
@@ -2333,6 +2391,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     appliedCoupon = sGet("coupon", null);
     if (appliedCoupon && !COUPONS[appliedCoupon]) appliedCoupon = null;
     ordersCache = null;
+    cashbackBalance = 0; useCashback = false;
   }
 
   /* ---------------- Tabs / navigation ---------------- */
@@ -2418,13 +2477,29 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   }
   function removeCoupon() { appliedCoupon = null; sSet("coupon", null); onCart(); }
 
+  async function loadCashbackBalance() {
+    try {
+      const res = await fetch("/api/cashback", { credentials: "same-origin", cache: "no-store" });
+      if (!res.ok) return;
+      const d = await res.json();
+      cashbackBalance = Math.max(0, Number(d.balance) || 0);
+      if (Math.floor(cashbackBalance) < 1) useCashback = false;
+      onCart();
+    } catch (e) { console.error("Cashback balance error:", e); }
+  }
+  document.addEventListener("change", e => {
+    if (e.target && e.target.id === "gm-use-cashback") { useCashback = e.target.checked; onCart(); }
+  });
+
   function onCart() {
     const cart = GM.cart;
     const count = cart.reduce((s, i) => s + i.qty, 0);
     const sub = subtotal();
     const disc = appliedCoupon ? discountFor(appliedCoupon, sub) : 0;
     const delivery = Number((GM.deliveryQuote && GM.deliveryQuote.deliveryCharge) || 0);
-    const total = sub - disc + delivery;
+    // cashback only pays the food bill (after coupon), in whole rupees; never the delivery charge
+    const cbApplied = useCashback ? Math.min(Math.floor(cashbackBalance), Math.max(sub - disc, 0)) : 0;
+    const total = sub - disc - cbApplied + delivery;
     $("gm-cart-total").textContent = money(total);
     const line = $("gm-discount-line");
     if (appliedCoupon) {
@@ -2440,6 +2515,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
       + `<div class="gm-sum-line"><span>Subtotal</span><span>NPR ${money(sub)}</span></div>`
       + (disc ? `<div class="gm-sum-line" style="color:#168653"><span>Coupon ${esc(appliedCoupon)} (estimated)</span><span>−NPR ${money(disc)}</span></div>` : "")
       + `<div class="gm-sum-line"><span>Delivery${GM.deliveryQuote ? ` (${money(GM.deliveryQuote.distanceKm)} km)` : ""}</span><span>${GM.deliveryQuote ? `NPR ${money(delivery)}` : "Choose location"}</span></div>`
+      + (Math.floor(cashbackBalance) >= 1 ? `<label class="gm-sum-line" style="cursor:pointer;color:#168653"><span><input type="checkbox" id="gm-use-cashback" ${useCashback ? "checked" : ""} style="width:auto;margin-right:8px">Use my cashback (NPR ${esc(Number(cashbackBalance).toLocaleString("en-IN", { maximumFractionDigits: 2 }))} available)</span><span>${cbApplied ? "−NPR " + money(cbApplied) : ""}</span></label>` : "")
       + `<div class="gm-sum-line total"><span>Total</span><span>NPR ${money(total)}</span></div>`
       + `<p class="gm-cart-note">The final total is confirmed when your order is placed.</p>`;
     updateCheckoutView();
@@ -2580,7 +2656,8 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   renderers.checkout = () => {
     updateCheckoutView();
     if (!GM.cart.length) return;
-    if (!$("gm-customer-lat").value || !$("gm-customer-lng").value) GM.useCurrentLocation();
+    loadCashbackBalance();
+    if (!window.gmLocationManual) GM.useCurrentLocation();
     const sel = $("gm-saved-address");
     $("gm-saved-address-label").hidden = sel.hidden = !addresses.length;
     sel.innerHTML = `<option value="">— Choose a saved address —</option>` +
@@ -2904,12 +2981,17 @@ const riderNotes = o.delivery_notes || "";
   window.GMUI = {
     showTab, heart, onCart,
     couponCode: () => (appliedCoupon && discountFor(appliedCoupon, subtotal()) > 0) ? appliedCoupon : undefined,
+    useCashback: () => useCashback && Math.floor(cashbackBalance) >= 1,
     backFromMenu: () => showTab(lastNonMenu === "menu" ? "restaurants" : lastNonMenu),
     onOrderPlaced: result => {
       justOrdered = true;
-      $("gm-checkout-done-text").textContent = "Order #" + (result && result.order_id) + " · Total NPR " + (result && result.total_amount) + ". We'll keep you posted.";
+      const used = Number(result && result.cashback_used) || 0;
+      $("gm-checkout-done-text").textContent = "Order #" + (result && result.order_id) + " · Total NPR " + (result && result.total_amount) +
+        (used ? " (cashback used: NPR " + used + ")" : "") + ". We'll keep you posted.";
       appliedCoupon = null; sSet("coupon", null);
+      useCashback = false;
       ordersCache = null; onCart(); refreshBadges();
+      loadCashbackBalance();
     }
   };
 
@@ -3556,7 +3638,9 @@ if (confirmLocationBtn) {
       "Location selected. Calculating delivery charge…";
 
     document.getElementById("gm-map-container").style.display = "none";
+    window.gmLocationManual = true; // customer chose this spot: do not overwrite it with GPS
     window.dispatchEvent(new Event("gm:location-selected"));
+    if (window.GM && GM.fillAddressFromCoords) GM.fillAddressFromCoords(position.lat(), position.lng());
   });
 }
   
