@@ -1841,7 +1841,12 @@ function addToCart(restaurant, foodId) {
   }
 
   // Keep only ONE declaration of key.
-  const key = food.menu_key || (restaurant.id + ":" + food.id);
+  if (!food.menu_key) {
+  alert("Food menu key is missing. Please refresh the page.");
+  return;
+}
+
+const key = food.menu_key;
   const existing = cart.find(item => item.key === key);
 
   if (existing) {
@@ -2112,9 +2117,9 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
         coupon_code: (window.GMUI && GMUI.couponCode()) || undefined,
         use_cashback: !!(window.GMUI && GMUI.useCashback && GMUI.useCashback()),
         items: cart.map((item) => ({
-         menu_key: item.menu_key || item.key,
-          quantity: item.qty
-        }))
+  menu_key: item.menu_key,
+  quantity: item.qty
+}))
       })
     });
 
@@ -2188,6 +2193,38 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
           foods: []
         };
       });
+
+    // Load real food products from D1
+    const productResponse = await fetch("/api/products", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+
+    const productData = await productResponse.json().catch(() => ({}));
+
+    if (!productResponse.ok) {
+      throw new Error(productData.error || "Could not load food products.");
+    }
+
+    const products = Array.isArray(productData.products)
+      ? productData.products
+      : [];
+
+    // Attach each restaurant's real D1 products
+    synced.forEach(restaurant => {
+      restaurant.foods = products
+        .filter(product =>
+          String(product.restaurant_id) === String(restaurant.id) &&
+          Number(product.active) === 1
+        )
+        .map(product => ({
+          id: String(product.id),
+          menu_key: product.menu_key,
+          name: product.name,
+          price: Number(product.price_npr)
+        }));
+    });
 
     restaurants.splice(0, restaurants.length, ...synced);
     renderRestaurants();
