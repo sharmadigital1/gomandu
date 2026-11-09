@@ -2098,13 +2098,16 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   el("gm-checkout-message").textContent = "Placing your order...";
 
   try {
-    console.log("ORDER DEBUG:", {
-  restaurantId: cart[0]?.restaurantId,
-  items: cart.map(item => ({
+    console.log("RESTAURANT ID:", cart[0]?.restaurantId);
+
+console.log("CART ITEMS:", JSON.stringify(
+  cart.map(item => ({
     menu_key: item.menu_key,
     quantity: item.qty
-  }))
-});
+  })),
+  null,
+  2
+));
     const response = await fetch("/api/orders", {
       method: "POST",
       headers: {
