@@ -8,7 +8,7 @@
   <title>GoMandu | Food, Grocery & Rides</title>
   
       <!-- GoMandu Favicon -->
-  <link rel="icon" type="image/jpg" href="gomandu-logo.jpg">
+  <link rel="icon" type="image/png" href="gomandu-logo.png">
   
   <style>
     :root {
@@ -1414,6 +1414,16 @@
   #gm-checkout-form #gm-place-order:active { transform: translateY(0) scale(.99); }
   #gm-checkout-form #gm-place-order:disabled { opacity: .65; cursor: not-allowed; transform: none; box-shadow: none; }
   #gm-checkout-form #gm-close-checkout { display: block; width: 100%; margin-top: 14px; padding: 12px 20px; border-radius: 14px; }
+
+  /* Veg / Non-veg symbol (square outline + dot): green = veg, red = non-veg */
+  .gm-diet {
+    display: inline-grid; place-items: center; flex: none;
+    width: 16px; height: 16px; margin-right: 7px; vertical-align: -2px;
+    border: 2px solid currentColor; border-radius: 3px; background: #fff;
+  }
+  .gm-diet::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .gm-diet.veg { color: #0f9d58; }
+  .gm-diet.nonveg { color: #e63946; }
 </style>
 
   <dialog id="auth" aria-labelledby="auth-title">
@@ -1541,6 +1551,32 @@
 
   let activeRestaurant = null;
 
+  // ---- Veg / Non-veg helpers ----
+  const escHtml = v => String(v == null ? "" : v).replace(/[&<>"']/g,
+    c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Words that mean the dish contains meat / fish / egg.
+  const NONVEG_RE = /\b(non[\s-]?veg(etarian)?|chicken|chikan|buff|mutton|lamb|goat|pork|bacon|ham|sausage|salami|pepperoni|beef|meat|keema|kheema|fish|prawn|shrimp|crab|duck|turkey|egg|eggs|omelette|omelet|sekuwa|sukuti|choila)\b/i;
+
+  // Returns "veg" or "nonveg". An explicit field saved with the food wins
+  // (isVeg / veg / foodType / diet / type); otherwise it is guessed from the name.
+  function dietOf(food) {
+    food = food || {};
+    const flag = food.isVeg ?? food.is_veg ?? food.veg;
+    if (flag === true || flag === 1 || String(flag).toLowerCase() === "true" || flag === "1") return "veg";
+    if (flag === false || flag === 0 || String(flag).toLowerCase() === "false" || flag === "0") return "nonveg";
+    const t = String(food.foodType ?? food.food_type ?? food.diet ?? food.type ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (/^(nonveg|nonvegetarian|nv|meat|chicken)$/.test(t)) return "nonveg";
+    if (/^(veg|vegetarian|v)$/.test(t)) return "veg";
+    return NONVEG_RE.test(String(food.name || "")) ? "nonveg" : "veg";
+  }
+
+  function dietBadge(food) {
+    const d = (food && (food.diet === "veg" || food.diet === "nonveg")) ? food.diet : dietOf(food);
+    const label = d === "veg" ? "Vegetarian" : "Non-vegetarian";
+    return `<span class="gm-diet ${d}" role="img" aria-label="${label}" title="${label}"></span>`;
+  }
+
   // ---- Cart is kept in localStorage so a page refresh does not empty it ----
   const CART_KEY = "gm:cart:v1";
   const CART_MAX_AGE_MS = 7 * 24 * 3600 * 1000; // forget carts older than 7 days
@@ -1570,6 +1606,7 @@
             ? { latitude: Number(i.origin.latitude), longitude: Number(i.origin.longitude) } : null,
           foodId: i.foodId,
           name: i.name,
+          diet: (i.diet === "veg" || i.diet === "nonveg") ? i.diet : dietOf({ name: i.name }),
           price: Number(i.price),
           qty: Number(i.qty)
         }));
@@ -1742,8 +1779,44 @@ function renderRestaurants() {
   });
 }
 
+  // Draws the menu of the open restaurant. Called again when the Firestore menu finishes loading.
+  function renderMenu() {
+    if (!activeRestaurant) return;
+    const list = el("gm-food-list");
+
+    if (!Array.isArray(activeRestaurant.foods) || !activeRestaurant.foods.length) {
+      const state = window.gmMenuState;
+      list.innerHTML =
+        state === "error"
+          ? '<div class="gm-empty">We could not load the menu right now. Please refresh the page and try again.</div>'
+          : state === "loading"
+            ? '<div class="gm-empty">Loading menu…</div>'
+            : '<div class="gm-empty">This restaurant has not added its menu yet. Please check back soon.</div>';
+      return;
+    }
+
+    // Food items show as text and price only; no food images.
+    list.innerHTML = activeRestaurant.foods.map(food => `
+      <div class="gm-food-row">
+        <div>
+          <h3>${dietBadge(food)}${escHtml(food.name)}</h3>
+          <p>NPR ${money(food.price)}</p>
+        </div>
+        <span class="gm-food-actions">${window.GMUI ? GMUI.heart("food", activeRestaurant.id + ":" + food.id) : ""}
+        <button type="button" class="gm-btn gm-primary"
+          data-add-food="${escHtml(food.id)}">Add to Cart</button></span>
+      </div>
+    `).join("");
+
+    list.querySelectorAll("[data-add-food]").forEach(button => {
+      button.addEventListener("click", () => addToCart(activeRestaurant, button.dataset.addFood));
+    });
+  }
+
+  window.addEventListener("gm:menu-loaded", renderMenu);
+
   function openRestaurant(id) {
-    activeRestaurant = restaurants.find(r => r.id === id);
+    activeRestaurant = restaurants.find(r => String(r.id) === String(id));
     if (!activeRestaurant) return;
 
     el("gm-restaurants-view").hidden = true;
@@ -1751,31 +1824,7 @@ function renderRestaurants() {
     el("gm-menu-title").textContent = activeRestaurant.name;
     if (window.GMUI) GMUI.showTab("menu");
 
-    // Restaurant records come from D1. Menu items still need a menu API.
-    if (!Array.isArray(activeRestaurant.foods) || !activeRestaurant.foods.length) {
-      el("gm-food-list").innerHTML =
-        '<div class="gm-empty">This restaurant has not added its menu yet. Please check back soon.</div>';
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-
-    // Food items show as text and price only; no food images.
-    el("gm-food-list").innerHTML = activeRestaurant.foods.map(food => `
-      <div class="gm-food-row">
-        <div>
-          <h3>${food.name}</h3>
-          <p>NPR ${money(food.price)}</p>
-        </div>
-        <span class="gm-food-actions">${window.GMUI ? GMUI.heart("food", activeRestaurant.id + ":" + food.id) : ""}
-        <button type="button" class="gm-btn gm-primary"
-          data-add-food="${food.id}">Add to Cart</button></span>
-      </div>
-    `).join("");
-
-    el("gm-food-list").querySelectorAll("[data-add-food]").forEach(button => {
-      button.addEventListener("click", () => addToCart(activeRestaurant, button.dataset.addFood));
-    });
-
+    renderMenu();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -1808,6 +1857,7 @@ function addToCart(restaurant, foodId) {
       } : null,
       foodId: food.id,
       name: food.name,
+      diet: dietOf(food),
       price: food.price,
       qty: 1
     });
@@ -1844,7 +1894,7 @@ function addToCart(restaurant, foodId) {
     el("gm-cart-items").innerHTML = cart.map(item => `
       <div class="gm-cart-line">
         <div>
-          <strong>${item.name}</strong>
+          <strong>${dietBadge(item)}${escHtml(item.name)}</strong>
           <div style="font-size:13px;color:#666">${item.restaurantName}</div>
           <div>NPR ${money(item.price * item.qty)}</div>
         </div>
@@ -2155,6 +2205,9 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     fillAddressFromCoords,
     addToCart,
     openRestaurant,
+    renderMenu,
+    dietOf,
+    dietBadge,
     autofill: autofillCheckoutFromProfile,
     money
   };
@@ -2310,6 +2363,12 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     if (typeof renderers.home === "function") renderers.home();
     if (typeof renderers.restaurants === "function") renderers.restaurants();
   });
+  // Menu items arrive a moment later from Firestore: redraw what depends on them.
+  window.addEventListener("gm:menu-loaded", () => {
+    ["home", "restaurants", "search", "categories", "favorites"].forEach(n => {
+      if ((n === "home" || n === "restaurants" || n === current) && typeof renderers[n] === "function") renderers[n]();
+    });
+  });
 
   const MART = {
     id: "mart", name: "GoMandu Mart", category: "Grocery • Essentials",
@@ -2338,8 +2397,10 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     ]
   };
   const MART_CATS = ["All", ...Array.from(new Set(MART.foods.map(f => f.cat)))];
-  const ALL_SOURCES = [...REST, MART];
-  const srcById = id => ALL_SOURCES.find(r => r.id === id);
+  // Built fresh every time: REST is replaced with the real restaurants after login,
+  // so a one-time copy would still point at the old sample restaurants.
+  const allSources = () => [...REST, MART];
+  const srcById = id => allSources().find(r => String(r.id) === String(id));
 
   const FOOD_CATS = [
     { id: "momo", icon: "🥟", name: "Momo", rests: ["momo-house"] },
@@ -2447,7 +2508,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
   function foodRow(src, f, showSrc) {
     const key = src.id + ":" + f.id;
     return `<div class="gm-food-row"><div>
-        <h3>${f.icon ? esc(f.icon) + " " : ""}${esc(f.name)}</h3>
+        <h3>${src.id !== "mart" ? GM.dietBadge(f) : ""}${f.icon ? esc(f.icon) + " " : ""}${esc(f.name)}</h3>
         <p>NPR ${money(f.price)}</p>
         ${showSrc ? `<span class="gm-rest-name">${esc(src.name)}</span>` : ""}
       </div><div class="gm-food-actions">${heart("food", key)}
@@ -2578,7 +2639,7 @@ el("gm-checkout-form").addEventListener("submit", async (event) => {
     }
     const rs = REST.filter(r => (r.name + " " + r.category).toLowerCase().includes(q));
     const foods = [];
-    ALL_SOURCES.forEach(src => src.foods.forEach(f => {
+    allSources().forEach(src => (src.foods || []).forEach(f => {
       if ((f.name + " " + src.name + " " + (src.category || "") + " " + (f.cat || "")).toLowerCase().includes(q)) foods.push([src, f]);
     }));
     const restFoods = foods.filter(([s]) => s.id !== "mart"), martFoods = foods.filter(([s]) => s.id === "mart");
@@ -2852,7 +2913,7 @@ const riderNotes = o.delivery_notes || "";
     $("gm-review-form").hidden = !reviewOrder;
     $("gm-review-context").textContent = reviewOrder ? "Rate your delivered order #" + reviewOrder
       : (reviewNote || "You can rate an order after it is delivered. Open My Orders and tap “Rate order”.");
-    $("gm-review-rest").innerHTML = ALL_SOURCES.map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
+    $("gm-review-rest").innerHTML = allSources().map(r => `<option value="${esc(r.id)}">${esc(r.name)}</option>`).join("");
     drawStars();
     drawReviewList();
     loadServerReviews().then(drawReviewList).catch(() => {});
@@ -3648,13 +3709,8 @@ if (confirmLocationBtn) {
 </script>
   
 <script type="module">
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/13.1.0/firebase-firestore.js";
-
+// Menu items live in Firestore (collection "menuItems"). The Firebase files are loaded with
+// import() inside try/catch, so a blocked/failed download shows a message instead of a silently empty menu.
 const firebaseConfig = {
   apiKey: "AIzaSyCHp4AMcaaO_b9cplfD7U7Q8jOjqOdwEVI",
   authDomain: "gomandu-7026e.firebaseapp.com",
@@ -3665,34 +3721,95 @@ const firebaseConfig = {
   measurementId: "G-M37S79SG9H"
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const FIREBASE_BASE = "https://www.gstatic.com/firebasejs/13.1.0/";
+let firestorePromise = null;
+
+function getFirestoreTools() {
+  if (!firestorePromise) {
+    firestorePromise = (async () => {
+      const [appMod, fsMod] = await Promise.all([
+        import(FIREBASE_BASE + "firebase-app.js"),
+        import(FIREBASE_BASE + "firebase-firestore.js")
+      ]);
+      const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(firebaseConfig);
+      return { db: fsMod.getFirestore(app), fsMod };
+    })();
+    firestorePromise.catch(() => { firestorePromise = null; }); // allow a retry on the next call
+  }
+  return firestorePromise;
+}
+
+// 1) Normal way: Firebase SDK from gstatic.com.
+async function fetchMenuItemsSdk() {
+  const { db, fsMod } = await getFirestoreTools();
+  const snap = await fsMod.getDocs(fsMod.collection(db, "menuItems"));
+  return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+// 2) Fallback when gstatic.com cannot be loaded (blocked network, CSP, ad-blocker):
+//    read the same collection through Firestore's REST API with plain fetch().
+function fromFirestoreValue(v) {
+  if (!v) return null;
+  if ("stringValue" in v) return v.stringValue;
+  if ("integerValue" in v) return Number(v.integerValue);
+  if ("doubleValue" in v) return v.doubleValue;
+  if ("booleanValue" in v) return v.booleanValue;
+  if ("timestampValue" in v) return v.timestampValue;
+  return null;
+}
+
+async function fetchMenuItemsRest() {
+  const items = [];
+  let pageToken = "";
+  do {
+    const url = "https://firestore.googleapis.com/v1/projects/" + encodeURIComponent(firebaseConfig.projectId) +
+      "/databases/(default)/documents/menuItems?pageSize=300&key=" + encodeURIComponent(firebaseConfig.apiKey) +
+      (pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : "");
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Firestore REST request failed (HTTP " + res.status + ")");
+    const data = await res.json();
+    (data.documents || []).forEach(doc => {
+      const item = { id: String(doc.name || "").split("/").pop() };
+      Object.entries(doc.fields || {}).forEach(([k, v]) => { item[k] = fromFirestoreValue(v); });
+      items.push(item);
+    });
+    pageToken = data.nextPageToken || "";
+  } while (pageToken);
+  return items;
+}
+
+async function fetchMenuItems() {
+  try {
+    return await fetchMenuItemsSdk();
+  } catch (sdkError) {
+    console.warn("Firebase SDK could not load, using Firestore REST instead:", sdkError);
+    return await fetchMenuItemsRest();
+  }
+}
+
+let loadSeq = 0;
 
 async function loadCustomerMenu() {
+  if (!window.GM || !window.GM.restaurants) return;
+  const seq = ++loadSeq;
+  window.gmMenuState = "loading";
+
   try {
-    const snap = await getDocs(collection(db, "menuItems"));
+    const items = await fetchMenuItems();
+    if (seq !== loadSeq) return; // a newer load has started
+    // An item with no status is treated as available; "Available" / "available " also count.
+    const isAvailable = item => String(item.status ?? "available").trim().toLowerCase() === "available";
 
-    const items = snap.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    const restaurants = window.GM?.restaurants;
-    if (!restaurants) return;
-
-    restaurants.forEach(restaurant => {
+    // Read the live array again after the await: restaurants may have been refreshed meanwhile.
+    window.GM.restaurants.forEach(restaurant => {
       const restaurantName = String(restaurant.name || "").trim().toLowerCase();
 
       const matchedItems = items.filter(item => {
-        const sameId =
-          item.restaurantId &&
+        const sameId = item.restaurantId != null && item.restaurantId !== "" &&
           String(item.restaurantId) === String(restaurant.id);
-
-        const sameName =
-          item.restaurantName &&
+        const sameName = item.restaurantName &&
           String(item.restaurantName).trim().toLowerCase() === restaurantName;
-
-        return (sameId || sameName) && item.status === "available";
+        return (sameId || sameName) && isAvailable(item);
       });
 
       restaurant.foods = matchedItems.map(item => ({
@@ -3701,21 +3818,21 @@ async function loadCustomerMenu() {
         price: Number(item.price) || 0,
         category: item.category || "",
         imageUrl: item.imageUrl || "",
-        menu_key: item.id
+        menu_key: item.id,
+        // Optional fields that decide the veg / non-veg symbol.
+        isVeg: item.isVeg, veg: item.veg, foodType: item.foodType, diet: item.diet, type: item.type
       }));
     });
 
-    console.log("GoMandu Firebase Menu Loaded:", items.length);
-
-console.table(restaurants.map(r => ({
-  restaurant: r.name,
-  menuCount: r.foods.length,
-  foods: r.foods.map(f => f.name).join(", ")
-})));
-
+    window.gmMenuState = "ready";
+    console.log("GoMandu Firebase menu loaded:", items.length, "items");
   } catch (error) {
     console.error("Firebase Menu Load Error:", error);
+    if (seq === loadSeq) window.gmMenuState = "error";
   }
+
+  // Redraw the menu / lists that were waiting for the items (also shows the error message).
+  if (seq === loadSeq) window.dispatchEvent(new Event("gm:menu-loaded"));
 }
 
 window.addEventListener("gm:restaurants-updated", loadCustomerMenu);
