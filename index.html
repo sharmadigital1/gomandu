@@ -3880,7 +3880,7 @@ async function loadCustomerMenu() {
       restaurant.foods = products
         .filter(product =>
           String(product.restaurant_id) === String(restaurant.id) &&
-          Number(product.active) === 1 &&
+         (product.active == null || Number(product.active) === 1) &&
           product.menu_key
         )
         .map(product => {
