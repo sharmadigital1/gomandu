@@ -3844,84 +3844,82 @@ async function loadCustomerMenu() {
   window.gmMenuState = "loading";
 
   try {
-    // Load Firebase menu and D1 products together
-    const [items, productResponse] = await Promise.all([
-      fetchMenuItems(),
-      fetch("/api/products", {
-        method: "GET",
-        credentials: "same-origin",
-        cache: "no-store"
-      })
-    ]);
+    // Firebase menu metadata
+    const items = await fetchMenuItems();
 
-    if (seq !== loadSeq) return;
+    // D1 products: canonical product IDs and menu keys
+    const productResponse = await fetch("/api/products", {
+      method: "GET",
+      credentials: "same-origin",
+      cache: "no-store"
+    });
 
-    const productData = await productResponse.json();
+    const productData = await productResponse.json().catch(() => ({}));
 
     if (!productResponse.ok) {
-      throw new Error(productData.error || "Could not load D1 products");
+      throw new Error(productData.error || "Could not load D1 products.");
     }
+
+    if (seq !== loadSeq) return;
 
     const products = Array.isArray(productData.products)
       ? productData.products
       : [];
 
-    const isAvailable = item =>
-      String(item.status ?? "available").trim().toLowerCase() === "available";
+    // Match Firebase metadata using D1 productId
+    const menuByProductId = new Map();
 
+    items.forEach(item => {
+      if (item.productId != null) {
+        menuByProductId.set(String(item.productId), item);
+      }
+    });
+
+    // D1 restaurant and product IDs are authoritative
     window.GM.restaurants.forEach(restaurant => {
-      const restaurantName = String(restaurant.name || "")
-        .trim()
-        .toLowerCase();
+      restaurant.foods = products
+        .filter(product =>
+          String(product.restaurant_id) === String(restaurant.id) &&
+          Number(product.active) === 1 &&
+          product.menu_key
+        )
+        .map(product => {
+          const item = menuByProductId.get(String(product.id));
 
-      const matchedItems = items.filter(item => {
-        const sameId =
-          item.restaurantId != null &&
-          String(item.restaurantId) === String(restaurant.id);
+          if (item &&
+              String(item.status || "available").trim().toLowerCase() !== "available") {
+            return null;
+          }
 
-        const sameName =
-          item.restaurantName &&
-          String(item.restaurantName).trim().toLowerCase() === restaurantName;
-
-        return (sameId || sameName) && isAvailable(item);
-      });
-
-      restaurant.foods = matchedItems.map(item => {
-        const product = products.find(p =>
-          String(p.restaurant_id) === String(restaurant.id) &&
-          (
-            String(p.id) === String(item.productId || "") ||
-            String(p.name || "").trim().toLowerCase() ===
-              String(item.name || "").trim().toLowerCase()
-          ) &&
-          Number(p.active) === 1
-        );
-
-        return {
-          id: item.id,
-          productId: product ? product.id : null,
-          name: item.name || "",
-          price: Number(item.price) || 0,
-          category: item.category || "",
-          imageUrl: item.imageUrl || "",
-          menu_key: product ? product.menu_key : "",
-          isVeg: item.isVeg,
-          veg: item.veg,
-          foodType: item.foodType,
-          diet: item.diet,
-          type: item.type
-        };
-      }).filter(food => food.menu_key);
-
+          return {
+            id: String(product.id),
+            productId: product.id,
+            menu_key: product.menu_key,
+            name: item?.name || product.name || "",
+            price: Number(product.price_npr) || 0,
+            category: item?.category || "",
+            description: item?.description || "",
+            imageUrl: item?.imageUrl || "",
+            weight: item?.weight || "",
+            isVeg: item?.isVeg,
+            veg: item?.veg,
+            foodType: item?.foodType,
+            diet: item?.diet,
+            type: item?.type
+          };
+        })
+        .filter(Boolean);
     });
 
     window.gmMenuState = "ready";
-    console.log("GoMandu Firebase menu loaded:", items.length, "items");
-    console.log("GoMandu D1 products loaded:", products.length, "products");
 
+    console.log("GoMandu menu loaded from D1:", products.length, "products");
   } catch (error) {
     console.error("Customer Menu Load Error:", error);
-    if (seq === loadSeq) window.gmMenuState = "error";
+
+    if (seq === loadSeq) {
+      window.gmMenuState = "error";
+    }
   }
 
   if (seq === loadSeq) {
