@@ -3836,50 +3836,97 @@ async function fetchMenuItems() {
 
 let loadSeq = 0;
 
+
 async function loadCustomerMenu() {
   if (!window.GM || !window.GM.restaurants) return;
+
   const seq = ++loadSeq;
   window.gmMenuState = "loading";
 
   try {
-    const items = await fetchMenuItems();
-    if (seq !== loadSeq) return; // a newer load has started
-    // An item with no status is treated as available; "Available" / "available " also count.
-    const isAvailable = item => String(item.status ?? "available").trim().toLowerCase() === "available";
+    // Load Firebase menu and D1 products together
+    const [items, productResponse] = await Promise.all([
+      fetchMenuItems(),
+      fetch("/api/products", {
+        method: "GET",
+        credentials: "same-origin",
+        cache: "no-store"
+      })
+    ]);
 
-    // Read the live array again after the await: restaurants may have been refreshed meanwhile.
+    if (seq !== loadSeq) return;
+
+    const productData = await productResponse.json();
+
+    if (!productResponse.ok) {
+      throw new Error(productData.error || "Could not load D1 products");
+    }
+
+    const products = Array.isArray(productData.products)
+      ? productData.products
+      : [];
+
+    const isAvailable = item =>
+      String(item.status ?? "available").trim().toLowerCase() === "available";
+
     window.GM.restaurants.forEach(restaurant => {
-      const restaurantName = String(restaurant.name || "").trim().toLowerCase();
+      const restaurantName = String(restaurant.name || "")
+        .trim()
+        .toLowerCase();
 
       const matchedItems = items.filter(item => {
-        const sameId = item.restaurantId != null && item.restaurantId !== "" &&
+        const sameId =
+          item.restaurantId != null &&
           String(item.restaurantId) === String(restaurant.id);
-        const sameName = item.restaurantName &&
+
+        const sameName =
+          item.restaurantName &&
           String(item.restaurantName).trim().toLowerCase() === restaurantName;
+
         return (sameId || sameName) && isAvailable(item);
       });
 
-      restaurant.foods = matchedItems.map(item => ({
-        id: item.id,
-        name: item.name || "",
-        price: Number(item.price) || 0,
-        category: item.category || "",
-        imageUrl: item.imageUrl || "",
-        menu_key: item.id,
-        // Optional fields that decide the veg / non-veg symbol.
-        isVeg: item.isVeg, veg: item.veg, foodType: item.foodType, diet: item.diet, type: item.type
-      }));
+      restaurant.foods = matchedItems.map(item => {
+        const product = products.find(p =>
+          String(p.restaurant_id) === String(restaurant.id) &&
+          (
+            String(p.id) === String(item.productId || "") ||
+            String(p.name || "").trim().toLowerCase() ===
+              String(item.name || "").trim().toLowerCase()
+          ) &&
+          Number(p.active) === 1
+        );
+
+        return {
+          id: item.id,
+          productId: product ? product.id : null,
+          name: item.name || "",
+          price: Number(item.price) || 0,
+          category: item.category || "",
+          imageUrl: item.imageUrl || "",
+          menu_key: product ? product.menu_key : "",
+          isVeg: item.isVeg,
+          veg: item.veg,
+          foodType: item.foodType,
+          diet: item.diet,
+          type: item.type
+        };
+      }).filter(food => food.menu_key);
+
     });
 
     window.gmMenuState = "ready";
     console.log("GoMandu Firebase menu loaded:", items.length, "items");
+    console.log("GoMandu D1 products loaded:", products.length, "products");
+
   } catch (error) {
-    console.error("Firebase Menu Load Error:", error);
+    console.error("Customer Menu Load Error:", error);
     if (seq === loadSeq) window.gmMenuState = "error";
   }
 
-  // Redraw the menu / lists that were waiting for the items (also shows the error message).
-  if (seq === loadSeq) window.dispatchEvent(new Event("gm:menu-loaded"));
+  if (seq === loadSeq) {
+    window.dispatchEvent(new Event("gm:menu-loaded"));
+  }
 }
 
 window.addEventListener("gm:restaurants-updated", loadCustomerMenu);
@@ -3887,6 +3934,7 @@ window.addEventListener("gm:restaurants-updated", loadCustomerMenu);
 if (window.GM) {
   loadCustomerMenu();
 }
+
 </script>
 </body>
 </html>
